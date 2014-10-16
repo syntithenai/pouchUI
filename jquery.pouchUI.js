@@ -120,7 +120,7 @@ MimeConverter.lookupMime = function(fileName) {
 			// treat as binary
 			ret='application/unknown';
 		}
-		console.log('LOOKUP MIME',fileName,ret);
+		//console.log('LOOKUP MIME',fileName,ret);
 	}
 	return ret;
 }
@@ -279,7 +279,7 @@ $.fn.pouchUI = function(options) {
 				}).catch(function(err) {
 					//console.log('create new',err);
 					pouch.validatingPost(sheetRow).then(function (info) {
-						console.log('google sheet entry created',info);
+						//console.log('google sheet entry created',info);
 						dfr.resolve();
 					}).catch(function (err) {
 					  console.log('failed to save NEW google sheet row',err);
@@ -378,7 +378,7 @@ $.fn.pouchUI = function(options) {
 		if ($(e.target).parents('.pouch-list-input').data('pouchFolder') && $(e.target).parents('.pouch-list-input').data('pouchFolder').length>0) folder=$(e.target).parents('.pouch-list-input').data('pouchFolder');			if ($(e.target).data('pouchFolder') && $(e.target).data('pouchFolder').length>0) folder=$(e.target).data('pouchFolder');
 		if (folder.substr(folder.length-1)=='/') folder=folder.substr(0,folder.length-1);
 					
-		console.log('input change',e.target,attachmentsDOM);
+		//console.log('input change',e.target,attachmentsDOM);
 		// DND
 		if (e && e.dataTransfer && e.dataTransfer.files) {
 			entries = e.dataTransfer.files;
@@ -386,7 +386,7 @@ $.fn.pouchUI = function(options) {
 		} else if (e && e.target && e.target.files) {
 			entries = e.target.files;
 		}
-		console.log('Entries',entries); 
+		//console.log('Entries',entries); 
 		$.each(entries,function(key,file) {
 			var parts;
 			if (file.webkitRelativePath) parts=file.webkitRelativePath.split("/");
@@ -398,10 +398,10 @@ $.fn.pouchUI = function(options) {
 				return function(e) {
 					var mime=MimeConverter.lookupMime(fileRef.name);
 					var b=new Blob([e.target.result],{type : mime});
-					var fileDOM=$('<div class="file pending"><span class="ui-button" data-pouch-action="deletefile" >X</span><a target="_new" >'+fileRef.name+'</a></div>');
-					$('.file[data-docid="'+folder+"/"+fileRef.name+'"]',attachmentsDOM).remove();
+					var fileDOM=$('<div class="file pending"><span class="ui-button" data-pouch-action="deletefile" >X</span><a target="_new" >'+path+'/'+fileRef.name+'</a></div>');
+					$('.file[data-docid="'+folder+"/"+path+'/'+fileRef.name+'"]',attachmentsDOM).remove();
 					attachmentsDOM.prepend(fileDOM);
-					fileDOM.attr('data-docid',folder+"/"+fileRef.name);
+					fileDOM.attr('data-docid',folder+"/"+path+'/'+fileRef.name);
 					fileDOM.attr('data-size',fileRef.size);
 					fileDOM.attr('data-mime',mime);
 					var reader = new FileReader();
@@ -410,9 +410,9 @@ $.fn.pouchUI = function(options) {
 						$('a',fileDOM).attr('href',reader.result);
 						var targetList=fileDOM.parents('.pouch-list').first();
 						var targetItem=$(fileDOM).parents('.pouch-list-item').first();
-						console.log('AUTOSAVE ON FILE??? ',targetList,targetItem);
+						//console.log('AUTOSAVE ON FILE??? ',targetList,targetItem);
 						if (targetList.length>0 && targetList.attr('data-pouch-autosave')=='true') {
-							console.log('AUTOSAVE ON FILE',targetList);
+							//console.log('AUTOSAVE ON FILE',targetList);
 							// NO AUTOSAVE ON ID FIELD
 							actionSave(targetList,targetItem);
 						}
@@ -580,7 +580,7 @@ $.fn.pouchUI = function(options) {
 		// UPDATE EXISTING
 		if (currentListItem.data('pouchId') && currentListItem.data('pouchId').length>0) {
 			pouch.get(currentListItem.data('pouchId')).then(function(res) {
-				console.log('get',currentListItem.data('pouchId'),res);
+				//console.log('get',currentListItem.data('pouchId'),res);
 				// override incoming values
 				var initialAttachments={};
 				$.each(res['_attachments'],function(rak,rav) {
@@ -604,21 +604,21 @@ $.fn.pouchUI = function(options) {
 									var content=$('a',av).attr('href');
 									if (content && content.length>0) {
 										var icontent=content.substr(prefix.length);
-										console.log('ATT CONTENT',icontent);
+										//console.log('ATT CONTENT',icontent);
 										saveAttachment={content_type:mime,data:icontent}; //
 										changed=true;
 										$(av).removeClass('pending');
-										console.log('have changed files');
+										//console.log('have changed files');
 									}
 								} else {
-									console.log('ADS',res['_attachments'][docId]);
+									//console.log('ADS',res['_attachments'][docId]);
 									saveAttachment=res['_attachments'][docId]; //{content_type:"text\/plain",stub:true};  //$(av).data('mime')
 								}
 								initialAttachments[docId]=true;
 								saveAttachments[docId]=saveAttachment;
 							
 							});	
-							console.log('ATT',res._attachments,saveAttachments);
+							//console.log('ATT',res._attachments,saveAttachments);
 							res['_attachments']= saveAttachments; //{'set1.txt':{"content_type":"text\/plain","data": "VGhpcyBpcyBhIGJhc2U2NCBlbmNvZGVkIHRleHQ="},'set2.txt':{"content_type":"text\/plain","data": "VGhpcyBpcyBhIGJhc2U2NCBlbmNvZGVkIHRleHQ="}};
 							var foundAll=true;
 							$.each(initialAttachments,function(iak,iav) {
@@ -634,12 +634,12 @@ $.fn.pouchUI = function(options) {
 					});
 					//console.log('done loop inputs etc',res);
 				});
-				console.log('REALLY have changed files',changed);
+				//console.log('REALLY have changed files',changed);
 				//$.each(
 				if (changed) {
 					var recs={rows:[{doc:res}	]}
 					pouch.validatingPost(res).then(function(err,rs) {
-						console.log('SAVE OK',err,rs,recs);
+						//console.log('SAVE OK',err,rs,recs);
 						//$('.validationerror',currentListItem).remove();
 						//if (currentListItem && currentListItem.length) currentListItem.remove();
 					}).catch(function(err) {
@@ -675,10 +675,11 @@ $.fn.pouchUI = function(options) {
 			// ID from form data
 			if (res['_id'] && res['_id'].length>0) {
 				pouch.validtingPost(res,function(err,rs) {
-					console.log('saved new with ID',rs);
+					//console.log('saved new with ID',rs);
 					currentListItem.attr('data-pouch-id',rs._id);
 					currentListItem.attr('data-pouch-rev',rs._rev);
 				});
+			// TODO - COMPLETE THESE CASES
 			// ID from idFunction
 			} else if (false)  {
 				console.log('id fn');
@@ -707,7 +708,7 @@ $.fn.pouchUI = function(options) {
 			//if (!targetList.hasClass('.pouch-list')) {
 			//	targetList=parentList;
 			//}
-			console.log('click',cmd,target,button,targetList);
+			//console.log('click',cmd,target,button,targetList);
 			if (cmd=='deletefile') {
 				button.parents('.file').first().remove();
 				if (parentList.length>0 && parentList.attr('data-pouch-autosave')=='true') {
@@ -731,15 +732,15 @@ $.fn.pouchUI = function(options) {
 				}
 			} else if (cmd=='new' && target && targetList.length>0) {
 				function showList(list) {
-					console.log('showlist',list);
+					//console.log('showlist',list);
 					var listTmpl=$($(list).data('listTemplate'));
-					console.log('tmpl',listTmpl);
+					//console.log('tmpl',listTmpl);
 					$(list).html(listTmpl.html());
-					console.log('injected');
+					//console.log('injected');
 					$(list).show();
-					console.log('show');
+					//console.log('show');
 					$('input,textarea,select',list).first().focus();
-					console.log('focus');
+					//console.log('focus');
 				}
 				if (targetList.hasClass('pouch-list')) {
 					showList(targetList);
@@ -748,7 +749,7 @@ $.fn.pouchUI = function(options) {
 						showList(this);
 					});
 				}
-				console.log('aa',$('.pouch-list',targetList),$('input',targetList));
+				//console.log('aa',$('.pouch-list',targetList),$('input',targetList));
 				
 			}
 		} else {
@@ -798,9 +799,9 @@ $.fn.pouchUI = function(options) {
 			// REPLACE DOM ELEMENT HTML WITH FIELD VALUE
 			// special case for attachments
 			if ($(value).data('pouchField')=='_attachments') {
-				console.log('render attach',resvalue);
+				//console.log('render attach',resvalue);
 				if (resvalue.doc['_attachments'])  {
-					console.log('have attach for this record');
+					//console.log('have attach for this record');
 					var folder=$(value).data('pouchFolder');
 					var attList=$('<div class="attachments" />');
 					var attachmentsToSort=[];
@@ -812,29 +813,36 @@ $.fn.pouchUI = function(options) {
 					$.each(attachmentsToSort,function(rvka,rvva) {
 						var rvk=rvva.key;
 						var rvv=rvva.content;
-						console.log('render attach no ',rvk,rvv);
+						//console.log('render attach no ',rvk,rvv);
 						if (rvv.data) { 
-							console.log('render attach has content');
+							//console.log('render attach has content');
 							var attTmpl=$($(value)[0].outerHTML);
-							console.log('att tmpl',attTmpl)
+							//console.log('att tmpl',attTmpl)
 							var imgTmpl=$('img',attTmpl);
 							var aTmpl=$('a',attTmpl);
 							var renderableImage=false;
 							if (rvv.content_type && (rvv.content_type=='image/jpeg' || rvv.content_type=='image/jpg' || rvv.content_type=='image/gif' || rvv.content_type=='image/png' || rvv.content_type=='image/svg+xml' || rvv.content_type=='image/bmp')) renderableImage=true;
-							console.log('HAS IMAGE ??',rvv.content_type,renderableImage);
+							//console.log('HAS IMAGE ??',rvv.content_type,renderableImage);
 							if (renderableImage && imgTmpl.length>0) imgTmpl.attr('src',rvv.data);
 							else imgTmpl.remove();
 							if (aTmpl) {
 								aTmpl.attr('href',rvv.data); 
-								aTmpl.append(rvv.name)
+								if (renderableImage && imgTmpl.length>0) {
+									imgTmpl.attr('alt',rvv.name);
+									imgTmpl.attr('title',rvv.name);
+								} else {
+									aTmpl.append(rvv.name);
+								}
 							}
-							attList.append(attTmpl.html());
+							attTmplRes='<div class="file">'+attTmpl.html()+'</div>';
+							attList.append(attTmplRes);
 						} else {
-							console.log('render attach has no content');
+							//console.log('render attach has no content');
 							attList.append('<div class="file">'+rvk+'</div>');
 						}
 					});
-					$(value).html(attList[0].outerHTML);
+					console.log('RENATTC',attList)
+					$(value).html(attList.html());
 				} else {
 					$(value).html('');
 				}
@@ -844,11 +852,13 @@ $.fn.pouchUI = function(options) {
 		// REPLACE INPUT VALUES
 		$.each($('.pouch-list-input:not(.pouch-list .pouch-list .pouch-list-input)',itemTmpl),function(key,value) {
 			$.each($('input,textarea,select',value).first(),function(ik,formInput) {
-				console.log('HAVE input');
+				//console.log('HAVE input');
 				// REPLACE DOM ELEMENT HTML input WITH FIELD VALUE
 				// FILE
 				if ($(formInput).attr('type')=='file') {
-					console.log('filetypeinput');
+					var attachmentsAfter=$(formInput);
+					if ($(formInput).siblings('input[type="file"]').length>0) attachmentsAfter=$(formInput).siblings('input[type="file"]').last();
+					//console.log('filetypeinput');
 					var attachmentsDOM;
 					// ALLOW FOR VALUE UPDATE
 					if ($(formInput).siblings('.attachments').length>0) {
@@ -857,7 +867,7 @@ $.fn.pouchUI = function(options) {
 					// OTHERWISE CREATE DOM FOR ATTACHMENT LIST
 					} else {
 						attachmentsDOM=$('<div class="attachments"></div>');
-						$(formInput).after(attachmentsDOM);
+						$(attachmentsAfter).after(attachmentsDOM);
 					}
 					// FILTER BY FOLDER ?  using data-pouch-folder attr - from pouch-list-input tag override by input type=file tag
 					var folder='';
@@ -1100,7 +1110,7 @@ $.fn.pouchUI = function(options) {
 		//console.log('liste limit', $(list).data('pouchLimit'),$('.pouch-limit',list));
 		//console.log('liste limit', $(list).data('pouchLimit'),$('.pouch-limit',list));
 		$(list).html(listTmpl.html());
-		console.log('liste rendered',list) ;//,listTmpl.html());
+		//console.log('liste rendered',list) ;//,listTmpl.html());
 		// update paginate buttons
 		var skip=$(list).data('pouchSkip');
 		if (skip===undefined || skip===NaN) skip=0;
@@ -1134,7 +1144,7 @@ $.fn.pouchUI = function(options) {
 		// set limit DOM value in list
 		$('.pouch-limit',list).val(limit)
 		$(list).show();
-		//console.log('rendered list',res,$(list).data(),$(list)[0].outerHTML);
+		console.log('rendered list',res,$(list).data(),$(list)[0].outerHTML);
 		dfr.resolve(list);
 		return dfr;
 	}
@@ -1168,7 +1178,7 @@ $.fn.pouchUI = function(options) {
 		if (skip>0) d.skip=parseInt(skip);
 		// convert to boolean  DOESN'T WORK BUG - https://github.com/pouchdb/pouchdb/issues/2771
 		// if (d.pouchAttachments=='true') d.attachments=true;
-		console.log('now query local and rerender',d);
+		////console.log('now query local and rerender',d);
 		// NOW LOAD RESULTS
 		var pouch=getDB(d.pouchDb);
 		if (d.pouchIndex) {
@@ -1208,20 +1218,20 @@ $.fn.pouchUI = function(options) {
 		
 	function loadAttachments(pouch,res) {
 		var whenAttachmentsLoaded=$.Deferred();
-		console.log('config load attachments');
+		//console.log('config load attachments');
 		$.each(res.rows,function(rk,rv) {
-			console.log('look for attach in res ',rk,rv);
+			//console.log('look for attach in res ',rk,rv);
 			if (rv.doc && rv.doc._attachments) {
 				var promises=[];
 				$.each(rv.doc._attachments,function(rak,rav) {
-					console.log('res has attachments');
+					//console.log('res has attachments');
 					var dfr2=$.Deferred();
 					pouch.getAttachment(rv.doc._id,rak).then(function(ires) {
-						console.log('config loaded attachments',ires);
+						//console.log('config loaded attachments',ires);
 						 var reader = new window.FileReader();
 						 reader.onloadend = function() {
 							base64data = reader.result;                
-							console.log('read ATTACHMENT',ires,base64data );
+							//console.log('read ATTACHMENT',ires,base64data );
 							rav.data=base64data;
 							dfr2.resolve(rav);
 						 };
@@ -1238,10 +1248,12 @@ $.fn.pouchUI = function(options) {
 						loadedAttachments[rak]=loaded[i];
 						i++;
 					});
-					console.log('new attachments array',loadedAttachments);
+					//console.log('new attachments array',loadedAttachments);
 					rv.doc._attachments=loadedAttachments;
 					whenAttachmentsLoaded.resolve(res);
 				});
+			} else {
+				whenAttachmentsLoaded.resolve(res);
 			}
 		});
 		return whenAttachmentsLoaded;
@@ -1299,20 +1311,21 @@ $.fn.pouchUI = function(options) {
 			});
 			// UPDATE
 			var changes = pouch.changes({ live: true,include_docs:true,since:'now'}).on('update', function(change) { 
-				//console.log('changes','.pouch-list-item[data-pouch-id="'+change.doc._id+'"]',$('.pouch-list-item[data-pouch-id="'+change.doc._id+'"]'));
+				console.log('changes UPDATE','.pouch-list-item[data-pouch-id="'+change.doc._id+'"]',$('.pouch-list-item[data-pouch-id="'+change.doc._id+'"]'));
 				$.each(dv,function (lk,currentList) {
 					$('.pouch-list-item[data-pouch-id="'+change.doc._id+'"]',currentList).each(function(m,mm) {
-						//console.log('DO update item',m,mm,this);
-						var send={rows:[change]}
+						console.log('DO update item',m,mm);
+						var send={rows:[{doc:change.doc}]};
 						loadAttachments(pouch,send).then(function(res) {
-							substituteRecordValues(this,res.rows[0]);
+							console.log('loaded with att',res);
+							substituteRecordValues(mm,res.rows[0]);
 						});
 					});
 				});
 			});
 			// DELETE
 			var changes = pouch.changes({ live: true,include_docs:true,since:'now'}).on('delete', function(change) { 
-				//console.log('changes','.pouch-list-item[data-pouch-id="'+change.doc._id+'"]',$('.pouch-list-item[data-pouch-id="'+change.doc._id+'"]'));
+				console.log('changes DEL','.pouch-list-item[data-pouch-id="'+change.doc._id+'"]',$('.pouch-list-item[data-pouch-id="'+change.doc._id+'"]'));
 				$.each(dv,function (lk,currentList) {
 					$('.pouch-list-item[data-pouch-id="'+change.doc._id+'"]',currentList).each(function(m,mm) {
 						//console.log('DO delete item',m,mm,this);

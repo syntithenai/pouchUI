@@ -57,6 +57,7 @@ TODO
 recursive list rendering/activation
 file upload support
 jquery mobile integration
+couchapp
 authentication
 click to edit
 samples 
@@ -68,6 +69,8 @@ form types - password, dep select
 
 
 pagination optimisation based on startkey endkey
+file upload - don't put unsaved attachments in DOM. Put them in the database in a temporary record and provide links. 
+	- Only images need to be loaded into DOM when they are displayed as images.
 full text search https://github.com/nolanlawson/pouchdb-quick-search
 
 

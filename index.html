@@ -106,7 +106,7 @@ designDoc.testdb2 =  {
 			<div class='pouch-list-input' data-pouch-field='_id' ><input type='text' value='' /></div>	
 			Name: <div class='pouch-list-input' data-pouch-field='name' ><textarea ></textarea></div>
 			Age: <div class='pouch-list-input' data-pouch-field='age' ><input type='text'  /></div>	
-			Files: <div class='pouch-list-input' ><input type='file' data-pouch-folder='aaa/' /></div>	
+			<div class='pouch-list-input' >Select Folder<input type='file' data-pouch-folder='aaa/' webkitdirectory='webkitdirectory' />Select Files<input type='file' data-pouch-folder='aaa/' /></div>	
 			<div class='buttonset' >
 				<a class='ui-button' href='#listtemplate' data-pouch-action='close' />Close</a>
 				<a class='ui-button' href='#listtemplate' data-pouch-action='save' />Save</a>
@@ -139,15 +139,8 @@ designDoc.testdb2 =  {
 	<li class='pouch-list-item' >
 		<div class='pouch-list-value' data-pouch-field='name' >eg xanthum</div>
 		Age: <div class='pouch-list-value' data-pouch-field='age' >eg 33</div>
-		Files: <div class='pouch-list-value' data-pouch-field='_attachments' data-pouch-list-folder='' ><div><a target='_new' ><img width='100' /></a></div></div>
-		<div class='pouch-list' data-pouch-db='testdb2' data-pouch-index='people/petsbyowner' data-pouch-field='_id' >list of all pets
-			<div class='pouch-list-item' >
-				<div class='pouch-list-value' data-pouch-field='name' >eg Joe</div>
-				<div class='pouch-list' data-pouch-db='testdb2' data-pouch-index='people/foods' data-pouch-field='eats'  >
-					<div class='pouch-list-item' ><div class='pouch-list-value' data-pouch-field='name' ></div></div>
-				</div>
-			</div>
-		</div>
+		Files: <div class='pouch-list-value' data-pouch-field='_attachments' data-pouch-list-folder='' ><a target='_new' ><img width='100' /></a></div>
+		
 		<div class='buttonset' >
 		<a class='ui-button' dhref='#listtemplate' data-pouch-action='delete' >Delete</a>
 		<a class='ui-button' href='#edittemplate' data-pouch-action='edit' />Edit</a>
@@ -189,7 +182,18 @@ extra list
 				<div class='pouch-list-collation-value'  data-pouch-field='age' >eg 4</div>
 				<div class='pouch-list-collation-value' data-pouch-field='species' >eg cat</div>
 			</div>
-		</div-->
+		</div-
+		
+		<div class='pouch-list' data-pouch-db='testdb2' data-pouch-index='people/petsbyowner' data-pouch-field='_id' >list of all pets
+			<div class='pouch-list-item' >
+				<div class='pouch-list-value' data-pouch-field='name' >eg Joe</div>
+				<div class='pouch-list' data-pouch-db='testdb2' data-pouch-index='people/foods' data-pouch-field='eats'  >
+					<div class='pouch-list-item' ><div class='pouch-list-value' data-pouch-field='name' ></div></div>
+				</div>
+			</div>
+		</div>
+		
+		-->
 
 <script>
 
