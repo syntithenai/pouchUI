@@ -596,20 +596,27 @@ $.fn.pouchUI = function(options) {
 						if ($(riv).attr('type')=='file')  {
 							var saveAttachments={};
 							$.each($(riv).siblings('.attachments').find('.file'),function(ak,av) {
-								var content=$('a',av).attr('href');
 								var docId=$(av).data('docid');
 								var saveAttachment;
 								if ($(av).hasClass('pending')) {
-									saveAttachment={content_type:"text\/plain",data:'VGhpcyBpcyBhIGJhc2U2NCBlbmNvZGVkIHRleHQ='}; //$(av).data('mime')
-									changed=true;
-									$(av).removeClass('pending');
-									console.log('have changed files');
+									var mime=$(av).data('mime');
+									var prefix="data:"+mime+";base64,"
+									var content=$('a',av).attr('href');
+									if (content && content.length>0) {
+										var icontent=content.substr(prefix.length);
+										console.log('ATT CONTENT',icontent);
+										saveAttachment={content_type:mime,data:icontent}; //
+										changed=true;
+										$(av).removeClass('pending');
+										console.log('have changed files');
+									}
 								} else {
 									console.log('ADS',res['_attachments'][docId]);
 									saveAttachment=res['_attachments'][docId]; //{content_type:"text\/plain",stub:true};  //$(av).data('mime')
 								}
 								initialAttachments[docId]=true;
 								saveAttachments[docId]=saveAttachment;
+							
 							});	
 							console.log('ATT',res._attachments,saveAttachments);
 							res['_attachments']= saveAttachments; //{'set1.txt':{"content_type":"text\/plain","data": "VGhpcyBpcyBhIGJhc2U2NCBlbmNvZGVkIHRleHQ="},'set2.txt':{"content_type":"text\/plain","data": "VGhpcyBpcyBhIGJhc2U2NCBlbmNvZGVkIHRleHQ="}};
@@ -798,6 +805,7 @@ $.fn.pouchUI = function(options) {
 					var attList=$('<div class="attachments" />');
 					var attachmentsToSort=[];
 					$.each(resvalue.doc['_attachments'],function(rvk,rvv) {
+						rvv.name=rvk;
 						attachmentsToSort.push({key:rvk,content:rvv});
 					});
 					attachmentsToSort.sort(function(a,b) {if (a.key.toLowerCase()<b.key.toLowerCase()) return -1; else return 1;});
@@ -805,16 +813,22 @@ $.fn.pouchUI = function(options) {
 						var rvk=rvva.key;
 						var rvv=rvva.content;
 						console.log('render attach no ',rvk,rvv);
-						if (rvv.content) { 
+						if (rvv.data) { 
 							console.log('render attach has content');
 							var attTmpl=$($(value)[0].outerHTML);
+							console.log('att tmpl',attTmpl)
 							var imgTmpl=$('img',attTmpl);
 							var aTmpl=$('a',attTmpl);
 							var renderableImage=false;
 							if (rvv.content_type && (rvv.content_type=='image/jpeg' || rvv.content_type=='image/jpg' || rvv.content_type=='image/gif' || rvv.content_type=='image/png' || rvv.content_type=='image/svg+xml' || rvv.content_type=='image/bmp')) renderableImage=true;
-							if (renderableImage && imgTmpl.length>0) imgTmpl.attr('src',rvv.content);
-							if (aTmpl) aTmpl.attr('href',rvv.content); 
-							attList.append(attTmpl);
+							console.log('HAS IMAGE ??',rvv.content_type,renderableImage);
+							if (renderableImage && imgTmpl.length>0) imgTmpl.attr('src',rvv.data);
+							else imgTmpl.remove();
+							if (aTmpl) {
+								aTmpl.attr('href',rvv.data); 
+								aTmpl.append(rvv.name)
+							}
+							attList.append(attTmpl.html());
 						} else {
 							console.log('render attach has no content');
 							attList.append('<div class="file">'+rvk+'</div>');
@@ -1161,16 +1175,24 @@ $.fn.pouchUI = function(options) {
 			//console.log('now queryindex',d.pouchIndex);
 			pouch.query(d.pouchIndex,d).then(function(res) {
 				// HACK AROUND BUG - https://github.com/pouchdb/pouchdb/issues/2771
+				var whenAttachmentsLoaded=$.Deferred();
 				if (d.pouchAttachments) {
-					$.each(res,function(rk,rv) {
-						if (rv.doc && rv.doc._attachments) $.each(rv.doc._attachments,function(rak,rav) {
-							//pouch.
-						});
+					// here
+					loadAttachments(pouch,res).then(function(atres) {
+						whenAttachmentsLoaded.resolve(atres);
 					});
+				} else {
+					whenAttachmentsLoaded.resolve(res);
 				}
 				//console.log('RESULTS done');
-				console.log('RESULTS query',res);	
-				dfr.resolve(res);
+				/*$.when.apply(promises).then(function(resultsWithAttachments) {
+					console.log('RESULTS query',resultsWithAttachments);	
+					dfr.resolve(resultsWithAttachments);
+				});*/
+				$.when(whenAttachmentsLoaded).then(function(lres) {
+					console.log('RESULTS query',lres);
+					dfr.resolve(lres);
+				});
 			}).catch(function(err) {
 				console.log('Query index err',err);
 			});
@@ -1183,6 +1205,47 @@ $.fn.pouchUI = function(options) {
 		}
 		return dfr;
 	}
+		
+	function loadAttachments(pouch,res) {
+		var whenAttachmentsLoaded=$.Deferred();
+		console.log('config load attachments');
+		$.each(res.rows,function(rk,rv) {
+			console.log('look for attach in res ',rk,rv);
+			if (rv.doc && rv.doc._attachments) {
+				var promises=[];
+				$.each(rv.doc._attachments,function(rak,rav) {
+					console.log('res has attachments');
+					var dfr2=$.Deferred();
+					pouch.getAttachment(rv.doc._id,rak).then(function(ires) {
+						console.log('config loaded attachments',ires);
+						 var reader = new window.FileReader();
+						 reader.onloadend = function() {
+							base64data = reader.result;                
+							console.log('read ATTACHMENT',ires,base64data );
+							rav.data=base64data;
+							dfr2.resolve(rav);
+						 };
+						 reader.readAsDataURL(ires); 
+					}); 
+					promises.push(dfr2);
+				});
+				$.when.apply($,promises).then(function(resultsWithAttachments) {
+					//console.log('RESULTS with attach',arguments,this,resultsWithAttachments);	
+					var loaded=arguments;
+					var i=0;
+					var loadedAttachments={};
+					$.each(rv.doc._attachments,function(rak,rav) {
+						loadedAttachments[rak]=loaded[i];
+						i++;
+					});
+					console.log('new attachments array',loadedAttachments);
+					rv.doc._attachments=loadedAttachments;
+					whenAttachmentsLoaded.resolve(res);
+				});
+			}
+		});
+		return whenAttachmentsLoaded;
+	}	
 		
 	// START PLUGIN
 	var pluginElements=this;
@@ -1240,7 +1303,10 @@ $.fn.pouchUI = function(options) {
 				$.each(dv,function (lk,currentList) {
 					$('.pouch-list-item[data-pouch-id="'+change.doc._id+'"]',currentList).each(function(m,mm) {
 						//console.log('DO update item',m,mm,this);
-						substituteRecordValues(this,change);
+						var send={rows:[change]}
+						loadAttachments(pouch,send).then(function(res) {
+							substituteRecordValues(this,res.rows[0]);
+						});
 					});
 				});
 			});
