@@ -1,0 +1,196 @@
+<script src='../jquery-ui/js/jquery-1.10.2.js' ></script>
+<script src='../jquery-ui/js/jquery-ui-1.10.4.custom.min.js' ></script>
+<!--script src='pouchdb-3.0.6.min.js' ></script-->
+<script src='pouchdb.js' ></script>
+<script src='pouchdb-validation.min.js' ></script>
+<script src='jquery.pouchUI.js' ></script>
+
+<!-- POUCH ENHANCED MARKUP ->
+<!-- 
+Where a list has data-pouch-db
+-->
+<style>
+.ui-button {
+	border: 1px solid black;
+	background-color:pink;
+	padding: 0.2em;
+	margin-right: 0.5em;
+	margin-top: 20px;
+	text-decoration:none;
+}
+.pagination {
+	margin-top: 0.3em;
+}
+.ui-button.disabled {
+	background-color:grey;
+}
+.validationerror {
+	color: red;
+}
+.attachments, .buttonset {
+	margin-top: 0.7em;
+}
+</style>
+<script>
+$(document).ready(function() {
+PouchDB.plugin(Validation);
+var designDoc = {};
+var validateMe=function(newDoc, oldDoc, userCtx, secObj) {
+	if (!newDoc.type || newDoc.type.length <=0)  {
+		throw {"forbidden": "Type must have a value"};
+	}
+	if (!newDoc.name || newDoc.name.length <=0)  {
+		throw {"forbidden": "Name must have a value"};
+	}
+
+}
+designDoc.testdb2 =  {
+		  _id: '_design/people',
+		  validate_doc_update : validateMe.toString(),
+		  views: {
+			'all': {
+			  map: function(doc) {
+				emit(doc._id);
+			  }.toString()
+			},
+			'byowner': {
+			  map: function(doc) {
+				// view collation - multiple rows emitted for single 'person' record
+				if (doc.type=='pet' && doc.owner) emit([doc.owner,'a_pet']);
+				else if (doc.type=='person') emit([doc._id,'b_person']);
+			  }.toString()
+			},
+			'byage': {
+			  map: function(doc) {
+				emit(doc.age);
+			  }.toString()
+			},
+			'byname' : {
+				map: function(doc) {
+					emit(doc.name);
+				}.toString()
+			},
+			'petsbyowner' : {
+				map: function(doc) {
+					if (doc.type=='pet' && doc.owner) emit(doc.owner);
+				}.toString()
+			},
+			'pets' : {
+				map: function(doc) {
+					if (doc.type=='pet' && doc.owner) emit(doc._id);
+				}.toString()
+			},
+			'persons' : {
+				map: function(doc) {
+					if (doc.type=='person') emit(doc._id);
+				}.toString()
+			},
+			'foods' : {
+				map: function(doc) {
+					if (doc.type=='food') emit(doc._id);
+				}.toString()
+			},
+		  }
+		};
+	
+	console.log('PLUGINRET',$('#listtemplate ,#edittemplate').pouchUI({dbOptions:{testdb2:{adapter:'idb'}},design:designDoc}));
+	
+});
+</script>
+
+<div id='edittemplate' style='float:right' >
+
+	<div style='display:none;' class='pouch-list' ddata-pouch-autosave='true' data-pouch-db='testdb2' data-pouch-index='people/all' data-key='-1' >
+		<div class='pouch-list-item' >
+			<h1>edit template</h1>
+			<div class='pouch-list-input' data-pouch-field='_id' ><input type='text' value='' /></div>	
+			Name: <div class='pouch-list-input' data-pouch-field='name' ><textarea ></textarea></div>
+			Age: <div class='pouch-list-input' data-pouch-field='age' ><input type='text'  /></div>	
+			Files: <div class='pouch-list-input' ><input type='file' data-pouch-folder='aaa/' /></div>	
+			<div class='buttonset' >
+				<a class='ui-button' href='#listtemplate' data-pouch-action='close' />Close</a>
+				<a class='ui-button' href='#listtemplate' data-pouch-action='save' />Save</a>
+				<a class='ui-button' href='#listtemplate' data-pouch-action='delete' >Delete</a>
+			</div>
+		</div>
+	</div> 
+</div> 
+
+
+
+
+
+
+<div id='listtemplate'>
+<div data-search-target='#listtemplate' class='pouch-search' >
+<input type='text' >
+<!--input type='text'  >
+<select><option>aaa</option><option>bbbb</option></select-->
+<a class='ui-button' data-pouch-action='search' >Search</a>
+<a class='ui-button' data-pouch-action='new'  href='#edittemplate' >New Record</a>
+</div>
+
+<div style='display:none;' class='pouch-list'  data-pouch-attachments='true' data-pouch-db='testdb2' data-pouch-index='people/persons'  ddata-pouch-sheetsource='https://spreadsheets.google.com/feeds/list/0AgNF3G4HQWMTdEJPTFFSV2VXTkM1WUowSmJBMnRGLVE/od7/public/basic'  data-pouch-dbsource='http://stever:wtfaid72@localhost:5984/people'>
+<!-- sdata-pouch-dbsource='http://stever:wtfaid72@localhost:5984/people' ddata-pouch-dbsource='http://stever:wtfaid72@localhost:5984/people' ddata-pouch-startkey='ddd'  ddata-pouch-endkey='gggg' -->
+<h1 style='display:inline' >Owners</h1> 
+
+<div class='pagination' ><span class='ui-button' data-pouch-action='paginate-first' >First</span><span class='ui-button' data-pouch-action='paginate-previous' >Previous</span><span class='ui-button' data-pouch-action='paginate-next' >Next</span><span class='ui-button' data-pouch-action='paginate-last' >Last</span>Limit<select class='pouch-limit' ><option>5</option><option>10</option><option>20</option><option>50</option></select></div>
+<ul>
+	<li class='pouch-list-item' >
+		<div class='pouch-list-value' data-pouch-field='name' >eg xanthum</div>
+		Age: <div class='pouch-list-value' data-pouch-field='age' >eg 33</div>
+		Files: <div class='pouch-list-value' data-pouch-field='_attachments' data-pouch-list-folder='' ><img width='100' /><a></a></div>
+		<div class='pouch-list' data-pouch-db='testdb2' data-pouch-index='people/petsbyowner' data-pouch-field='_id' >list of all pets
+			<div class='pouch-list-item' >
+				<div class='pouch-list-value' data-pouch-field='name' >eg Joe</div>
+				<div class='pouch-list' data-pouch-db='testdb2' data-pouch-index='people/foods' data-pouch-field='eats'  >
+					<div class='pouch-list-item' ><div class='pouch-list-value' data-pouch-field='name' ></div></div>
+				</div>
+			</div>
+		</div>
+		<div class='buttonset' >
+		<a class='ui-button' dhref='#listtemplate' data-pouch-action='delete' >Delete</a>
+		<a class='ui-button' href='#edittemplate' data-pouch-action='edit' />Edit</a>
+		<a class='ui-button' href='#listtemplate'  data-pouch-action='save' />Save</a>
+		</div>
+		<HR>
+		
+	</li>
+	<li class='pouch-list-noresults' >No matching Results</li>
+</ul>
+<div class='pagination'><span class='ui-button' data-pouch-action='paginate-first' >First</span><span class='ui-button' data-pouch-action='paginate-previous' >Previous</span><span class='ui-button' data-pouch-action='paginate-next' >Next</span><span class='ui-button' data-pouch-action='paginate-last' >Last</span></div>
+
+</div>
+</div>
+<hr/>
+<!--div class='pouch-list' data-pouch-db='testdb2' ddata-pouch-sheetsource='joe' >
+extra list
+<ul class='pouch-list-item' >
+	<li class='pouch-list-value' data-pouch-field='name'  >stuff here</li>
+</ul>
+</div>
+<ul sclass='pouch-list' sdata-pouch-dbsource='http://stever:wtfaid72@localhost:5984/people' data-pouch-dbsource='http://stever:wtfaid72@localhost:5984/people'  data-pouch-db='testdb2' data-pouch-index='people/persons' ddata-pouch-startkey='ddd'  ddata-pouch-endkey='gggg' >
+<li><h1>People</h1></li>
+	<li class='pouch-list-item' >
+		<div class='label'>Namw</div>
+		<div class='pouch-list-value' data-pouch-field='name' >eg Joe</div>
+		<div class='label'>Postcode</div>
+		<div class='pouch-list-value' data-pouch-field='postcode' >eg 3454</div>
+		<div class='label'>Age</div>
+		<div class='pouch-list-value' data-pouch-field='age' >eg 2</div>
+		<button data-pouch-action='delete' >Delete</button><button data-pouch-action='edit' />Edit</button>
+	</li>
+</ul-->
+	
+		<!--div class='pouch-list-collation' data-pouch-collationkey='a_pet' >
+			Pets: 
+			<div class='pouch-list-collation-item'>
+				<div class='pouch-list-collation-value'  data-pouch-field='name' >eg lima</div>
+				<div class='pouch-list-collation-value'  data-pouch-field='age' >eg 4</div>
+				<div class='pouch-list-collation-value' data-pouch-field='species' >eg cat</div>
+			</div>
+		</div-->
+
+<script>
+
+</script>

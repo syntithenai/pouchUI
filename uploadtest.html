@@ -1,0 +1,103 @@
+<script src='../jquery-ui/js/jquery-1.10.2.js' ></script>
+<script src='mimeconverter.js' ></script>
+<form>
+Single <input type='file'  name='Select File' ><br>
+Multiple <input type='file' multiple='multiple' value='Select Files' ><br>
+Folder <input type='file' webkitdirectory='webkitdirectory' value='Select Folder' ><br>
+<div id="dropfiles" style='border: 1px dashed black' >DROP FILES HERE<br/><br/><br/><br/></div>
+</form>
+
+
+<script>
+// INIT
+$(document).ready(function() {
+	if (!supportMultiple()) {
+		$('input[multiple]').remove();
+	}
+	if (!supportWebkitdirectory()) {
+		$('input[webkitdirectory]').remove();
+	}
+	
+	$('form input[type="file"]').bind("change",handleFiles);
+	$('#dropfiles')
+	.bind('dragenter', ignoreDrag)
+	.bind('dragover', ignoreDrag)
+	.bind('drop', drop);
+	$('dbody')
+	.bind('dragenter', ignoreDrag)
+	.bind('dragover', ignoreDrag)
+	.bind('drop', ignoreDrag);
+});
+
+// FEATURE TESTING
+function supportMultiple() {
+	var el = document.createElement("input");
+	return ("multiple" in el);
+}
+function supportWebkitdirectory() {
+	var el = document.createElement("input");
+	return ("webkitdirectory" in el);
+}
+
+// BIND TO FILE UPLOAD
+function ignoreDrag(e) {
+  e.originalEvent.stopPropagation();
+  e.originalEvent.preventDefault();
+}
+function drop(e) {
+	ignoreDrag(e);
+	handleFiles(e.originalEvent);
+}
+function handleFiles(e) {
+	// DND
+	if (e && e.dataTransfer && e.dataTransfer.files) {
+		entries = e.dataTransfer.files;
+	// FILESELECTION
+	} else if (e && e.target && e.target.files) {
+		entries = e.target.files;
+	}
+	// else if (a.input && a.input.files) {
+	//	entries = a.input.files;
+	//}
+	console.log('Entries',entries); 
+	$.each(entries,function(key,file) {
+		var parts;
+		if (file.webkitRelativePath) parts=file.webkitRelativePath.split("/");
+		else parts=[];
+		if (parts[parts.length-1] !='.' ) {
+			var path=parts.slice(0,parts.length-1).join("/");
+			var reader = new FileReader();
+			// Closure to capture the file information.
+			reader.onload = (function(fileRef) {
+			//console.log('LOADEDA ',reader.result);
+			return function(e) {
+				//console.log('LOADED',e,fileRef);
+				//console.log('file content',content);
+				var b=new Blob([e.target.result],{type : MimeConverter.lookupMime(fileRef.name)});
+			
+				//var base64=Base64.encode(content);
+				var newFile={
+					name: fileRef.name,
+					size : fileRef.size,
+					locked : 0,mime : MimeConverter.lookupMime(fileRef.name) ,type : 'file',read : 1,write:1,ts:Date.now(),
+				};
+				var reader = new FileReader();
+				reader.onload = function(e) {
+				  var dataURL = reader.result;
+				  console.log(newFile,dataURL);
+				}
+				reader.readAsDataURL(b);
+				
+			};
+			})(file);
+
+			// Read in the image file as a data URL for sending inline
+			reader.readAsArrayBuffer(file);
+		}
+	});
+};
+
+
+
+
+</script>

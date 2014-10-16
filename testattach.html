@@ -1,0 +1,55 @@
+<script src='../jquery-ui/js/jquery-1.10.2.js' ></script>
+<script src='../jquery-ui/js/jquery-ui-1.10.4.custom.min.js' ></script>
+<script src='pouchdb-3.0.6.min.js' ></script>
+<script src='pouchdb-validation.min.js' ></script>
+<script src='jquery.pouchUI.js' ></script>
+<script>
+$(document).ready(function() {
+	var doc={
+		_id:'god2',
+		name:'god',
+		age:'33',
+		_attachments: {
+			'set.txt':{
+				"content_type":"text\/plain",
+				"data": "VGhpcyBpcyBhIGJhc2U2NCBlbmNvZGVkIHRleHQ="
+			},
+			'aaa/aset.txt':{
+				"content_type":"text\/plain",
+				"data": "VGhpcyBpcyBhIGJhc2U2NCBlbmNvZGVkIHRleHQ="
+			},
+			'aaa/ccc/aset.txt':{
+				"content_type":"text\/plain",
+				"data": "VGhpcyBpcyBhIGJhc2U2NCBlbmNvZGVkIHRleHQ="
+			},
+			'bbb/aset.txt':{
+				"content_type":"text\/plain",
+				"data": "VGhpcyBpcyBhIGJhc2U2NCBlbmNvZGVkIHRleHQ="
+			}
+		}
+	}
+
+	var p=new PouchDB('af',{adapter:'idb'});
+	var server='http://stever:wtfaid72@localhost:5984/people';
+	p.post(doc).catch(function(err) {
+		console.log('POST ERR',err);
+	}).then(function(res) {
+		console.log('POST',res);
+		p.get(doc._id,{}).catch(function(err) {
+			console.log('get ERR',err);
+		}).then(function(res) {
+			console.log('GET',res);
+			p.sync(server,{live:true})
+			.on('change', function (info) {
+				console.log('sync change',info)
+				//updateList(list,options);
+			})
+			.on('complete', function (info) {
+				console.log('sync complete',info);
+					//updateList(list,options);
+			}); 
+		});
+	});
+
+});
+</script>

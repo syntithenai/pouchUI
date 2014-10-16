@@ -1,0 +1,43 @@
+<script src='../jquery-ui/js/jquery-1.10.2.js' ></script>
+
+
+<div class='a' >c</div>
+<div class='cont' >
+ <div class='a' >a
+	 <div class='b' data-aa='sss'>b</div>
+	 <div class='b' data-aa='ssddds'>b
+		<div class='a' >c</div>
+	</div>
+		
+	<div class='b' >b
+		<div class='a' >c</div>
+		<div class='p' data-aa='ssddds'>c</div>
+		<div class='q' data-aa='aaa'>c<input type='text'></div>
+		<div class='r' data-aa='bbb'>cab</div>
+		<div class='s' data-aa='ccc'>b</div>
+		<div class='t' data-aa='ddd'>b</div>
+	</div>
+</div>
+</div>
+<style>
+div {
+	margin-left: 1em;
+}
+</style>
+	
+	<script>
+	$(document).ready(function() {
+		console.log($('.a input'));
+		var timer;
+		$('.a').bind('keyup',function(e) {
+			 if (timer) {
+				window.clearTimeout(timer);
+			}
+			timer = window.setTimeout( function() {
+				timer = null;
+				console.log('keyup',e.originalEvent.target,$(e.originalEvent.target).val());
+			}, 500 );
+			
+		})
+	})
+	</script>
