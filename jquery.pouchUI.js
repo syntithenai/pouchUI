@@ -1164,7 +1164,7 @@ $.fn.pouchUI = function(options) {
 				if (d.pouchAttachments) {
 					$.each(res,function(rk,rv) {
 						if (rv.doc && rv.doc._attachments) $.each(rv.doc._attachments,function(rak,rav) {
-						
+							//pouch.
 						});
 					});
 				}
