@@ -103,10 +103,11 @@ designDoc.testdb2 =  {
 	<div style='display:none;' class='pouch-list' ddata-pouch-autosave='true' data-pouch-db='testdb2' data-pouch-index='people/all' data-key='-1' >
 		<div class='pouch-list-item' >
 			<h1>edit template</h1>
+			<div class='pouch-list-input' style='display:none'  data-pouch-field='type' ><input type='hidden' value='person' /></div>	
 			<div class='pouch-list-input' data-pouch-field='_id' ><input type='text' value='' /></div>	
 			Name: <div class='pouch-list-input' data-pouch-field='name' ><textarea ></textarea></div>
 			Age: <div class='pouch-list-input' data-pouch-field='age' ><input type='text'  /></div>	
-			<div class='pouch-list-input' >Select Folder<input type='file' data-pouch-folder='aaa/' webkitdirectory='webkitdirectory' />Select Files<input type='file' data-pouch-folder='aaa/' /></div>	
+			<div class='pouch-list-input' >Select Folder<input type='file' data-pouch-folder='aaa/' webkitdirectory='webkitdirectory' />Select Files<input type='file' multiple="multiple" data-pouch-folder='aaa/' /></div>	
 			<div class='buttonset' >
 				<a class='ui-button' href='#listtemplate' data-pouch-action='close' />Close</a>
 				<a class='ui-button' href='#listtemplate' data-pouch-action='save' />Save</a>

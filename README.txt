@@ -53,6 +53,13 @@ search
 validation
 pagination
 
+BUGS
+- add/del images then save -> multiplication of images on rendering
+- slow rendering of images - make image loading async
+
+
+
+
 TODO
 recursive list rendering/activation
 file upload support

@@ -374,11 +374,17 @@ $.fn.pouchUI = function(options) {
 	
 	function actionFileSelected(e) {
 		var attachmentsDOM=$(e.target).siblings('.attachments');
+		if (attachmentsDOM.length==0) {
+			var lastInput=$(e.target);
+			if (lastInput.siblings('input[type="file"]').length>0) lastInput=lastInput.siblings('input[type="file"]').last();
+			attachmentsDOM=$('<div class="attachments"></div>');
+			lastInput.after(attachmentsDOM);
+		}
 		var folder='';
 		if ($(e.target).parents('.pouch-list-input').data('pouchFolder') && $(e.target).parents('.pouch-list-input').data('pouchFolder').length>0) folder=$(e.target).parents('.pouch-list-input').data('pouchFolder');			if ($(e.target).data('pouchFolder') && $(e.target).data('pouchFolder').length>0) folder=$(e.target).data('pouchFolder');
 		if (folder.substr(folder.length-1)=='/') folder=folder.substr(0,folder.length-1);
 					
-		//console.log('input change',e.target,attachmentsDOM);
+		console.log('input change',e.target,attachmentsDOM);
 		// DND
 		if (e && e.dataTransfer && e.dataTransfer.files) {
 			entries = e.dataTransfer.files;
@@ -391,26 +397,30 @@ $.fn.pouchUI = function(options) {
 			var parts;
 			if (file.webkitRelativePath) parts=file.webkitRelativePath.split("/");
 			else parts=[];
+			//console.log('PATH PARTS',parts);
 			if (parts[parts.length-1] !='.' ) {
+				//console.log('PATH PARTS P',parts);
 				var path=parts.slice(0,parts.length-1).join("/");
+				if (path.length>0) path=path+'/';
 				var reader = new FileReader();
 				reader.onload = (function(fileRef) {
 				return function(e) {
+					//console.log('read file');
 					var mime=MimeConverter.lookupMime(fileRef.name);
 					var b=new Blob([e.target.result],{type : mime});
-					var fileDOM=$('<div class="file pending"><span class="ui-button" data-pouch-action="deletefile" >X</span><a target="_new" >'+path+'/'+fileRef.name+'</a></div>');
-					$('.file[data-docid="'+folder+"/"+path+'/'+fileRef.name+'"]',attachmentsDOM).remove();
+					var fileDOM=$('<div class="file pending"><span class="ui-button" data-pouch-action="deletefile" >X</span><a target="_new" >'+path+fileRef.name+'</a></div>');
+					$('.file[data-docid="'+folder+"/"+path+fileRef.name+'"]',attachmentsDOM).remove();
 					attachmentsDOM.prepend(fileDOM);
-					fileDOM.attr('data-docid',folder+"/"+path+'/'+fileRef.name);
+					fileDOM.attr('data-docid',folder+"/"+path+fileRef.name);
 					fileDOM.attr('data-size',fileRef.size);
 					fileDOM.attr('data-mime',mime);
 					var reader = new FileReader();
 					reader.onload = function(e) {
 						// save selected file content in link as base64
 						$('a',fileDOM).attr('href',reader.result);
-						var targetList=fileDOM.parents('.pouch-list').first();
-						var targetItem=$(fileDOM).parents('.pouch-list-item').first();
-						//console.log('AUTOSAVE ON FILE??? ',targetList,targetItem);
+						var targetList=$(e.target).parents('.pouch-list').first();
+						var targetItem=$(e.target).parents('.pouch-list-item').first();
+						//console.log('AUTOSAVE ON FILE??? ',attachmentsDOM,fileDOM,targetList,targetItem);
 						if (targetList.length>0 && targetList.attr('data-pouch-autosave')=='true') {
 							//console.log('AUTOSAVE ON FILE',targetList);
 							// NO AUTOSAVE ON ID FIELD
@@ -554,7 +564,9 @@ $.fn.pouchUI = function(options) {
 					console.log('ERR DELETE get',err);
 				} else {
 					try {
-						pouch.validatingRemove(res._id,res._rev).then(function(err,dres) {
+						// TODO - RESTORE VALIDATION ON REMOVE - pouch.validatingRemove - removed because
+						// TypeError: Cannot assign to read only property '_deleted' of joe {stack: "TypeError: Cannot assign to read only property '_d…   at http://localhost/pouchUI/pouchdb.js:7936:21", message: "Cannot assign to read only property '_deleted' of joe"}
+						pouch.remove(res._id,res._rev).then(function(err,dres) {
 							//console.log('DEL OK',err,dres);
 						}).catch(function(err) {
 							console.log('ERR DELETE',err);
@@ -583,9 +595,11 @@ $.fn.pouchUI = function(options) {
 				//console.log('get',currentListItem.data('pouchId'),res);
 				// override incoming values
 				var initialAttachments={};
-				$.each(res['_attachments'],function(rak,rav) {
-					initialAttachments[rak]=false;
-				});
+				if (res['_attachments']) {
+					$.each(res['_attachments'],function(rak,rav) {
+						initialAttachments[rak]=false;
+					});
+				}
 				var changed=false;
 				$.each($('.pouch-list-input',currentListItem),function(ivk,ivv) {
 					//console.log('getting',ivk,ivv);
@@ -674,7 +688,7 @@ $.fn.pouchUI = function(options) {
 			});
 			// ID from form data
 			if (res['_id'] && res['_id'].length>0) {
-				pouch.validtingPost(res,function(err,rs) {
+				pouch.validatingPost(res,function(err,rs) {
 					//console.log('saved new with ID',rs);
 					currentListItem.attr('data-pouch-id',rs._id);
 					currentListItem.attr('data-pouch-rev',rs._rev);
@@ -708,7 +722,7 @@ $.fn.pouchUI = function(options) {
 			//if (!targetList.hasClass('.pouch-list')) {
 			//	targetList=parentList;
 			//}
-			//console.log('click',cmd,target,button,targetList);
+			console.log('click',cmd,target,button,targetList);
 			if (cmd=='deletefile') {
 				button.parents('.file').first().remove();
 				if (parentList.length>0 && parentList.attr('data-pouch-autosave')=='true') {
@@ -794,14 +808,24 @@ $.fn.pouchUI = function(options) {
 	 **************************************************************/
 	function substituteRecordValues(itemTmpl,resvalue,collation) {
 		// REPLACE ROW/FIELD VALUES
-		//console.log(resvalue,itemTmpl[0].outerHTML)
+		console.log('SUB',resvalue) //,itemTmpl[0].outerHTML)
 		$.each($('.pouch-list-value',itemTmpl).not('.pouch-list .pouch-list .pouch-list-value'),function(key,value) {  //:not(.pouch-list .pouch-list .pouch-list-value)
 			// REPLACE DOM ELEMENT HTML WITH FIELD VALUE
 			// special case for attachments
 			if ($(value).data('pouchField')=='_attachments') {
+				var attTmpl;
+				if ($('.file',value).length>0) {
+					attTmpl=$('.file',value).first();
+				} else {
+					attTmpl=$($(value).html());
+				}
+				console.log('att tmpl',attTmpl)
+				
+				
+				
 				//console.log('render attach',resvalue);
 				if (resvalue.doc['_attachments'])  {
-					//console.log('have attach for this record');
+					console.log('have attach for this record');
 					var folder=$(value).data('pouchFolder');
 					var attList=$('<div class="attachments" />');
 					var attachmentsToSort=[];
@@ -810,19 +834,18 @@ $.fn.pouchUI = function(options) {
 						attachmentsToSort.push({key:rvk,content:rvv});
 					});
 					attachmentsToSort.sort(function(a,b) {if (a.key.toLowerCase()<b.key.toLowerCase()) return -1; else return 1;});
+					console.log('SORTED',attachmentsToSort);
 					$.each(attachmentsToSort,function(rvka,rvva) {
 						var rvk=rvva.key;
 						var rvv=rvva.content;
-						//console.log('render attach no ',rvk,rvv);
+						console.log('render attach no ',rvk,rvv);
 						if (rvv.data) { 
-							//console.log('render attach has content');
-							var attTmpl=$($(value)[0].outerHTML);
-							//console.log('att tmpl',attTmpl)
+							console.log('render attach has content');
 							var imgTmpl=$('img',attTmpl);
 							var aTmpl=$('a',attTmpl);
 							var renderableImage=false;
 							if (rvv.content_type && (rvv.content_type=='image/jpeg' || rvv.content_type=='image/jpg' || rvv.content_type=='image/gif' || rvv.content_type=='image/png' || rvv.content_type=='image/svg+xml' || rvv.content_type=='image/bmp')) renderableImage=true;
-							//console.log('HAS IMAGE ??',rvv.content_type,renderableImage);
+							console.log('HAS IMAGE ??',rvv.content_type,renderableImage,imgTmpl);
 							if (renderableImage && imgTmpl.length>0) imgTmpl.attr('src',rvv.data);
 							else imgTmpl.remove();
 							if (aTmpl) {
@@ -834,14 +857,14 @@ $.fn.pouchUI = function(options) {
 									aTmpl.append(rvv.name);
 								}
 							}
-							attTmplRes='<div class="file">'+attTmpl.html()+'</div>';
+							var attTmplRes='<div class="file">'+attTmpl.html()+'</div>';
 							attList.append(attTmplRes);
 						} else {
 							//console.log('render attach has no content');
 							attList.append('<div class="file">'+rvk+'</div>');
 						}
 					});
-					console.log('RENATTC',attList)
+					//console.log('RENATTC',attList)
 					$(value).html(attList.html());
 				} else {
 					$(value).html('');
