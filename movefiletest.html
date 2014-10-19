@@ -1,0 +1,31 @@
+<script src='../jquery-ui/js/jquery-1.10.2.js' ></script>
+<form>
+
+<input type='file' id='a'>
+
+
+<div id='b'>this is it</div>
+
+</form>
+
+
+<script>
+$(document).ready(function() {
+	/*$('#a').bind('change',function() {
+		$('#b').append($('#a'));
+	});
+	*/
+	var a=[3,67,4,2,1];
+	var p=[];
+	$.each(a,function(ak,av) {
+		var d=$.Deferred();
+		p.push(d);
+		d.resolve(av);
+	});
+	$.when.apply($,p).then(function() {
+		console.log('done',arguments);
+	});
+	
+});
+
+</script>
