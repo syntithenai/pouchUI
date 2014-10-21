@@ -57,12 +57,8 @@ BUGS
 - add/del images then save -> multiplication of images on rendering
 - slow rendering of images - make image loading async
 
-
-
-
 TODO
 recursive list rendering/activation
-file upload support
 jquery mobile integration
 couchapp
 authentication
@@ -73,7 +69,7 @@ samples
 documentation
 plugin website	
 form types - password, dep select
-
+ensure error checking on all async operations
 
 pagination optimisation based on startkey endkey
 file upload - don't put unsaved attachments in DOM. Put them in the database in a temporary record and provide links. 

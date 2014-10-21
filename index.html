@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <script src='../jquery-ui/js/jquery-1.10.2.js' ></script>
 <script src='../jquery-ui/js/jquery-ui-1.10.4.custom.min.js' ></script>
 <!--script src='pouchdb-3.0.6.min.js' ></script-->
@@ -5,7 +6,7 @@
 <script src='pouchdb-validation.min.js' ></script>
 <script src='jquery.pouchUI.js' ></script>
 
-<!-- POUCH ENHANCED MARKUP ->
+<!-- POUCH ENHANCED MARKUP -->
 <!-- 
 Where a list has data-pouch-db
 -->
@@ -30,6 +31,12 @@ Where a list has data-pouch-db
 .attachments, .buttonset {
 	margin-top: 0.7em;
 }
+#listtemplate .attachments {
+	width: 500px;
+}
+#listtemplate .attachments .file {
+	ddisplay: inline;
+}
 </style>
 <script>
 $(document).ready(function() {
@@ -44,9 +51,9 @@ var validateMe=function(newDoc, oldDoc, userCtx, secObj) {
 	}
 
 }
-designDoc.testdb2 =  {
+designDoc['http://stever:wtfaid72@localhost:5984/people'] =  {
 		  _id: '_design/people',
-		  validate_doc_update : validateMe.toString(),
+		  //validate_doc_update : validateMe.toString(),
 		  views: {
 			'all': {
 			  map: function(doc) {
@@ -93,14 +100,14 @@ designDoc.testdb2 =  {
 		  }
 		};
 	
-	console.log('PLUGINRET',$('#listtemplate ,#edittemplate').pouchUI({dbOptions:{testdb2:{adapter:'idb'}},design:designDoc}));
+	console.log('PLUGINRET',$('#listtemplate ,#edittemplate').pouchUI({design:designDoc})); //dbOptions:{testdb2:{adapter:'idb'}}
 	
 });
 </script>
 
 <div id='edittemplate' style='float:right' >
 
-	<div style='display:none;' class='pouch-list' ddata-pouch-autosave='true' data-pouch-db='testdb2' data-pouch-index='people/all' data-key='-1' >
+	<div style='display:none;' class='pouch-list' ddata-pouch-autosave='true' ddata-pouch-db='testdb2'  data-pouch-db='http://stever:wtfaid72@localhost:5984/people' data-pouch-index='people/all' data-key='-1' >
 		<div class='pouch-list-item' >
 			<h1>edit template</h1>
 			<div class='pouch-list-input' style='display:none'  data-pouch-field='type' ><input type='hidden' value='person' /></div>	
@@ -109,8 +116,9 @@ designDoc.testdb2 =  {
 			Age: <div class='pouch-list-input' data-pouch-field='age' ><input type='text'  /></div>	
 			<div class='pouch-list-input' >Select Folder<input type='file' data-pouch-folder='aaa/' webkitdirectory='webkitdirectory' />Select Files<input type='file' multiple="multiple" data-pouch-folder='aaa/' /></div>	
 			<div class='buttonset' >
-				<a class='ui-button' href='#listtemplate' data-pouch-action='close' />Close</a>
-				<a class='ui-button' href='#listtemplate' data-pouch-action='save' />Save</a>
+				<a class='ui-button' href='#listtemplate' data-pouch-action='close' >Close</a>
+				<a class='ui-button' href='#listtemplate' data-pouch-action='save' >Save</a>
+				<a class='ui-button' href='#listtemplate' data-pouch-action='saveandclose' >Done</a>
 				<a class='ui-button' href='#listtemplate' data-pouch-action='delete' >Delete</a>
 			</div>
 		</div>
@@ -131,7 +139,7 @@ designDoc.testdb2 =  {
 <a class='ui-button' data-pouch-action='new'  href='#edittemplate' >New Record</a>
 </div>
 
-<div style='display:none;' class='pouch-list'  data-pouch-attachments='true' data-pouch-db='testdb2' data-pouch-index='people/persons'  ddata-pouch-sheetsource='https://spreadsheets.google.com/feeds/list/0AgNF3G4HQWMTdEJPTFFSV2VXTkM1WUowSmJBMnRGLVE/od7/public/basic'  data-pouch-dbsource='http://stever:wtfaid72@localhost:5984/people'>
+<div style='display:none;' class='pouch-list'  data-pouch-attachments='true' ddata-pouch-db='testdb2' data-pouch-index='people/persons'  ddata-pouch-sheetsource='https://spreadsheets.google.com/feeds/list/0AgNF3G4HQWMTdEJPTFFSV2VXTkM1WUowSmJBMnRGLVE/od7/public/basic'  data-pouch-db='http://stever:wtfaid72@localhost:5984/people'>
 <!-- sdata-pouch-dbsource='http://stever:wtfaid72@localhost:5984/people' ddata-pouch-dbsource='http://stever:wtfaid72@localhost:5984/people' ddata-pouch-startkey='ddd'  ddata-pouch-endkey='gggg' -->
 <h1 style='display:inline' >Owners</h1> 
 
@@ -140,12 +148,12 @@ designDoc.testdb2 =  {
 	<li class='pouch-list-item' >
 		<div class='pouch-list-value' data-pouch-field='name' >eg xanthum</div>
 		Age: <div class='pouch-list-value' data-pouch-field='age' >eg 33</div>
-		Files: <div class='pouch-list-value' data-pouch-field='_attachments' data-pouch-list-folder='' ><a target='_new' ><img width='100' /></a></div>
+		Files: <div class='pouch-list-value' data-pouch-field='_attachments' data-pouch-list-folder='/' ><a target='_blank' ><img width='100' /></a></div>
 		
 		<div class='buttonset' >
 		<a class='ui-button' dhref='#listtemplate' data-pouch-action='delete' >Delete</a>
-		<a class='ui-button' href='#edittemplate' data-pouch-action='edit' />Edit</a>
-		<a class='ui-button' href='#listtemplate'  data-pouch-action='save' />Save</a>
+		<a class='ui-button' href='#edittemplate' data-pouch-action='edit' >Edit</a>
+		<a class='ui-button' href='#listtemplate'  data-pouch-action='save' >Save</a>
 		</div>
 		<HR>
 		

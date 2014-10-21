@@ -197,8 +197,8 @@ $.fn.pouchUI = function(options) {
 		list.hide();
 		var dfr=$.Deferred();
 		var d=$.extend({include_docs:true},options,list.data());
-		if (!$(list).data('listTemplate')) {
-			$(list).data('listTemplate',$(list)[0].outerHTML);
+		if (!list.data('listTemplate')) {
+			list.data('listTemplate',list[0].outerHTML);
 			//console.log('newlisttemplateok',$(list).data('listTemplate'));
 		}
 		var pouch=getDB(d.pouchDb);
@@ -303,25 +303,26 @@ $.fn.pouchUI = function(options) {
 	
 	function initialiseDesignDocuments(designDoc) {
 		var dfr=$.Deferred();
-		//console.log('got design ',designDoc);
+		console.log('got design ',designDoc);
 		// load existing design doc and update it
 		var promises=[];
 		// first delete databases if reset flag
 		$.each(designDoc,function(dkey,dval) {
 			promises.push(destroyDB(dkey));
 		});
-		//console.log('dbs destroyed');
+		console.log('dbs destroyed');
 		$.when.apply($,promises).then(function() {
 			//console.log('dbs destroyed forreal');
 			//console.log('DD',designDoc);
 			$.each(designDoc,function(dkey,dval) {
 				//console.log('now create designs ',dkey,dval);
 				var pouch=getDB(dkey);
+				console.log('now pouched',dval._id,pouch);
 				pouch.get(dval._id).then(function(current) {
-					//console.log('got design doc',current);
+					console.log('got design doc',current);
 					dval._rev=current._rev;
 					pouch.post(dval).then(function (info) {
-						//console.log('design doc saved');
+						console.log('design doc saved',info);
 						dfr.resolve();
 					}).catch(function (err) {
 					   console.log('design doc err',err);
@@ -331,7 +332,7 @@ $.fn.pouchUI = function(options) {
 				}).catch(function(err) {
 					//console.log('create new');
 					pouch.post(dval).then(function (info) {
-						//console.log('design doc created info',info);
+						console.log('design doc created info',info);
 						dfr.resolve();
 					});
 				});
@@ -341,6 +342,7 @@ $.fn.pouchUI = function(options) {
 		return dfr;
 	}
 	function destroyDB(db) {
+		return;
 		var dfr=$.Deferred();
 		// SWITCH ON URL PARAMETER ?reset=yes
 		if ($.trim(location.search.split('reset=')[1])!='yes') {
@@ -573,8 +575,14 @@ $.fn.pouchUI = function(options) {
 		}
 	}
 	
-	function actionSave(list,currentListItem) {
-		//console.log('save ',list,currentListItem);
+	/*
+	
+	
+	
+	*/
+	
+	function actionSave(list,currentListItem,closeAfter) {
+		console.log('save ',currentListItem.data('pouchRev'));
 		var d=$.extend({include_docs:true},options,$(list).data());
 		var pouch=getDB(d.pouchDb);
 		// UPDATE EXISTING
@@ -655,6 +663,7 @@ $.fn.pouchUI = function(options) {
 									reader.readAsDataURL(b);
 								}	
 							});
+							$('.file.pending',currentListItem).remove();
 						});
 						$.when.apply($,ldfrs).then(function() {
 							//console.log('LAT',arguments);
@@ -670,8 +679,7 @@ $.fn.pouchUI = function(options) {
 								if (!foundAll) changed=true;
 							});
 							fieldDfr.resolve({changed:changed,field:'_attachments',fieldValue:saveAttachments});
-						});
-						
+						});	
 					// USE THE VALUE FROM THE FIRST INPUT/SELECT OR TEXTAREA
 					} else {
 						var fn=$(ivv).data('pouchField');
@@ -690,9 +698,9 @@ $.fn.pouchUI = function(options) {
 					}
 				});
 				$.when.apply($,fieldDfrs).then(function() {
-					console.log('LATFIE',currentListItem.data(),arguments);
-					var finalDoc={};
-					finalDoc._rev=currentListItem.data('pouchRev');
+					//console.log('LATFIE',currentListItem.data(),arguments);
+					var finalDoc=res;
+					//finalDoc._rev=currentListItem.data('pouchRev');
 					var finalChanged=false;
 					$.each(arguments,function(fieldk,fieldv) {
 						finalChanged=finalChanged && fieldv.changed;
@@ -701,10 +709,14 @@ $.fn.pouchUI = function(options) {
 					if (changed) {
 						//var recs={rows:[{doc:finalDoc}]};
 						console.log('PRESAVE',finalDoc);
-						pouch.validatingPost(finalDoc).then(function(err,rs) {
-							console.log('SAVE OK',err,rs);
+						pouch.validatingPost(finalDoc).then(function(rs) {
+							//console.log('SAVE OK',rs);
 							//$('.validationerror',currentListItem).remove();
-							//if (currentListItem && currentListItem.length) currentListItem.remove();
+							if (closeAfter && currentListItem && currentListItem.length) currentListItem.remove();
+							else {
+								//console.log('UPDATE REVISION TO ',rs.rev);
+								currentListItem.attr('data-pouch-rev',rs.rev);
+							}
 						}).catch(function(err) {
 							console.log('SAVE ERROR',err);
 							$('.validationerror',currentListItem).remove();
@@ -717,6 +729,7 @@ $.fn.pouchUI = function(options) {
 						//if (target && target.length) currentListItem.remove();
 						//$('.validationerror',currentListItem).remove();
 						//return true;
+						if (closeAfter && currentListItem && currentListItem.length) currentListItem.remove();
 					}
 				});	
 				//console.log('REALLY have changed files',changed);
@@ -744,6 +757,7 @@ $.fn.pouchUI = function(options) {
 					//console.log('saved new with ID',rs);
 					currentListItem.attr('data-pouch-id',rs._id);
 					currentListItem.attr('data-pouch-rev',rs._rev);
+					//if (closeAfter && currentListItem && currentListItem.length) currentListItem.remove();
 				});
 			// TODO - COMPLETE THESE CASES
 			// ID from idFunction
@@ -755,11 +769,50 @@ $.fn.pouchUI = function(options) {
 			}
 			return true;
 		}
-	}		
+	}	
+
+	function actionLoadAndClickLink(docId,attachmentId,button,db) {
+		//console.log('load and click',docId,attachmentId,button,db);
+		//return;
+		if (docId && attachmentId && button && db) {
+			var pouch=getDB(db);
+			pouch.getAttachment(docId,attachmentId).then(function(ires) {
+				//console.log('async loaded ',ires);
+				/* var reader = new window.FileReader();
+				 reader.onloadend = function() {
+					//console.log('IMAGE LOADED ASYNC',image,reader.result);
+					try {
+						button.attr('href',reader.result);
+						button[0].click();
+					} catch (err) {
+						console.log('ERR SetTING HREF');
+					}
+					
+				 };
+				 reader.readAsDataURL(ires); 
+				 */
+				var url=URL.createObjectURL(ires);
+				button.attr('href',url);
+				button[0].click();
+				setTimeout(function(url) {
+					URL.revokeObjectURL(url);
+					console.log('revoke url');
+				},5000);
+			}); 
+		} else {
+			console.log('ASYNC LOAD IMAGE MISSING META DATAS',image,image.data());
+		}
+	}
+	
 	function onPouchClick(e) {
+		//console.log('pouchclick',e,e.target);
+		// chrome
+		var theElement=e.target;
+		// firefox
+		//if (!theElement && e && e.originalEvent) theElement=e.originalEvent.originalTarget;
 		// return false on failure of command to prevent link default action
-		if (e && e.toElement) {
-			var button=$(e.toElement);
+		if (theElement) {
+			var button=$(theElement);
 			var cmd=button.data('pouchAction');
 			var target=button.attr('href');
 			var parentList=button.parents('.pouch-list').first();
@@ -774,21 +827,36 @@ $.fn.pouchUI = function(options) {
 			//if (!targetList.hasClass('.pouch-list')) {
 			//	targetList=parentList;
 			//}
-			console.log('click',cmd,target,button,targetList);
+			//console.log('click',cmd,target,button,targetList);
+			//console.log('click',button.parents('.file').length,theElement.nodeName);
+			// FILE BUTTONS
 			if (cmd=='deletefile') {
 				button.parents('.file').first().remove();
 				if (parentList.length>0 && parentList.attr('data-pouch-autosave')=='true') {
-					actionSave(parentList,parentListItem);
+					actionSave(parentList,parentListItem,false);
 				}
+			} else if (button.parents('.file').length>0 && (theElement.nodeName=='A' || theElement.nodeName=="IMG" && button.parents('a').length>0)) {
+				e.preventDefault();
+				e.stopImmediatePropagation();
+				var attachmentId=button.parents('.file').first().data('attachmentId');
+				var theLink;
+				if (theElement.nodeName=="A") theLink=button;
+				else theLink=button.parents('a').first();
+				//console.log('clicked file link',id,attachmentId,theLink,parentList.data('pouchDb'));
+				actionLoadAndClickLink(id,attachmentId,theLink,parentList.data('pouchDb'));
+			// FORM BUTTONS
 			} else if ((cmd=='edit'||cmd=='view') && targetList && targetList.length>0) {
 				actionRenderSingle(id,targetList)
 			} else if (cmd=='delete') {
 				actionDelete(parentList.data('pouchDb'),id,parentListItem,target,e);
 			} else if (cmd=='save') {
-				actionSave(parentList,parentListItem,target);
+				actionSave(parentList,parentListItem,false);
+			} else if (cmd=='saveandclose') {
+				actionSave(parentList,parentListItem,true);
 			} else if (cmd=='cancel'||cmd=='close') {
 				//history.back(-1);
 				parentListItem.remove();
+			// LIST BUTTONS
 			} else if (cmd=='search') {
 				actionSearch(button);
 			} else if (cmd=='paginate-first' || cmd=='paginate-last' || cmd=='paginate-next' || cmd=='paginate-previous') {
@@ -817,7 +885,7 @@ $.fn.pouchUI = function(options) {
 				}
 				//console.log('aa',$('.pouch-list',targetList),$('input',targetList));
 				
-			}
+			} 
 		} else {
 			console.log('Missing event toElement on click');
 		}
@@ -846,7 +914,7 @@ $.fn.pouchUI = function(options) {
 			// NO AUTOSAVE ON ID FIELD
 			if (targetItem.data('pouchField')!=='_id') {
 			//console.log('keyup SAVE',targetList,targetItem,value);
-				actionSave(targetList,targetItem);
+				actionSave(targetList,targetItem,false);
 			}
 		}
 		
@@ -861,67 +929,98 @@ $.fn.pouchUI = function(options) {
 	function substituteRecordValues(itemTmpl,resvalue,collation) {
 		// REPLACE ROW/FIELD VALUES
 		//console.log('SUB',resvalue) //,itemTmpl[0].outerHTML)
+		var list=itemTmpl.parents('.pouch-list').first();
 		$(itemTmpl).attr('data-pouch-rev',resvalue._rev);
 		$.each($('.pouch-list-value',itemTmpl).not('.pouch-list .pouch-list .pouch-list-value'),function(key,value) {  //:not(.pouch-list .pouch-list .pouch-list-value)
 			// REPLACE DOM ELEMENT HTML WITH FIELD VALUE
 			// special case for attachments
 			if ($(value).data('pouchField')=='_attachments') {
 				var attTmpl;
-				if ($('.file',value).length>0) {
-					attTmpl=$('.file',value).first();
+				var saveTmpl=false;
+				// are we refreshing the list in which case we have already stashed the template
+				if ($('.filetemplate',value).length>0) {
+					attTmpl=$($('.filetemplate',value).html());
+					//console.log('REFRESH',attTmpl);
+				// or are we getting the list template for the first time
 				} else {
-					attTmpl=$($(value).html());
+					attTmpl=$('<div class="file">'+$(value).html()+'</div>');
+					//console.log('FRIST TIME',attTmpl);
+					saveTemplate=$('<div class="filetemplate" style="display:none" >'+attTmpl[0].outerHTML+'</div>');
 				}
-				//console.log('att tmpl',attTmpl)
-				
-				
-				
+				//console.log('att tmpl',attTmpl);
 				//console.log('render attach',resvalue);
 				if (resvalue.doc['_attachments'])  {
 					//console.log('have attach for this record');
+					// FILTER ATTACHMENTS BY FOLDER AND SORT
+					// if folder has trailing slash then include all files inside this path. If no trailing slash, only include files directly inside this folder.
 					var folder=$(value).data('pouchFolder');
+					if (!folder) folder=''; 
+					var folderTrailingSlash=false;
+					if (folder.substr(folder.length-1)=="/") folderTrailingSlash=true;
+					var folderNoTrailingSlash=folder;
+					if (folderTrailingSlash) folderNoTrailingSlash=folder.substr(0,folder.length-1);
+					else folderNoTrailingSlash='';
+					var folderPathDepth=folderNoTrailingSlash.split("/").length;
 					var attList=$('<div class="attachments" />');
 					var attachmentsToSort=[];
+					//console.log('folder',folder,'hasSlash',folderTrailingSlash,folderNoTrailingSlash,folderPathDepth);
 					$.each(resvalue.doc['_attachments'],function(rvk,rvv) {
-						rvv.name=rvk;
-						attachmentsToSort.push({key:rvk,content:rvv});
+						//console.log('ATTRC',rvk,rvv);
+						var filePathDepth=rvk.split("/").length;
+						//console.log('ATTRC2',rvk,rvv);
+						//console.log('filepathdetph',filePathDepth);
+						if (folder.length==0 || (rvk.indexOf(folder)==0 && (!folderTrailingSlash || (folderTrailingSlash && folderPathDepth==filePathDepth)))) {
+							//console.log('include this file');
+							rvv.name=rvk;
+							attachmentsToSort.push({key:rvk,content:rvv});
+						}
 					});
 					attachmentsToSort.sort(function(a,b) {if (a.key.toLowerCase()<b.key.toLowerCase()) return -1; else return 1;});
 					//console.log('SORTED',attachmentsToSort);
+					// RENDER
 					$.each(attachmentsToSort,function(rvka,rvva) {
+						var attTmplCopy=$(attTmpl[0].outerHTML);
+						//console.log('COPIED',attTmpl[0].outerHTML);
 						var rvk=rvva.key;
 						var rvv=rvva.content;
-						//console.log('render attach no ',rvk,rvv);
-						if (rvv.data) { 
-							//console.log('render attach has content');
-							var imgTmpl=$('img',attTmpl);
-							var aTmpl=$('a',attTmpl);
-							var renderableImage=false;
-							if (rvv.content_type && (rvv.content_type=='image/jpeg' || rvv.content_type=='image/jpg' || rvv.content_type=='image/gif' || rvv.content_type=='image/png' || rvv.content_type=='image/svg+xml' || rvv.content_type=='image/bmp')) renderableImage=true;
-							//console.log('HAS IMAGE ??',rvv.content_type,renderableImage,imgTmpl);
-							if (renderableImage && imgTmpl.length>0) imgTmpl.attr('src',rvv.data);
-							else imgTmpl.remove();
-							if (aTmpl) {
-								aTmpl.attr('href',rvv.data); 
-								if (renderableImage && imgTmpl.length>0) {
-									imgTmpl.attr('alt',rvv.name);
-									imgTmpl.attr('title',rvv.name);
-								} else {
-									aTmpl.append(rvv.name);
-								}
-							}
-							var attTmplRes='<div class="file">'+attTmpl.html()+'</div>';
-							attList.append(attTmplRes);
+						var renderableImage=false;
+						if (rvv.content_type && (rvv.content_type=='image/jpeg' || rvv.content_type=='image/jpg' || rvv.content_type=='image/gif' || rvv.content_type=='image/png' || rvv.content_type=='image/svg+xml' || rvv.content_type=='image/bmp')) renderableImage=true;
+						var imageRendered=false;
+						var linkRendered=false;
+						if (renderableImage && $('img',attTmplCopy).length>0) {
+							$('img',attTmplCopy).attr('alt',rvv.name);
+							$('img',attTmplCopy).attr('title',rvv.name);
+							// async load image
+							$('img',attTmplCopy).attr('data-pouch-db',list.data('pouchDb'));
+							$('img',attTmplCopy).attr('data-pouch-id',resvalue.id);
+							$('img',attTmplCopy).attr('data-pouch-attachmentid',rvk);		
+							$('img',attTmplCopy).attr('data-pouch-loadme','yes');
+							imageRendered=true;
 						} else {
-							//console.log('render attach has no content');
-							attList.append('<div class="file">'+rvk+'</div>');
+							$('img',attTmplCopy).remove();
 						}
+						//console.log('RENDERED IMAGE',attTmplCopy)
+						if ($('a',attTmplCopy).length>0) {
+							// only render link text if no image
+							if (!imageRendered) { 
+								$('a',attTmplCopy).append(rvv.name);	
+							}
+							$('a',attTmplCopy).attr('href','#');
+							linkRendered=true;
+						}
+						if (!imageRendered && !linkRendered) {
+							//console.log('DEFAULT LINK RENDER');
+							attTmplCopy.append('<a href="#" >'+rvk+'</a>');
+						}
+						attList.append('<div class="file" data-attachment-id="'+rvk+'" >'+attTmplCopy.html()+'</div>');
+						//console.log('ATTMPL',attTmplCopy);
 					});
 					//console.log('RENATTC',attList)
-					$(value).html(attList.html());
+					$(value).html(attList[0].outerHTML);
 				} else {
 					$(value).html('');
 				}
+				if (saveTemplate) $(value).prepend(saveTemplate); 
 			} else if (resvalue.doc[$(value).data('pouchField')]) $(value).html(valueFromObjectPath(resvalue.doc,$(value).data('pouchField')));
 			else $(value).html('');
 		});
@@ -1219,8 +1318,11 @@ $.fn.pouchUI = function(options) {
 		
 		// set limit DOM value in list
 		$('.pouch-limit',list).val(limit)
+		$.each($('img[data-pouch-loadme="yes"]',$(list)),function() {
+			asyncLoadImage($(this));
+		});
 		$(list).show();
-		//console.log('rendered list',res,$(list).data(),$(list)[0].outerHTML);
+		//console.log('rendered list',res,$(list).data()); //,$(list)[0].outerHTML);
 		dfr.resolve(list);
 		return dfr;
 	}
@@ -1252,33 +1354,13 @@ $.fn.pouchUI = function(options) {
 		//console.log('list data',$(list).data());
 		if (limit>0) d.limit=parseInt(limit);
 		if (skip>0) d.skip=parseInt(skip);
-		// convert to boolean  DOESN'T WORK BUG - https://github.com/pouchdb/pouchdb/issues/2771
-		// if (d.pouchAttachments=='true') d.attachments=true;
-		////console.log('now query local and rerender',d);
+		//console.log('now query local and rerender',d);
 		// NOW LOAD RESULTS
 		var pouch=getDB(d.pouchDb);
 		if (d.pouchIndex) {
-			//console.log('now queryindex',d.pouchIndex);
+			console.log('now queryindex',d.pouchIndex);
 			pouch.query(d.pouchIndex,d).then(function(res) {
-				// HACK AROUND BUG - https://github.com/pouchdb/pouchdb/issues/2771
-				var whenAttachmentsLoaded=$.Deferred();
-				if (d.pouchAttachments) {
-					// here
-					loadAttachments(pouch,res).then(function(atres) {
-						whenAttachmentsLoaded.resolve(atres);
-					});
-				} else {
-					whenAttachmentsLoaded.resolve(res);
-				}
-				//console.log('RESULTS done');
-				/*$.when.apply(promises).then(function(resultsWithAttachments) {
-					console.log('RESULTS query',resultsWithAttachments);	
-					dfr.resolve(resultsWithAttachments);
-				});*/
-				$.when(whenAttachmentsLoaded).then(function(lres) {
-					//console.log('RESULTS query',lres);
-					dfr.resolve(lres);
-				});
+				dfr.resolve(res);
 			}).catch(function(err) {
 				console.log('Query index err',err);
 			});
@@ -1291,50 +1373,26 @@ $.fn.pouchUI = function(options) {
 		}
 		return dfr;
 	}
-		
-	function loadAttachments(pouch,res) {
-		var whenAttachmentsLoaded=$.Deferred();
-		return whenAttachmentsLoaded.resolve();
-		//console.log('config load attachments');
-		$.each(res.rows,function(rk,rv) {
-			//console.log('look for attach in res ',rk,rv);
-			if (rv.doc && rv.doc._attachments) {
-				var promises=[];
-				$.each(rv.doc._attachments,function(rak,rav) {
-					//console.log('res has attachments');
-					var dfr2=$.Deferred();
-					pouch.getAttachment(rv.doc._id,rak).then(function(ires) {
-						//console.log('config loaded attachments',ires);
-						 var reader = new window.FileReader();
-						 reader.onloadend = function() {
-							base64data = reader.result;                
-							//console.log('read ATTACHMENT',ires,base64data );
-							rav.data=base64data;
-							dfr2.resolve(rav);
-						 };
-						 reader.readAsDataURL(ires); 
-					}); 
-					promises.push(dfr2);
-				});
-				$.when.apply($,promises).then(function(resultsWithAttachments) {
-					//console.log('RESULTS with attach',arguments,this,resultsWithAttachments);	
-					var loaded=arguments;
-					var i=0;
-					var loadedAttachments={};
-					$.each(rv.doc._attachments,function(rak,rav) {
-						loadedAttachments[rak]=loaded[i];
-						i++;
-					});
-					//console.log('new attachments array',loadedAttachments);
-					rv.doc._attachments=loadedAttachments;
-					whenAttachmentsLoaded.resolve(res);
-				});
-			} else {
-				whenAttachmentsLoaded.resolve(res);
-			}
-		});
-		return whenAttachmentsLoaded;
-	}	
+			
+	function asyncLoadImage(image) {
+		if (image.data('pouchDb') && image.data('pouchId') && image.data('pouchAttachmentid')) {
+			var pouch=getDB(image.data('pouchDb'));
+			var docId=image.data('pouchId');
+			var attachmentId=image.data('pouchAttachmentid');
+			pouch.getAttachment(docId,attachmentId).then(function(ires) {
+				//console.log('async loaded ',ires);
+				 var reader = new window.FileReader();
+				 reader.onloadend = function() {
+					//console.log('IMAGE LOADED ASYNC',image,reader.result);
+					image.attr('src',reader.result);
+				 };
+				 reader.readAsDataURL(ires); 
+			}); 
+		} else {
+			console.log('ASYNC LOAD IMAGE MISSING META DATAS',image,image.data());
+		}
+	}
+
 		
 	// START PLUGIN
 	var pluginElements=this;
@@ -1388,15 +1446,18 @@ $.fn.pouchUI = function(options) {
 			});
 			// UPDATE
 			var changes = pouch.changes({ live: true,include_docs:true,since:'now'}).on('update', function(change) { 
-				console.log('changes UPDATE','.pouch-list-item[data-pouch-id="'+change.doc._id+'"]',$('.pouch-list-item[data-pouch-id="'+change.doc._id+'"]'));
+				//console.log('changes UPDATE','.pouch-list-item[data-pouch-id="'+change.doc._id+'"]',$('.pouch-list-item[data-pouch-id="'+change.doc._id+'"]'));
 				$.each(dv,function (lk,currentList) {
 					$('.pouch-list-item[data-pouch-id="'+change.doc._id+'"]',currentList).each(function(m,mm) {
-						console.log('DO update item',m,mm);
+						//console.log('DO update item',m,mm);
 						var send={rows:[{doc:change.doc}]};
-						loadAttachments(pouch,send).then(function(res) {
-							console.log('loaded with att',res);
-							substituteRecordValues(mm,res.rows[0]);
-						});
+						//loadAttachments(pouch,send).then(function(res) {
+							//console.log('loaded with att',res);
+							substituteRecordValues($(mm),change); //res.rows[0]);
+							$.each($('img[data-pouch-loadme="yes"]',mm),function() {
+								asyncLoadImage($(this));
+							});
+						//});
 					});
 				});
 			});
