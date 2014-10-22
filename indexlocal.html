@@ -6,6 +6,7 @@
 <script src='pouchdb-validation.min.js' ></script>
 <script src='jquery.pouchUI.js' ></script>
 
+
 <style>
 .ui-button {
 	border: 1px solid black;
@@ -55,9 +56,9 @@ var validateMe=function(newDoc, oldDoc, userCtx, secObj) {
 		}
 	}
 }
-designDoc['http://stever:wtfaid72@localhost:5984/people'] =  {
+designDoc['testdb2'] =  {
 		  _id: '_design/people',
-		  validate_doc_update : validateMe.toString(),
+		 // validate_doc_update : validateMe.toString(),
 		  views: {
 			'all': {
 			  map: function(doc) {
@@ -111,16 +112,14 @@ designDoc['http://stever:wtfaid72@localhost:5984/people'] =  {
 
 <div id='edittemplate' style='float:right' >
 
-	<div style='display:none;' class='pouch-list' ddata-pouch-autosave='true' ddata-pouch-db='testdb2'  data-pouch-db='http://stever:wtfaid72@localhost:5984/people' data-pouch-index='people/all' data-key='-1' >
+	<div style='display:none;' class='pouch-list' ddata-pouch-autosave='true' data-pouch-db='testdb2'  fdata-pouch-db='http://stever:wtfaid72@localhost:5984/people' data-pouch-index='people/all' data-key='-1' >
 		<div class='pouch-list-item' >
 			<h1>edit template</h1>
 			<div class='pouch-list-input' style='display:none'  data-pouch-field='type' ><input type='hidden' value='person' /></div>	
 			<div class='pouch-list-input' data-pouch-field='_id' ><input type='text' value='' /></div>	
 			Name: <div class='pouch-list-input' data-pouch-field='name' ><textarea ></textarea></div>
 			Age: <div class='pouch-list-input' data-pouch-field='age' ><input type='text'  /></div>	
-			Date: <div class='pouch-list-input' data-pouch-field='date' ><input type='date'  /></div>	
-			Time: <div class='pouch-list-input' data-pouch-field='time' ><input type='time'  /></div>
-			Number: <div class='pouch-list-input' data-pouch-field='number' ><input type='number'  /></div>
+			<div class='pouch-list-input' >Select Folder<input type='file' data-pouch-folder='aaa/' webkitdirectory='webkitdirectory' />Select Files<input type='file' multiple="multiple" data-pouch-folder='aaa/' /></div>	
 			<div class='buttonset' >
 				<a class='ui-button' href='#listtemplate' data-pouch-action='close' >Close</a>
 				<a class='ui-button' href='#listtemplate' data-pouch-action='save' >Save</a>
@@ -145,7 +144,7 @@ designDoc['http://stever:wtfaid72@localhost:5984/people'] =  {
 <a class='ui-button' data-pouch-action='new'  href='#edittemplate' >New Record</a>
 </div>
 
-<div style='display:none;' class='pouch-list'  data-pouch-attachments='true' ddata-pouch-db='testdb2' data-pouch-index='people/persons'  ddata-pouch-sheetsource='https://spreadsheets.google.com/feeds/list/0AgNF3G4HQWMTdEJPTFFSV2VXTkM1WUowSmJBMnRGLVE/od7/public/basic'  data-pouch-db='http://stever:wtfaid72@localhost:5984/people'>
+<div style='display:none;' class='pouch-list'  data-pouch-attachments='true' data-pouch-db='testdb2' data-pouch-index='people/persons'  ddata-pouch-sheetsource='https://spreadsheets.google.com/feeds/list/0AgNF3G4HQWMTdEJPTFFSV2VXTkM1WUowSmJBMnRGLVE/od7/public/basic'  f	data-pouch-db='http://stever:wtfaid72@localhost:5984/people'>
 <!-- sdata-pouch-dbsource='http://stever:wtfaid72@localhost:5984/people' ddata-pouch-dbsource='http://stever:wtfaid72@localhost:5984/people' ddata-pouch-startkey='ddd'  ddata-pouch-endkey='gggg' -->
 <h1 style='display:inline' >Owners</h1> 
 
@@ -153,10 +152,9 @@ designDoc['http://stever:wtfaid72@localhost:5984/people'] =  {
 <ul>
 	<li class='pouch-list-item' >
 		<div class='pouch-list-value' data-pouch-field='name' >eg xanthum</div>
-		<div class='pouch-list-value' data-pouch-field='age' ><label>Age: </label>eg 33</div>
-		<div class='pouch-list-value' data-pouch-field='date' ><label>Date: </label>1/1/99</div>
-		<div class='pouch-list-value' data-pouch-field='time' ><label>Time: </label>2:00PM</div>
-		<div class='pouch-list-value' data-pouch-field='number' ><label>Number: </label>3</div>
+		Age: <div class='pouch-list-value' data-pouch-field='age' >eg 33</div>
+		Files: <div class='pouch-list-value' data-pouch-field='_attachments' data-pouch-list-folder='/' ><a target='_blank' ><img width='100' /></a></div>
+		
 		<div class='buttonset' >
 		<a class='ui-button' dhref='#listtemplate' data-pouch-action='delete' >Delete</a>
 		<a class='ui-button' href='#edittemplate' data-pouch-action='edit' >Edit</a>
@@ -208,13 +206,6 @@ extra list
 				</div>
 			</div>
 		</div>
-		
-		AAA/<div class='pouch-list-input' data-pouch-folder='aaa/' >Select Folder<input type='file'  webkitdirectory='webkitdirectory' />Select Files<input type='file' multiple="multiple"  /></div>	
-			BBB/<div class='pouch-list-input' data-pouch-folder='bbb/' >Select Folder<input type='file'  webkitdirectory='webkitdirectory' />Select Files<input type='file' multiple="multiple"  /></div>	
-			
-		
-		Files: <div class='pouch-list-value' data-pouch-field='_attachments' data-pouch-list-folder='/' ><a target='_blank' ><img width='100' /></a></div>
-		
 		
 		-->
 

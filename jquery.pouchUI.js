@@ -163,6 +163,29 @@ $.fn.pouchUI = function(options) {
 		//console.log('CONNECT DB',db,options['dbOptions'][db],options['dbOptions'],options,dbOptions);
 		return new PouchDB(db,dbOptions);
 	}
+	function isCouch(db) {
+		var p=db.substr(0,7);
+		if (p=='http://' || p=='https:/') {
+			// have config but connect string not http://
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	function maxFileSize() {
+		if (options.maxFileSize) return options.maxFileSize 
+		else return 20*1024*1024;
+	}
+	
+	function startWaiting() {
+		if ($('#loading').length==0) $('body').prepend('<div id="loading"><img src="loading.gif" /></div>');
+		$('#loading').show();
+	}
+	
+	function stopWaiting() {
+		$('#loading').hide();
+	}
 	
 	/**************************************************************
 	 * START INIT FUNCTIONS
@@ -387,12 +410,12 @@ $.fn.pouchUI = function(options) {
 			var lastInput=$(e.target);
 			if (lastInput.siblings('input[type="file"]').length>0) lastInput=lastInput.siblings('input[type="file"]').last();
 			attachmentsDOM=$('<div class="attachments"></div>');
-			lastInput.after(attachmentsDOM);
+			//lastInput.after(attachmentsDOM);
 		}
 		var folder='';
-		if ($(e.target).parents('.pouch-list-input').data('pouchFolder') && $(e.target).parents('.pouch-list-input').data('pouchFolder').length>0) folder=$(e.target).parents('.pouch-list-input').data('pouchFolder');			if ($(e.target).data('pouchFolder') && $(e.target).data('pouchFolder').length>0) folder=$(e.target).data('pouchFolder');
+		if ($(e.target).parents('.pouch-list-input').data('pouchFolder') && $(e.target).parents('.pouch-list-input').data('pouchFolder').length>0) folder=$(e.target).parents('.pouch-list-input').data('pouchFolder');
 		if (folder.substr(folder.length-1)=='/') folder=folder.substr(0,folder.length-1);
-					
+		if (folder.length>0) folder=folder+"/"; 			
 		//console.log('input change',e.target,attachmentsDOM);
 		// DND
 		//if (e && e.dataTransfer && e.dataTransfer.files) {
@@ -403,24 +426,34 @@ $.fn.pouchUI = function(options) {
 		if (e && e.target && e.target.files) {
 			entries = e.target.files;
 		}
+		var targetList=$(e.target).parents('.pouch-list').first();
+		var db=targetList.data('pouchDb');		
 		//console.log('Entries',entries); 
 		$.each(entries,function(key,file) {
-			var parts;
-			if (file.webkitRelativePath) parts=file.webkitRelativePath.split("/");
-			else parts=[];
-			//console.log('PATH PARTS',parts);
-			if (parts[parts.length-1] !='.' ) {
-				//console.log('PATH PARTS P',parts);
-				var path=parts.slice(0,parts.length-1).join("/");
-				if (path.length>0) path=path+'/';
-				var fileDOM=$('<div class="file pending"><span class="ui-button" data-pouch-action="deletefile" >X</span><a target="_new" >'+path+file.name+'</a></div>');
-				// remove files of same name
-				$('.file[data-docid="'+folder+"/"+path+file.name+'"]',attachmentsDOM).remove();
-				attachmentsDOM.prepend(fileDOM);
-				var targetList=$(e.target).parents('.pouch-list').first();
-				var targetItem=$(e.target).parents('.pouch-list-item').first();
-				if (targetList.length>0 && targetList.attr('data-pouch-autosave')=='true') {
-					actionSave(targetList,targetItem);			
+			//!isCouch(db) &&   - LATEST VERSION OF POUCH CRASHES MEMORY FOR SAVING ATTACHMENTS GREATER THAN 26M. OLDER VERSIONS WERE TESTED FINE UP TO 1G
+			if (file.size > maxFileSize()) {
+				console.log('Ignoring file '+file.name+' because it is too large.');
+				alert('File '+file.name+' is too large');
+			} else {
+				var parts;
+				if (file.webkitRelativePath) parts=file.webkitRelativePath.split("/");
+				else parts=[];
+				//console.log('PATH PARTS',parts);
+				if (parts[parts.length-1] !='.' ) {
+					//console.log('PATH PARTS P',parts);
+					var path=parts.slice(0,parts.length-1).join("/");
+					if (path.length>0) path=path+'/';
+					var fileDOM=$('<div class="file pending"><span class="ui-button" data-pouch-action="deletefile" >X</span><a target="_new" >'+path+file.name+'</a></div>');
+					console.log(file)
+					fileDOM.attr('data-docid',folder+path+file.name);
+					fileDOM.attr('data-mime',file.type);
+					// remove files of same name
+					$('.file[data-docid="'+folder+path+file.name+'"]',attachmentsDOM).remove();
+					attachmentsDOM.prepend(fileDOM);
+					var targetItem=$(e.target).parents('.pouch-list-item').first();
+					if (targetList.length>0 && targetList.attr('data-pouch-autosave')=='true') {
+						actionSave(targetList,targetItem);			
+					}
 				}
 			}
 		});
@@ -550,81 +583,63 @@ $.fn.pouchUI = function(options) {
 	}
 	function actionDelete(db,id,listItem,target,e) {
 		if (confirm('Really Delete?')) {
+			startWaiting();
 			var pouch=getDB(db);
 			pouch.get(id,function(err,res) {
 				//console.log('get',res);
 				if (err) {
 					console.log('ERR DELETE get',err);
+					stopWaiting();
 				} else {
 					try {
 						// TODO - RESTORE VALIDATION ON REMOVE - pouch.validatingRemove - removed because
 						// TypeError: Cannot assign to read only property '_deleted' of joe {stack: "TypeError: Cannot assign to read only property '_d…   at http://localhost/pouchUI/pouchdb.js:7936:21", message: "Cannot assign to read only property '_deleted' of joe"}
 						pouch.remove(res._id,res._rev).then(function(err,dres) {
 							//console.log('DEL OK',err,dres);
+							stopWaiting();
 						}).catch(function(err) {
 							console.log('ERR DELETE',err);
+							stopWaiting();
 							//$('.validationerror',listItem).remove();
 							//var errMsg=$('<div class="validationerror" >'+err.message+'</div>');
 							//$('input,select,textarea',listItem).first().before(errMsg);
 						});
 					} catch (e) {
-					console.log('ERR DELETE exc',e);
+						console.log('ERR DELETE exc',e);
+						stopWaiting();
 					}
 				}
 			});
 		}
 	}
 	
-	/*
-	
-	
-	
-	*/
 	
 	function actionSave(list,currentListItem,closeAfter) {
-		console.log('save ',currentListItem.data('pouchRev'));
+		//console.log('save ',currentListItem);
 		var d=$.extend({include_docs:true},options,$(list).data());
 		var pouch=getDB(d.pouchDb);
-		// UPDATE EXISTING
-		if (currentListItem.data('pouchId') && currentListItem.data('pouchId').length>0) {
-			pouch.get(currentListItem.data('pouchId')).then(function(res) {
-				//console.log('get',currentListItem.data('pouchId'),res);
-				// override incoming values
-				var initialAttachments={};
-				if (res['_attachments']) {
-					$.each(res['_attachments'],function(rak,rav) {
-						initialAttachments[rak]=false;
-					});
-				}
-				var changed=false;
-				var fieldDfrs=[];
-				$.each($('.pouch-list-input',currentListItem),function(ivk,ivv) {
-					var fieldDfr=$.Deferred();
-					// IF THERE IS A FILE INPUT FILE INPUT, COLLECT ALL FILES LISTED IN CLASS ATTACHMENTS AS STUBS AND ALL FILE INPUTS AS NEW FILES
-					if ($('input[type="file"]',ivv).length>0) {
-						fieldDfrs.push(fieldDfr);
-						//console.log('file input');
-						var saveAttachments={};
-						// CAPTURE ALL THE EXISTING ATTACHMENTS LISTED IN THE ATTACHMENTS DIV AS STUBS
-						if (res['_attachments']) {
-							$.each($('.attachments',ivv).find('.file:not(.file.pending)'),function(ak,av) {
-								//console.log('file attachment',av);
-								var docId=$(av).data('docid');
-								// flag changed
-								initialAttachments[docId]=true;
-								saveAttachments[docId]=res['_attachments'][docId];
-							 });
-						}
-						 // CAPTURE ALL THE FILEINPUTS
-						var ldfrs=[]
+		var changed=false;
+		var finalDoc={};
+		
+		function doSaveAttachments(finalDoc,attachments,currentListItem,closeAfter) {
+			var first={}
+			var theRest={};
+			var count=0;
+			$.each(attachments,function(ak,av) {
+				if (count==0) first=ak;
+				else theRest[ak]=av;
+				count++;
+			});
+			if (count>0)  {
+				if (attachments[first]) {
+					//console.log('do save att',first);
+					// find file for saving, file inputs are appended so the last file found in the following iteration will be the last file selected (where multiple files of the same name are selected before save)
+					var theFile;
+					$.each($('.pouch-list-input',currentListItem),function(ivk,ivv) {
 						$.each($('input.pending[type="file"]',ivv),function(ik,iv) {
-							//console.log('file input pending',iv);
-							// folder prefix
 							var folder='';
-							// from parent list-input
-							if ($(iv).parents('.pouch-list-input').data('pouchFolder') && $(iv).parents('.pouch-list-input').data('pouchFolder').length>0) folder=$(iv).parents('.pouch-list-input').data('pouchFolder');			
-							// from the input itself
-							if ($(iv).data('pouchFolder') && $(iv).data('pouchFolder').length>0) folder=$(iv).data('pouchFolder');
+							if ($(ivv).data('pouchFolder') && $(ivv).data('pouchFolder').length>0) folder=$(ivv).data('pouchFolder');			
+							if ($(iv).data('pouchFolder') && $(iv).data('pouchFolder').length>0) folder=$(iv).data('pouchFolder');			
 							// ensure single trailing slash
 							if (folder.substr(folder.length-1)=='/') folder=folder.substr(0,folder.length-1);
 							if (folder.length>0) folder=folder+"/"; 
@@ -644,121 +659,181 @@ $.fn.pouchUI = function(options) {
 									var path=parts.slice(0,parts.length-1).join("/");
 									if (path.length>0) path=path+'/';
 									var docId=folder+path+file.name;
-									var mime=MimeConverter.lookupMime(file.name);
-									var b=new Blob([file],{type : mime});
-									var reader = new FileReader();
-									var ldfr=$.Deferred();
-									ldfrs.push(ldfr);
-									reader.onload = function(e) {
-										initialAttachments[docId]=false;
-										var prefix="data:"+mime+";base64,"
-										var content=reader.result;
-										if (content && content.length>0) {
-											var icontent=content.substr(prefix.length);
-											saveAttachment={content_type:mime,data:icontent,docId:docId}; 
-											ldfr.resolve(saveAttachment);
-										}
-										else ldfr.resolve();
+									if (docId==first) {
+										var mime=file.type;
+										var b=new Blob([file],{type : mime});
+										theFile={id:docId,mime:mime,data:b};
 									}
-									reader.readAsDataURL(b);
-								}	
+								}
 							});
-							$('.file.pending',currentListItem).remove();
 						});
-						$.when.apply($,ldfrs).then(function() {
-							//console.log('LAT',arguments);
-							$.each(arguments,function(lak,lav) {
-								//console.log('a');
-								saveAttachments[lav.docId]=lav;
-								//console.log('b');
-								//res['_attachments']= saveAttachments; 
-								var foundAll=true;
-								$.each(initialAttachments,function(iak,iav) {
-									foundAll=foundAll&&iav;
-								});
-								if (!foundAll) changed=true;
-							});
-							fieldDfr.resolve({changed:changed,field:'_attachments',fieldValue:saveAttachments});
-						});	
-					// USE THE VALUE FROM THE FIRST INPUT/SELECT OR TEXTAREA
+					});
+					if (theFile) {
+						//console.log('found file',theFile);
+						pouch.putAttachment(finalDoc._id, theFile.id, finalDoc._rev, theFile.data, theFile.mime).then(function(res) {
+							finalDoc._rev=res.rev;
+							doSaveAttachments(finalDoc,theRest,closeAfter);
+						}).catch(function(err) {
+							console.log('ERROR SAVING ATTACHMENT',err);
+							doSaveAttachments(finalDoc,theRest,currentListItem,closeAfter);
+						});
+					}
+					
+				} else {
+					//console.log('do del att',first);
+					pouch.removeAttachment(finalDoc._id,first,finalDoc._rev).then(function(res) {
+						finalDoc._rev=res.rev;
+						doSaveAttachments(finalDoc,theRest,currentListItem,closeAfter);
+					}).catch(function(err) {
+						console.log('ERROR REMOVING ATTACHMENT',err);
+						// keep going with other attachments on fail
+						doSaveAttachments(finalDoc,theRest,currentListItem,closeAfter);
+					})
+				}
+			} else {
+				//console.log('FINISHED SAVING ATTACHMENTS');
+				$('.file.pending',currentListItem).remove();
+				if (closeAfter) {
+					//console.log('REMOVE LIST ITEM AFTER SAVING ATTA');
+					currentListItem.remove();
+				}
+			}
+			
+		}
+		
+		function collateAttachments(foundAttachments,updatedAttachments) {
+			var attachments={};
+			$.each(foundAttachments,function(ak,av) {
+				if (!av) {
+					attachments[ak]=false;
+				} else if (updatedAttachments[ak]) {
+					attachments[ak]=true;
+				}
+			});
+			return attachments;
+		}
+		
+		function doSave(changed,finalDoc,currentListItem,closeAfter,attachmentsChanged,foundAttachments,updatedAttachments) {
+			//console.log('DO SAVE',changed,finalDoc,currentListItem,closeAfter,attachmentsChanged,foundAttachments,updatedAttachments);
+			if (changed) {
+				pouch.validatingPost(finalDoc).then(function(rs) {
+					//console.log('DONE SAVE',rs);
+					currentListItem.attr('data-pouch-id',rs.id);
+					currentListItem.attr('data-pouch-rev',rs.rev);
+					finalDoc._id=rs.id;
+					finalDoc._rev=rs.rev;
+					if (attachmentsChanged) {
+						doSaveAttachments(finalDoc,collateAttachments(foundAttachments,updatedAttachments),currentListItem,closeAfter);
+					} else {
+						if (closeAfter) currentListItem.remove();
+					}
+					$('.validationerror',currentListItem).remove();
+				}).catch(function(err) {
+					$('.validationerror',currentListItem).remove();
+					var errMsg=$('<div class="validationerror" >'+err.message+'</div>');
+					$('.pouch-list-input',currentListItem).first().before(errMsg);
+					console.log(err,$('.pouch-list-input',currentListItem).first());
+				});
+			} else {
+				if (attachmentsChanged) {
+					doSaveAttachments(finalDoc,collateAttachments(foundAttachments,updatedAttachments),currentListItem,closeAfter);
+				} else {
+					console.log('RECORD AND ATTACHMENTS UNCHANGED');
+				}
+			}
+		}
+		
+		// UPDATE SAVE
+		if (currentListItem.data('pouchId') && currentListItem.data('pouchId').length>0) {
+			//console.log('have id',currentListItem.data('pouchId'));
+			pouch.get(currentListItem.data('pouchId')).then(function(res) {
+				//console.log('loaded to save',res);
+				var foundAttachments={};
+				var updatedAttachments={};
+				if (res._attachments) {
+					$.each(res._attachments,function (ak,av) {
+						foundAttachments[ak]=false;
+					});
+				}
+				finalDoc=res;
+				//console.log('setup found atts');
+				var validFolders={};
+				var allFoldersValid=false;
+				$.each($('.pouch-list-input',currentListItem),function(ivk,ivv) {
+					if ($('input[type="file"]',ivv).length>0) {
+						//console.log('FILE FIELD')
+						// COLLATE ATTACHMENTS
+						$.each($('.attachments .file',ivv),function(iv,ik) {
+							var folder='';
+							if ($(ivv).data('pouchFolder') && $(ivv).data('pouchFolder').length>0) folder=$(ivv).data('pouchFolder');			
+							if ($(iv).data('pouchFolder') && $(iv).data('pouchFolder').length>0) folder=$(iv).data('pouchFolder');			
+							// ensure single trailing slash
+							if (folder.substr(folder.length-1)=='/') folder=folder.substr(0,folder.length-1);
+							if (folder.length>0) folder=folder+"/"; 
+							if (folder.length==0) {
+								allFoldersValid=true;
+							} else {
+								validFolders[folder]=true;
+							}
+							//console.log(ik);
+							if ($(ik).data('docid')) foundAttachments[$(ik).data('docid')]=true;
+							if ($(ik).hasClass('pending')) updatedAttachments[$(ik).data('docid')]=true;
+						});
+						
+						//console.log('foundatt',foundAttachments);
 					} else {
 						var fn=$(ivv).data('pouchField');
-						//console.log('search inputs for ',fn);
-						if (fn && fn.length) { 
-							var extractFromInput=$('select,input,textarea',ivv).first();
-							if (extractFromInput.length>0) {
-								//console.log('found inputs for ',extractFromInput);
-								if ($(extractFromInput).val()!=res[fn]) {
-									changed=true;
-								}
-								fieldDfrs.push(fieldDfr);
-								fieldDfr.resolve({changed:changed,field:fn,fieldValue:$(extractFromInput).val()});	
+						var getDataFrom=$('select,input,textarea',ivv).first();
+						$.each(getDataFrom,function (rik,riv) {
+						//console.log('getdata from',riv);
+							if (finalDoc[fn]!=$(riv).val()) {
+								//console.log('change value');
+								changed=true;
+								finalDoc[fn]=$(riv).val();
 							}
-						}
+						});
 					}
 				});
-				$.when.apply($,fieldDfrs).then(function() {
-					//console.log('LATFIE',currentListItem.data(),arguments);
-					var finalDoc=res;
-					//finalDoc._rev=currentListItem.data('pouchRev');
-					var finalChanged=false;
-					$.each(arguments,function(fieldk,fieldv) {
-						finalChanged=finalChanged && fieldv.changed;
-						finalDoc[fieldv.field]=fieldv.fieldValue;
-					});
-					if (changed) {
-						//var recs={rows:[{doc:finalDoc}]};
-						console.log('PRESAVE',finalDoc);
-						pouch.validatingPost(finalDoc).then(function(rs) {
-							//console.log('SAVE OK',rs);
-							//$('.validationerror',currentListItem).remove();
-							if (closeAfter && currentListItem && currentListItem.length) currentListItem.remove();
-							else {
-								//console.log('UPDATE REVISION TO ',rs.rev);
-								currentListItem.attr('data-pouch-rev',rs.rev);
-							}
-						}).catch(function(err) {
-							console.log('SAVE ERROR',err);
-							$('.validationerror',currentListItem).remove();
-							var errMsg=$('<div class="validationerror" >'+err.message+'</div>');
-							$('input,select,textarea',currentListItem).first().before(errMsg);
-						});
-						return true;
+				// collate found status and remove attachments not matching any of the validFolders
+				var finalFoundAttachments={};
+				//console.log('now review for folders',validFolders,allFoldersValid);
+				$.each(foundAttachments,function(fk,fv) {
+					//console.log('check att',fk);
+					if (allFoldersValid) {
+						//console.log('all folders valid');
+						finalFoundAttachments[fk]=fv;
 					} else {
-						console.log('SAVE BUT NO CHANGES IGNORED');
-						//if (target && target.length) currentListItem.remove();
-						//$('.validationerror',currentListItem).remove();
-						//return true;
-						if (closeAfter && currentListItem && currentListItem.length) currentListItem.remove();
+						//console.log('check folders');
+						var inValidFolder=false;
+						$.each(validFolders,function(vfk,vfv) {
+							//console.log('check',vfk,'against',fk);
+							if (fk.indexOf(vfk)==0) {
+								//console.log('in valid');
+								inValidFolder=true;
+							}
+							//console.log('done check');
+						});
+						if (inValidFolder) finalFoundAttachments[fk]=fv;
 					}
-				});	
-				//console.log('REALLY have changed files',changed);
-				//$.each(
-				
-			}).catch(function(err) {
-				console.log('SAVE ERROR preloading record',err);
+				});
+				//console.log('attachmetns after filter by folder',finalFoundAttachments);
+				var foundAllAttachments=true;
+				$.each(finalFoundAttachments,function(fk,fv) {
+					foundAllAttachments=foundAllAttachments && fv;
+				});
+				var attachmentsChanged=!(foundAllAttachments&&(updatedAttachments.length==0));
+				//console.log('final doc',finalDoc);
+				doSave(changed,finalDoc,currentListItem,closeAfter,attachmentsChanged,finalFoundAttachments,updatedAttachments);
 			});
-			return true;
 		// SAVE NEW
 		} else {
-			var res={};
-			$.each($('.pouch-list-input',currentListItem),function(ivk,ivv) {
-				//console.log('getting',ivk,ivv);
-				var fn=$(ivv).data('pouchField');
-				//console.log('getting',fn);
-				$.each($('select,input,textarea',ivv),function (rik,riv) {
-					res[fn]=$(riv).val();
-				});
-				//console.log('done loop inputs etc',res);
-			});
+			changed=true;
+			var foundAttachments={};
+			var updatedAttachments={};
+			var attachmentsChanged=false;
 			// ID from form data
-			if (res['_id'] && res['_id'].length>0) {
-				pouch.validatingPost(res,function(err,rs) {
-					//console.log('saved new with ID',rs);
-					currentListItem.attr('data-pouch-id',rs._id);
-					currentListItem.attr('data-pouch-rev',rs._rev);
-					//if (closeAfter && currentListItem && currentListItem.length) currentListItem.remove();
-				});
+			if (finalDoc['_id'] && finalDoc['_id'].length>0) {
+				//console.log('id from post');
 			// TODO - COMPLETE THESE CASES
 			// ID from idFunction
 			} else if (false)  {
@@ -767,8 +842,27 @@ $.fn.pouchUI = function(options) {
 			} else {
 				console.log('id db');
 			}
-			return true;
-		}
+			// CAPTURE FIELDS
+			$.each($('.pouch-list-input',currentListItem),function(ivk,ivv) {
+				if ($('input[type="file"]',ivv).length>0) {
+					$.each($('.attachments .file',ivv),function(iv,ik) {
+						//console.log(ik);
+						if ($(ik).data('docid')) {
+							foundAttachments[$(ik).data('docid')]=true;
+							updatedAttachments.push[$(ik).data('docid')]=true;
+							attachmentsChanged=true;
+						}
+					});
+				} else {
+					var fn=$(ivv).data('pouchField');
+					var getDataFrom=$('select,input,textarea',ivv).first();
+					$.each(getDataFrom,function (rik,riv) {
+						finalDoc[fn]=$(riv).val();
+					});
+				}
+			});
+			doSave(changed,finalDoc,currentListItem,closeAfter,attachmentsChanged,foundAttachments,updatedAttachments);
+		}	
 	}	
 
 	function actionLoadAndClickLink(docId,attachmentId,button,db) {
@@ -776,29 +870,26 @@ $.fn.pouchUI = function(options) {
 		//return;
 		if (docId && attachmentId && button && db) {
 			var pouch=getDB(db);
-			pouch.getAttachment(docId,attachmentId).then(function(ires) {
-				//console.log('async loaded ',ires);
-				/* var reader = new window.FileReader();
-				 reader.onloadend = function() {
-					//console.log('IMAGE LOADED ASYNC',image,reader.result);
-					try {
-						button.attr('href',reader.result);
-						button[0].click();
-					} catch (err) {
-						console.log('ERR SetTING HREF');
-					}
-					
-				 };
-				 reader.readAsDataURL(ires); 
-				 */
-				var url=URL.createObjectURL(ires);
-				button.attr('href',url);
+			if (isCouch(db)) {
+				var urlParts=[];
+				urlParts.push(db);
+				urlParts.push(docId);
+				urlParts.push(encodeURI(attachmentId));
+				button.attr('href',urlParts.join("/"));
 				button[0].click();
-				setTimeout(function(url) {
-					URL.revokeObjectURL(url);
-					console.log('revoke url');
-				},5000);
-			}); 
+			} else {				
+				pouch.getAttachment(docId,attachmentId).then(function(ires) {
+					var url=URL.createObjectURL(ires);
+					button.attr('href',url);
+					var attachmentParts=attachmentId.split("/");
+					button.attr("download",attachmentParts[attachmentParts.length-1]);
+					button[0].click();
+					setTimeout(function(url) {
+						URL.revokeObjectURL(url);
+						console.log('revoke url');
+					},5000);				
+				}); 
+			}
 		} else {
 			console.log('ASYNC LOAD IMAGE MISSING META DATAS',image,image.data());
 		}
@@ -1021,8 +1112,18 @@ $.fn.pouchUI = function(options) {
 					$(value).html('');
 				}
 				if (saveTemplate) $(value).prepend(saveTemplate); 
-			} else if (resvalue.doc[$(value).data('pouchField')]) $(value).html(valueFromObjectPath(resvalue.doc,$(value).data('pouchField')));
-			else $(value).html('');
+			} else if (resvalue.doc[$(value).data('pouchField')]) {
+				var label='';
+				if ($('label',value).length>0) label=$('label',value)[0].outerHTML;
+				$(value).html(label+valueFromObjectPath(resvalue.doc,$(value).data('pouchField')));
+				$('label',value).show();
+			}
+			else {
+				var label='';
+				if ($('label',value).length>0) label=$('label',value)[0].outerHTML;
+				$(value).html(label);
+				$('label',value).hide();
+			}
 		});
 		// REPLACE INPUT VALUES
 		$.each($('.pouch-list-input:not(.pouch-list .pouch-list .pouch-list-input)',itemTmpl),function(key,value) {

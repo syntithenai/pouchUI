@@ -76,6 +76,7 @@ file upload - don't put unsaved attachments in DOM. Put them in the database in 
 	- Only images need to be loaded into DOM when they are displayed as images.
 full text search https://github.com/nolanlawson/pouchdb-quick-search
 
+smarter solutions for large files using server
 
 SAMPLE APP
 content editing timeline
