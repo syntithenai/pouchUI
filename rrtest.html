@@ -1,0 +1,199 @@
+ <!DOCTYPE html>
+<script src='../jquery-ui/js/jquery-1.10.2.js' ></script>
+<style>
+div {margin-left: 10px;}
+</style>
+<script>
+
+// TODO
+// async access to data
+// labels, value seperators  eg contains meat,flour
+// templated attributes DONE
+
+
+
+$(document).ready(function() {
+
+function loadList(key,values) {
+	console.log('load list',key,values);
+	var dfr=$.Deferred();
+	var results=[];
+	if (data[key]) {
+		$.each(values,function(vk,vv) {
+			results.push(data[key][vv]);
+		});
+		setTimeout(function() {
+			console.log('now timout',results);
+			dfr.resolve(results);
+		},3000);
+		
+	} else {
+		dfr.resolve({});
+	}
+	return dfr;
+}
+
+
+/**************************************
+ * Render data array using template into list
+ * @param	data - an array of objects to project into the template
+ * @param	template - a string or jquery object to copy and use as a template for rendering
+ * @param	list - reference to DOM object whose contents will be replaced by rendering result
+ ***********************************************/
+function renderList(data,template,list) {
+	if (data && data.length>0) {
+		// make a copy of list item
+		var listItems=$($(template)[0].outerHTML);
+		//console.log('TEM',$(template)[0].outerHTML);
+		// clear template items
+		listItems.children('.item').remove();
+		// iterate data
+		$.each(data,function(k,v) {
+			// copy item template
+			var itemTemplate=$(template).children('.item').first();
+			console.log('I-T',itemTemplate)
+			// replace field value
+			$.each(itemTemplate.data(),function(fk,fv) {
+				console.log('DATA',fv,v[fv],v);
+				if (v[fv]) {
+					itemTemplate.attr(fv,v[fv]);
+					itemTemplate.removeAttr('data-'+fv);
+				}
+			});
+			$.each(itemTemplate.children('.field'),function(fk,fv) {
+				$(fv).text(v[$(fv).data('field')]);
+			});
+			$.each(itemTemplate.children('.list'),function(fk,fv) {
+				var thisData=v[$(fv).data('field')];
+				console.log('now sub list',$(fv).data('field'),thisData);
+				if (Array.isArray(thisData) && thisData.length>0) {
+					console.log('list has values');
+					// need to load data
+					if ($.type(thisData[0])=="string") { 
+						console.log('load list values');
+						loadList($(fv).data('field'),thisData).then(function(res) {
+							console.log('got values',res);
+							renderList(res,$(fv)[0].outerHTML,$(fv));
+						});
+					// child data already present
+					} else {
+						renderList(v[$(fv).data('field')],$(fv)[0].outerHTML,$(fv));
+					}
+				// empty list
+				} else {
+					$(fv).html('');
+				}
+			});
+			// append to item list
+			listItems.append(itemTemplate);
+		});
+		list.html(listItems.children());
+	} else {
+		list.html('');
+	}
+}
+var data={};
+data.people=[
+	{name:'bill',x:43,
+		pets:['kofi','roar']
+	},
+	{name:'jane',x:99,
+		pets:['spot','seth']
+	}
+];
+
+data.pets={
+	kofi: {
+		name: 'kofi',
+		foods:['bikkis','fish']
+	},
+	roar: {
+		name: 'roar',
+		foods:['rabbits','mice']
+	},
+	spot: {
+		name: 'spot',
+		foods:['beef','carrots']
+	},
+	seth : {
+		name: 'seth',
+		foods:['chicken','fish']
+	}
+};
+data.foods = {
+	bikkis: {name: 'bikkis',contains:[{name:'flour'},{name:'meat'}]},
+	fish: {name: 'fish',contains:[{name:'protein'},{name:'fat'}]},
+	rabbits: {name: 'rabbits',contains:[{name:'fur'},{name:'meat'}]},
+	mice: {name: 'mice',contains:[{name:'fur'},{name:'fear'}]},
+	beef: {name: 'beef',},
+	carrots: {name: 'carrots',contains:[{name:'carotene'},{name:'water'}]},
+	chicken: {name: 'chicken',contains:[{name:'eggs'},{name:'meat'}]}
+};
+
+
+var d=[
+	{name:'bill',x:43,
+		pets:[
+			{
+				name:'kofi',
+				foods:[
+					{name:'bikkis',contains:[{name:'flour'},{name:'meat'}]},
+					{name:'fish',contains:[{name:'protein'},{name:'fat'}]}
+				]
+			},
+			{
+				name:'roar',
+				foods:[
+					{name:'rabbits',contains:[{name:'fur'},{name:'meat'}]},
+					{name:'mice',contains:[{name:'fur'},{name:'fear'}]}
+				]
+			}
+		]
+	},
+	{name:'jane',x:99,
+		pets:[
+			{
+				name:'spot',
+				foods:[{name:'beef'},{name:'carrots',contains:[{name:'carotene'},{name:'water'}]}]
+			},
+			{
+				name:'seth',
+				foods:[{name:'chicken',contains:[{name:'eggs'},{name:'meat'}]},{name:'fish'}]
+			}
+		]
+	}
+];
+var list=$('.list').first();
+var template=list[0].outerHTML;
+if (list.data('template')) {
+	template=list.data('template');
+} else {
+	list.data('template',template)
+}
+//console.log($(template).get(0).outerHTML);
+renderList(data.people,template,list);
+//renderList(d,template,list);
+})
+</script>
+
+
+<div class='list' ><h1>People/Pets/Food</h1>
+	<div class='item' data-x='x' >Person
+		<div class='field' data-field='name' >Joe</div>
+		<div class='list'  data-field='pets'>
+			<div class='item' >has pet
+				<div class='field' data-field='name' >Spot the dog</div>
+				<div class='list'  data-field='foods'>
+					<div class='item'  >who eats
+						<div class='field' data-field='name' >meat</div>
+						<div class='list'  data-field='contains'>
+							<div class='item'  >containing
+								<div class='field' data-field='name' >stuff</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

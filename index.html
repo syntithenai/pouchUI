@@ -110,7 +110,7 @@ designDoc['http://stever:wtfaid72@localhost:5984/people'] =  {
 </script>
 
 <div id='edittemplate' style='float:right' >
-
+editing
 	<div style='display:none;' class='pouch-list' ddata-pouch-autosave='true' ddata-pouch-db='testdb2'  data-pouch-db='http://stever:wtfaid72@localhost:5984/people' data-pouch-index='people/all' data-key='-1' >
 		<div class='pouch-list-item' >
 			<h1>edit template</h1>
@@ -137,6 +137,7 @@ designDoc['http://stever:wtfaid72@localhost:5984/people'] =  {
 
 
 <div id='listtemplate'>
+listing
 <div data-search-target='#listtemplate' class='pouch-search' >
 <input type='text' >
 <!--input type='text'  >
@@ -157,6 +158,14 @@ designDoc['http://stever:wtfaid72@localhost:5984/people'] =  {
 		<div class='pouch-list-value' data-pouch-field='date' ><label>Date: </label>1/1/99</div>
 		<div class='pouch-list-value' data-pouch-field='time' ><label>Time: </label>2:00PM</div>
 		<div class='pouch-list-value' data-pouch-field='number' ><label>Number: </label>3</div>
+		<div class='pouch-list' data-pouch-db='http://stever:wtfaid72@localhost:5984/people' data-pouch-index='people/petsbyowner' data-pouch-field='_id' >list of all pets
+			<div class='pouch-list-item' >
+				<div class='pouch-list-value' data-pouch-field='name' >eg Joe</div>
+				Pet Eats <div class='pouch-list' data-pouch-db='http://stever:wtfaid72@localhost:5984/people' data-pouch-index='people/foods' data-pouch-field='eats'  >
+					<div class='pouch-list-item' ><div class='pouch-list-value' data-pouch-field='name' ></div></div>
+				</div>
+			</div>
+		</div>
 		<div class='buttonset' >
 		<a class='ui-button' dhref='#listtemplate' data-pouch-action='delete' >Delete</a>
 		<a class='ui-button' href='#edittemplate' data-pouch-action='edit' >Edit</a>
@@ -214,6 +223,9 @@ extra list
 			
 		
 		Files: <div class='pouch-list-value' data-pouch-field='_attachments' data-pouch-list-folder='/' ><a target='_blank' ><img width='100' /></a></div>
+		Person Eats <div class='pouch-list' data-pouch-db='http://stever:wtfaid72@localhost:5984/people' data-pouch-index='people/foods' data-pouch-field='eats'  >
+			<div class='pouch-list-item' ><div class='pouch-list-value' data-pouch-field='name' ></div></div>
+		</div>
 		
 		
 		-->

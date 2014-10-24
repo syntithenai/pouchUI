@@ -1,0 +1,126 @@
+ <!DOCTYPE html>
+<script src='../jquery-ui/js/jquery-1.10.2.js' ></script>
+<style>
+div {margin-left: 10px;}
+</style>
+<script>
+
+// TODO
+// async access to data
+// labels, value seperators  eg contains meat,flour
+// templated attributes DONE
+
+
+
+$(document).ready(function() {
+
+	function getDomPath(el) {
+	  var stack = [];
+	  while ( el.parentNode != null ) {
+		//console.log(el.nodeName);
+		var sibCount = 0;
+		var sibIndex = 0;
+		for ( var i = 0; i < el.parentNode.childNodes.length; i++ ) {
+		  var sib = el.parentNode.childNodes[i];
+		  if ( sib.nodeName == el.nodeName ) {
+			if ( sib === el ) {
+			  sibIndex = sibCount;
+			}
+			sibCount++;
+		  }
+		}
+		if ( el.hasAttribute('id') && el.id != '' ) {
+		  stack.unshift(el.nodeName.toLowerCase() + '#' + el.id);
+		} else if ( sibCount > 1 ) {
+		  stack.unshift(el.nodeName.toLowerCase() + ':eq(' + sibIndex + ')');
+		} else {
+		  stack.unshift(el.nodeName.toLowerCase());
+		}
+		el = el.parentNode;
+	  }
+
+	  return stack.slice(1); // removes the html element
+	}
+
+	var et=$('#listtemplate').get(0).outerHTML;
+	$('.pouch-list',et).each(function(k,v) {
+		$(v).attr('data-templatepath',getDomPath(v))
+		console.log(getDomPath(v));
+	});
+
+
+});
+</script>
+
+
+
+<div id='edittemplate' style='float:right' >
+
+	<div style='display:none;' class='pouch-list' ddata-pouch-autosave='true' ddata-pouch-db='testdb2'  data-pouch-db='http://stever:wtfaid72@localhost:5984/people' data-pouch-index='people/all' data-key='-1' >
+		<div class='pouch-list-item' >
+			<h1>edit template</h1>
+			<div class='pouch-list-input' style='display:none'  data-pouch-field='type' ><input type='hidden' value='person' /></div>	
+			<div class='pouch-list-input' data-pouch-field='_id' ><input type='text' value='' /></div>	
+			Name: <div class='pouch-list-input' data-pouch-field='name' ><textarea ></textarea></div>
+			Age: <div class='pouch-list-input' data-pouch-field='age' ><input type='text'  /></div>	
+			Date: <div class='pouch-list-input' data-pouch-field='date' ><input type='date'  /></div>	
+			Time: <div class='pouch-list-input' data-pouch-field='time' ><input type='time'  /></div>
+			Number: <div class='pouch-list-input' data-pouch-field='number' ><input type='number'  /></div>
+			<div class='buttonset' >
+				<a class='ui-button' href='#listtemplate' data-pouch-action='close' >Close</a>
+				<a class='ui-button' href='#listtemplate' data-pouch-action='save' >Save</a>
+				<a class='ui-button' href='#listtemplate' data-pouch-action='saveandclose' >Done</a>
+				<a class='ui-button' href='#listtemplate' data-pouch-action='delete' >Delete</a>
+			</div>
+		</div>
+	</div> 
+</div> 
+
+
+
+
+
+
+<div id='listtemplate'>
+<div data-search-target='#listtemplate' class='pouch-search' >
+<input type='text' >
+<!--input type='text'  >
+<select><option>aaa</option><option>bbbb</option></select-->
+<a class='ui-button' data-pouch-action='search' >Search</a>
+<a class='ui-button' data-pouch-action='new'  href='#edittemplate' >New Record</a>
+</div>
+
+<div style='display:none;' class='pouch-list'  data-pouch-attachments='true' ddata-pouch-db='testdb2' data-pouch-index='people/persons'  ddata-pouch-sheetsource='https://spreadsheets.google.com/feeds/list/0AgNF3G4HQWMTdEJPTFFSV2VXTkM1WUowSmJBMnRGLVE/od7/public/basic'  data-pouch-db='http://stever:wtfaid72@localhost:5984/people'>
+<!-- sdata-pouch-dbsource='http://stever:wtfaid72@localhost:5984/people' ddata-pouch-dbsource='http://stever:wtfaid72@localhost:5984/people' ddata-pouch-startkey='ddd'  ddata-pouch-endkey='gggg' -->
+<h1 style='display:inline' >Owners</h1> 
+
+<div class='pagination' ><span class='ui-button' data-pouch-action='paginate-first' >First</span><span class='ui-button' data-pouch-action='paginate-previous' >Previous</span><span class='ui-button' data-pouch-action='paginate-next' >Next</span><span class='ui-button' data-pouch-action='paginate-last' >Last</span>Limit<select class='pouch-limit' ><option>5</option><option>10</option><option>20</option><option>50</option></select></div>
+<ul>
+	<li class='pouch-list-item' >
+		<div class='pouch-list-value' data-pouch-field='name' >eg xanthum</div>
+		<div class='pouch-list-value' data-pouch-field='age' ><label>Age: </label>eg 33</div>
+		<div class='pouch-list-value' data-pouch-field='date' ><label>Date: </label>1/1/99</div>
+		<div class='pouch-list-value' data-pouch-field='time' ><label>Time: </label>2:00PM</div>
+		<div class='pouch-list-value' data-pouch-field='number' ><label>Number: </label>3</div>
+		<div class='pouch-list' data-pouch-db='http://stever:wtfaid72@localhost:5984/people' data-pouch-index='people/petsbyowner' data-pouch-field='_id' >list of all pets
+			<div class='pouch-list-item' >
+				<div class='pouch-list-value' data-pouch-field='name' >eg Joe</div>
+				Pet Eats <div class='pouch-list' data-pouch-db='http://stever:wtfaid72@localhost:5984/people' data-pouch-index='people/foods' data-pouch-field='eats'  >
+					<div class='pouch-list-item' ><div class='pouch-list-value' data-pouch-field='name' ></div></div>
+				</div>
+			</div>
+		</div>
+		<div class='buttonset' >
+		<a class='ui-button' dhref='#listtemplate' data-pouch-action='delete' >Delete</a>
+		<a class='ui-button' href='#edittemplate' data-pouch-action='edit' >Edit</a>
+		<a class='ui-button' href='#listtemplate'  data-pouch-action='save' >Save</a>
+		</div>
+		<HR>
+		
+	</li>
+	<li class='pouch-list-noresults' >No matching Results</li>
+</ul>
+<div class='pagination'><span class='ui-button' data-pouch-action='paginate-first' >First</span><span class='ui-button' data-pouch-action='paginate-previous' >Previous</span><span class='ui-button' data-pouch-action='paginate-next' >Next</span><span class='ui-button' data-pouch-action='paginate-last' >Last</span></div>
+
+</div>
+</div>
