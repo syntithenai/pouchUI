@@ -23,7 +23,7 @@ function pouchUI_captureGoogleSheet(val) {
 	 * @param raw DOM element to find path for
 	 * @return a string containing the path as a CSS selector
 	 **********************************************/
-	function getDomPath(el) {
+	function getDomPath(el,slice) {
 	  var stack = [];
 	  while ( el.parentNode != null ) {
 		//console.log(el.nodeName);
@@ -47,8 +47,14 @@ function pouchUI_captureGoogleSheet(val) {
 		}
 		el = el.parentNode;
 	  }
-
-	  return stack.join(' ');
+	  var finalVal='';
+	if (slice && slice >0) {
+		//console.log('SLICE',slice,stack.slice(slice));
+		finalVal=stack.slice(slice).join(' > ');
+	} else {
+		finalVal=stack.join(' > ');
+	}
+	return finalVal;
 	}
 
 /* 
@@ -251,10 +257,6 @@ $.fn.pouchUI = function(options) {
 		list.hide();
 		var dfr=$.Deferred();
 		var d=$.extend({include_docs:true},options,list.data());
-		if (!list.data('listTemplate')) {
-			list.data('listTemplate',list[0].outerHTML);
-			//console.log('newlisttemplateok',$(list).data('listTemplate'));
-		}
 		var pouch=getDB(d.pouchDb);
 		//console.log('initialise conf',d);
 		// BIND LIST EVENTS
@@ -492,11 +494,36 @@ $.fn.pouchUI = function(options) {
 		
 	}
 	
-	function actionReloadList(list) {
-		//console.log('reload list')
-		loadList(list).then(function(res) {
-			renderList(res,list,list);
-		});
+	function actionReloadList(iList) {
+		loadList(iList).then(function(res2) {
+			if (res2 && res2.rows && res2.rows.length>0)  {
+				renderList(res2,iList).then(function (items) {
+					var firstItem=$('.pouch-list-item',iList).first();
+					// start with list items that are immediate children
+					var allItems=$(iList).children('.pouch-list-item');
+					// for all children, look at their immediate children for list items
+					var secondLevel=$(iList).children();
+					$.each(secondLevel,function(sk,sv) {
+						allItems=allItems.add($(sv).children('.pouch-list-item'));
+					});
+					 //.add(secondChildren);
+					console.log('reloadlist',allItems);
+					
+					if ($(iList).data('pouchWrapstart')) firstItem.before($(iList).data('pouchWrapstart'));
+					var count=0;
+					$.each(items,function(rlk,rlv) {
+						if (count>0) firstItem.before($(iList).data('pouchSeperator'));
+						firstItem.before(rlv);
+						count++;
+					});
+					if ($(iList).data('pouchWrapend')) firstItem.before($(iList).data('pouchWrapend'));
+					allItems.remove();
+					$('.pouch-list-noresults',iList).remove();
+				});
+			} else {
+				showNoResults(iList);
+			}
+		});	
 	}
 	
 	/*
@@ -573,9 +600,7 @@ $.fn.pouchUI = function(options) {
 				$(splv).data('endkey',end);
 				//console.log('set search criteria in selected lists',$(splv).data());
 				// do search
-				loadList($(splv)).then(function(res) {
-					renderList(res,splv,$(splv));
-				});
+				actionReloadList($(splv));
 			});
 		} 
 		return dfr;
@@ -601,11 +626,7 @@ $.fn.pouchUI = function(options) {
 					var d=$.extend({include_docs:true},options,$(tvv).data())
 					$(tvv).data('key',id);
 					//console.log('look for child lists set key',id,d);
-					loadList(tvv).then(function(results) {
-						//console.log('loaded child list');
-						renderList(results,tvv,$(tvv));
-						//console.log('rendered child list');
-					});
+					actionReloadList($(tvv));
 					dfr.resolve();
 				});
 			}
@@ -1049,61 +1070,132 @@ $.fn.pouchUI = function(options) {
 	 * END CLICK ACTIONS
 	 **************************************************************/
 
-	function getTemplate(path) {
-		return $(path,pluginTemplate);
+	function getTemplate(path,recurse) {
+		//console.log('gettemplate',path)
+		//console.log(pluginTemplate[0].outerHTML);
+		var v=$(path,$(pluginTemplate));
+		//console.log('v',v.length)
+		return v;
 	}
+	
+	function showNoResults(iList) {
+		//console.log('NORES',$(iList).data('templatepath'),getTemplate($(iList).data('templatepath'),2));
+		var firstItem=$('.pouch-list-item',iList).first();
+		var noRes=$('.pouch-list-noresults',getTemplate($(iList).data('templatepath'),2)).last();	
+		//noRes='<b>No Res</b>';
+		firstItem.after(noRes);
+		$('label',iList).remove();
+		firstItem.remove();
+	}
+	
 
 	function renderList(res,list) {
-		var listTmpl=getTemplate(list.data('templatepath'));
-		console.log('render lsit with template',listTmpl);
-		if (res.rows && res.rows.length>0) {
-			var result=$('<div/>');
-			//console.log('render plain list',res,list,itemTmpl);
-			$.each(res.rows,function(reskey,resvalue) {
-				if (resvalue.doc) {
-					var itemTmpl=listTmpl.children('.pouch-list-item').first().clone(true);
-					// SET ROW METADATA
-					itemTmpl.attr('data-pouch-id',resvalue.doc._id);
-					itemTmpl.attr('data-pouch-rev',resvalue.doc._rev);
-					$.each($(itemTmpl).children('.pouch-list-value'),function(key,value) { 
-						if (resvalue.doc[$(value).data('pouchField')]) {
-							var label='';
-							if ($('label',value).length>0) label=$('label',value)[0].outerHTML;
-							$(value).html(label+valueFromObjectPath(resvalue.doc,$(value).data('pouchField')));
-							$('label',value).show();
-						}
-						else {
-							var label='';
-							if ($('label',value).length>0) label=$('label',value)[0].outerHTML;
-							$(value).html(label);
-							$('label',value).hide();
-						}
-					});
-		
-					//console.log('set meta');
-					// SET RECORD DATA
-					//substituteRecordValues(itemTmpl,resvalue);
-					//console.log('subbed vals');
-					// AND APPEND TO THE FINAL LIST
-					result.append(itemTmpl.clone()); 
-					//console.log('added to list');
-				}
-			});
-		//console.log('DONE ROWS',result[0].outerHTML,$('.pouch-list-item',list));
-			$('.pouch-list-item:not(.pouch-list-item .pouch-list-item)',listTmpl).replaceWith($(result).html());
-			$('.pouch-list-noresults:not(.pouch-list-item .pouch-list-noresults)',listTmpl).hide();
-		} else {
-			$('.pouch-list-item:not(.pouch-list-item .pouch-list-item)',listTmpl).replaceWith('');
-			$('.pouch-list-noresults:not(.pouch-list-item .pouch-list-noresults)',listTmpl).show();
+		var dfr=$.Deferred();
+		//var result=$('<div/>');
+		var items=[];
+		if (list) {
+			if (!list.jquery) list=$(list);
+			var listTmpl=getTemplate(list.data('templatepath'));
+			var itemTmplBackup=listTmpl.find('.pouch-list-item').first().clone(true);
+			if (res.rows && res.rows.length>0) {
+				$.each(res.rows,function(reskey,resvalue) {
+					if (resvalue.doc) {
+						var itemTmpl=itemTmplBackup.clone(true);
+						// SET ROW METADATA
+						itemTmpl.attr('data-pouch-id',resvalue.doc._id);
+						itemTmpl.attr('data-pouch-rev',resvalue.doc._rev);
+						$.each($(itemTmpl).children('.pouch-list-value'),function(key,value) { 
+							if (resvalue.doc[$(value).data('pouchField')]) {
+								var label='';
+								if ($('label',value).length>0) label=$('label',value)[0].outerHTML;
+								$(value).html(label+valueFromObjectPath(resvalue.doc,$(value).data('pouchField')));
+								$('label',value).show();
+							} else {
+								var label='';
+								if ($('label',value).length>0) label=$('label',value)[0].outerHTML;
+								$(value).html(label);
+								$('label',value).hide();
+							}
+						});
+						$.each(itemTmpl.children('.pouch-list'),function(key,iList) {
+							var field=$(iList).data('pouchField');
+							if (field && field.length>0 && resvalue.doc[field]) {
+								if ($(iList).data('pouchMmseperator') && $(iList).data('pouchMmseperator').length && $(iList).data('pouchMmseperator').length>0) {
+									$(iList).attr('data-keys',resvalue.doc[field]);
+								} else {
+									$(iList).attr('data-key',resvalue.doc[field]);
+								}
+								//$(iList).attr('data-endkey',resvalue.doc[field]);
+								loadList(iList).then(function(res2) {
+									if (res2 && res2.rows && res2.rows.length>0)  {
+										renderList(res2,iList).then(function (items) {
+											var firstItem=$('.pouch-list-item',iList).first();
+											if ($(iList).data('pouchWrapstart')) firstItem.before($(iList).data('pouchWrapstart'));
+											var count=0;
+											$.each(items,function(rlk,rlv) {
+												if (count>0) firstItem.before($(iList).data('pouchSeperator'));
+												firstItem.before(rlv);
+												count++;
+											});
+											if ($(iList).data('pouchWrapend')) firstItem.before($(iList).data('pouchWrapend'));
+											firstItem.remove();
+											$('.pouch-list-noresults',iList).remove();
+										});
+									} else {
+										showNoResults(iList);
+									}
+								});
+							}  else {
+								showNoResults(iList);
+							}
+						});
+						items.push(itemTmpl);
+						
+					}
+				});
+			}
 		}
-		// REPLACE LIST CONTENTS WITH RENDERED LIST
-		$(list).html(listTmpl.html());
-		// NOW RECURSE
+		var skip=$(list).data('pouchSkip');
+		if (skip===undefined || skip===NaN) skip=0;
+		var limit=parseInt($(list).data('pouchLimit'));
+		var maxRecords=parseInt(res.total_rows);
+		var next=skip+limit;
+		var previous=skip-limit;
+		if (previous<0) previous=0;
+		var last=maxRecords;
+		if (limit>0) last=Math.floor(maxRecords/limit)*limit;
 		
+		$('[data-pouch-action="paginate-first"]',list).data('pouchSkipTo',0);
+		$('[data-pouch-action="paginate-previous"]',list).data('pouchSkipTo',previous);
+		$('[data-pouch-action="paginate-next"]',list).data('pouchSkipTo',next);
+		$('[data-pouch-action="paginate-last"]',list).data('pouchSkipTo',last);
+		
+		//console.log(skip<limit,'SKIP',skip,'limit',limit,'max',maxRecords,'next',next,'prev',previous,'laset',last);
+		
+		if (skip == 0) { 
+			$('[data-pouch-action="paginate-first"]',list).addClass('disabled');
+		}
+		if (skip < limit) {
+			//console.log('skip<limit');
+			$('[data-pouch-action="paginate-previous"]',list).addClass('disabled');
+		}
+		if (next > last) {
+			$('[data-pouch-action="paginate-next"]',list).addClass('disabled');
+			$('[data-pouch-action="paginate-last"]',list).addClass('disabled');
+		}
+		
+		// set limit DOM value in list
+		$('.pouch-limit',list).val(limit)
+		$.each($('img[data-pouch-loadme="yes"]',$(list)),function() {
+			asyncLoadImage($(this));
+		});
+		$(list).show();
+		//console.log('NORES',$('.pouch-list-noresults',list));
+		return dfr.resolve(items);
 	}
 	
 	// CALLED ON INIT AND ON CHANGES TO GET RECENT DATA AND CALL UPDATE LIST
-	function loadList(list) {
+	function loadList(list,recurse) {
 		//$(list).html('<b>eek</b>')
 		var dfr=$.Deferred();
 		var limit=0;
@@ -1126,14 +1218,21 @@ $.fn.pouchUI = function(options) {
 		}
 		var d=$.extend({include_docs:true},options,$(list).data());
 		//console.log('list data',$(list).data());
+		if (d.keys) {
+			console.log("PREP KEYS",d.keys);
+			d.keys=d.keys.split($(list).data('pouchMmseperator'));
+			console.log("PREPPED KEYS",d.keys);
+		}
+		
 		if (limit>0) d.limit=parseInt(limit);
 		if (skip>0) d.skip=parseInt(skip);
-		//console.log('now query local and rerender',d);
+		console.log('now query local and rerender',d);
 		// NOW LOAD RESULTS
 		var pouch=getDB(d.pouchDb);
 		if (d.pouchIndex) {
-			console.log('now queryindex',d.pouchIndex);
+			//if (recurse>0) console.log('DBDBDB now queryindex',recurse,d.pouchIndex);
 			pouch.query(d.pouchIndex,d).then(function(res) {
+				console.log('DBDBDB query res',recurse,res)
 				dfr.resolve(res);
 			}).catch(function(err) {
 				console.log('Query index err',err);
@@ -1180,21 +1279,27 @@ $.fn.pouchUI = function(options) {
 	$(this).each(function(tk,tv) {
 		pluginTemplate=pluginTemplate+tv.outerHTML;
 	});
+	//console.log("PTEMP",pluginTemplate);
 	pluginTemplate=$('<div id="root">'+pluginTemplate+'</div>');
 	// set path for every list regardless of nesting depth
 	$('.pouch-list',pluginTemplate).each(function(k,v) {
-		$(v).attr('data-templatepath',getDomPath(v));
+		$(v).attr('data-templatepath',getDomPath(v,1));
 		if ($(v).data('pouchDb')) {
+			if ($.type(databaseConfigs[$(v).data('pouchDb')])!='object') databaseConfigs[$(v).data('pouchDb')]={};
 			if ($(v).data('pouchSheetsource')) databaseConfigs[$(v).data('pouchDb')]['pouchSheetsource']=$(v).data('pouchSheetsource');
 			if ($(v).data('pouchDbsource')) databaseConfigs[$(v).data('pouchDb')]['pouchDbsource']=$(v).data('pouchDbsource');	
 		}
 	});
-	
+	console.log('PLUGIN TEMPLATE');
 	// gather top level lists for listening to changes
 	this.each(function() {
-		if ($(this).hasClass('pouch-list')) pouchLists.push($(this));
+		if ($(this).hasClass('pouch-list')) {
+			pouchLists.push($(this));
+			$(this).attr('data-templatepath',getDomPath(this,2));
+		}
 		else $('.pouch-list:not(.pouch-list .pouch-list)',$(this)).each(function() {
 			pouchLists.push($(this));
+			$(this).attr('data-templatepath',getDomPath(this,2));
 			//console.log('TT',typeof databasesToListen[$(this).data('pouchDb')]);
 			if (typeof databasesToListen[$(this).data('pouchDb')] === 'undefined' ) databasesToListen[$(this).data('pouchDb')]=[]; 
 			databasesToListen[$(this).data('pouchDb')].push($(this));
@@ -1209,12 +1314,7 @@ $.fn.pouchUI = function(options) {
 			//console.log('ini/load/render',lv,$(lv).data())
 			initialiseList(lv).then(function() {
 				//console.log('ini');
-				loadList(lv).then(function(results) {
-					//console.log('load',results);
-					renderList(results,lv.data('listTemplate'),lv).then(function(rl) {
-						//console.log('rendered',rl);
-					});
-				});
+				actionReloadList(lv);
 			});
 		});
 	});	
@@ -1230,7 +1330,9 @@ $.fn.pouchUI = function(options) {
 						//console.log('change new',results);
 						$(results).each(function(rk,rv) {
 							if (rv._id==change.doc_id)  {
-								renderList(results,currentList);
+								//renderList(results,currentList).then(function(renRes) {
+								//	currentList.html(renRes);
+								//});;
 							}
 						});
 					});

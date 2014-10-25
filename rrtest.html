@@ -25,7 +25,7 @@ function loadList(key,values) {
 		setTimeout(function() {
 			console.log('now timout',results);
 			dfr.resolve(results);
-		},3000);
+		},300);
 		
 	} else {
 		dfr.resolve({});
@@ -72,6 +72,10 @@ function renderList(data,template,list) {
 					if ($.type(thisData[0])=="string") { 
 						console.log('load list values');
 						loadList($(fv).data('field'),thisData).then(function(res) {
+							$(fv).bind('click',function() {alert('hi');});
+							setTimeout(function() {
+									$(fv).html('<p>eek</p>');
+							},5000);
 							console.log('got values',res);
 							renderList(res,$(fv)[0].outerHTML,$(fv));
 						});
@@ -84,6 +88,8 @@ function renderList(data,template,list) {
 					$(fv).html('');
 				}
 			});
+			//a$(itemTemplate).bind('click',function() {alert('ho');});
+							
 			// append to item list
 			listItems.append(itemTemplate);
 		});

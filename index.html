@@ -42,8 +42,6 @@
 }
 </style>
 <script>
-$(document).ready(function() {
-PouchDB.plugin(Validation);
 var designDoc = {};
 var validateMe=function(newDoc, oldDoc, userCtx, secObj) {
 	if (newDoc._deleted!=true) {
@@ -101,8 +99,15 @@ designDoc['http://stever:wtfaid72@localhost:5984/people'] =  {
 					if (doc.type=='food') emit(doc._id);
 				}.toString()
 			},
+			'ingredients' : {
+				map: function(doc) {
+					if (doc.type=='ingredient') emit(doc._id);
+				}.toString()
+			}
 		  }
 		};
+$(document).ready(function() {
+PouchDB.plugin(Validation);
 	
 	console.log('PLUGINRET',$('#listtemplate ,#edittemplate').pouchUI({design:designDoc})); //dbOptions:{testdb2:{adapter:'idb'}}
 	
@@ -158,14 +163,25 @@ listing
 		<div class='pouch-list-value' data-pouch-field='date' ><label>Date: </label>1/1/99</div>
 		<div class='pouch-list-value' data-pouch-field='time' ><label>Time: </label>2:00PM</div>
 		<div class='pouch-list-value' data-pouch-field='number' ><label>Number: </label>3</div>
-		<div class='pouch-list' data-pouch-db='http://stever:wtfaid72@localhost:5984/people' data-pouch-index='people/petsbyowner' data-pouch-field='_id' >list of all pets
-			<div class='pouch-list-item' >
-				<div class='pouch-list-value' data-pouch-field='name' >eg Joe</div>
-				Pet Eats <div class='pouch-list' data-pouch-db='http://stever:wtfaid72@localhost:5984/people' data-pouch-index='people/foods' data-pouch-field='eats'  >
-					<div class='pouch-list-item' ><div class='pouch-list-value' data-pouch-field='name' ></div></div>
-				</div>
-			</div>
-		</div>
+		<div class='pouch-list' data-pouch-db='http://stever:wtfaid72@localhost:5984/people' data-pouch-index='people/petsbyowner' data-pouch-field='_id' data-pouch-seperator='<span>,</span>' data-pouch-wrapstart='<span>[</span>' data-pouch-wrapend='<span>]</span>' >
+			<label>List of all pets</label>
+			<span class='pouch-list-item' >
+				<span class='pouch-list-value' data-pouch-field='name' >eg Joe</span>
+				<span class='pouch-list' data-pouch-db='http://stever:wtfaid72@localhost:5984/people' data-pouch-index='people/foods' data-pouch-field='eats' data-pouch-mmseperator=';'  data-pouch-seperator='<span>,</span>' data-pouch-wrapstart='<span>{</span>' data-pouch-wrapend='<span>}</span>' >
+					<label>who eats</label>
+					<span class='pouch-list-item' >
+						<span class='pouch-list-value' data-pouch-field='name' >what they eat</span>
+						<span class='pouch-list' data-pouch-db='http://stever:wtfaid72@localhost:5984/people' data-pouch-index='people/ingredients' data-pouch-field='contains' data-pouch-seperator='<span>,</span>' data-pouch-wrapstart='<span>(</span>' data-pouch-wrapend='<span>)</span>' >
+							<label>containing</label>
+							<span class='pouch-list-item' ><span class='pouch-list-value' data-pouch-field='name' >made of</span>
+							<span class='pouch-list-noresults' >the void</span>
+						</span>
+					</span>
+					<div class='pouch-list-noresults' >Pet eats nothing</div>
+				</span>
+			</span>
+			<div class='pouch-list-noresults' >No pets</div>
+		</div>	
 		<div class='buttonset' >
 		<a class='ui-button' dhref='#listtemplate' data-pouch-action='delete' >Delete</a>
 		<a class='ui-button' href='#edittemplate' data-pouch-action='edit' >Edit</a>
@@ -227,7 +243,15 @@ extra list
 			<div class='pouch-list-item' ><div class='pouch-list-value' data-pouch-field='name' ></div></div>
 		</div>
 		
-		
+		Pet Eats <div class='pouch-list' data-pouch-db='http://stever:wtfaid72@localhost:5984/people' data-pouch-index='people/foods' data-pouch-field='eats'  >
+					<div class='pouch-list-item' ><div class='pouch-list-value' data-pouch-field='name' ></div></div>
+				</div>
+				
+				
+				
+				
+				
+				
 		-->
 
 <script>

@@ -1,0 +1,67 @@
+Some thoughts on software development frameworks and tools and reuse generally.
+
+Leveraging someone elses hard work CAN save heaps of time and dramatically improve the quality outcomes for software development.
+There are patterns and libraries that have stood up to many people trying to use and break them and through have become better in different ways.
+It's also VERY EASY to write software that seems like a good idea at the time but as requirements and development expand prove to be difficult in some way.
+
+A key issue in the cost/benefit analysis for a particular tool is the knowledge and skills of the people who will be working with it. Intimately tied to this is the clarity and documentation of the tool.
+
+For a team there are many benefits to working with the same tools. For many reasons there may be a range of (potentially overlapping) tools in use. 
+Every developer picks up their own ideas as the learn and work.
+
+Continuous delivery clients - RAD tools VS Large project infrastructure
+
+
+Standard Frameworks for Web Applications
+- base libraries
+- rendering
+- model/persistence
+- routing
+
+For PHP
+	db
+		- cakePHP
+	
+For Other
+- Ruby on Rails
+- NodeJS
+- 
+
+
+
+What makes for a good tool ?
+- ease of use
+- fast outcomes ?
+- maintainability
+- documentation
+- community
+- efficiency
+- flexibility 
+- clear purpose (UNIX commands)
+
+
+
+At 2PI Software some of the tools include
+- github
+- basecamp
+- cmfive project management
+- cmfive IDE/framework
+	- foundation, phpDBO, REST, 
+- wordpress
+- typo3
+	- admin interface  (DBW/CSJ/NGH)
+	- robert database tools
+	
+	
+
+Frameworks for build
+
+
+Frameworks for deployment
+
+Frameworks for client management
+
+
+
+
+	
