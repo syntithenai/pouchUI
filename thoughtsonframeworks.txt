@@ -6,7 +6,7 @@ It's also VERY EASY to write software that seems like a good idea at the time bu
 
 A key issue in the cost/benefit analysis for a particular tool is the knowledge and skills of the people who will be working with it. Intimately tied to this is the clarity and documentation of the tool.
 
-For a team there are many benefits to working with the same tools. For many reasons there may be a range of (potentially overlapping) tools in use. 
+For a team there are many benefits to working with the same tools. However for many reasons there may be a range of (potentially overlapping) tools in use. 
 Every developer picks up their own ideas as the learn and work.
 
 Continuous delivery clients - RAD tools VS Large project infrastructure
@@ -38,7 +38,7 @@ What makes for a good tool ?
 - efficiency
 - flexibility 
 - clear purpose (UNIX commands)
-
+- additional tools support
 
 
 At 2PI Software some of the tools include
@@ -60,6 +60,26 @@ Frameworks for build
 Frameworks for deployment
 
 Frameworks for client management
+
+
+Pragmatism in using/hacking tools
+
+My ideals for development
+Offline First
+
+Javascript Tut
+
+jquery
+standardisation - events, attributes, data
+selectors
+
+Keeping the DOM intact
+Async - promises
+
+
+
+
+
 
 
 

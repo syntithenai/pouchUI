@@ -26,7 +26,6 @@ function pouchUI_captureGoogleSheet(val) {
 	function getDomPath(el,slice) {
 	  var stack = [];
 	  while ( el.parentNode != null ) {
-		//console.log(el.nodeName);
 		var sibCount = 0;
 		var sibIndex = 0;
 		for ( var i = 0; i < el.parentNode.childNodes.length; i++ ) {
@@ -49,7 +48,6 @@ function pouchUI_captureGoogleSheet(val) {
 	  }
 	  var finalVal='';
 	if (slice && slice >0) {
-		//console.log('SLICE',slice,stack.slice(slice));
 		finalVal=stack.slice(slice).join(' > ');
 	} else {
 		finalVal=stack.join(' > ');
@@ -180,13 +178,7 @@ MimeConverter.lookupMime = function(fileName) {
  
  *********************************************************/
 $.fn.pouchUI = function(options) {	
-	function valueFromObjectPath(obj,path,def) {
-		var v=valueFromObjectPath2(obj,path,def);
-		//console.log('VFOPret',v);
-		return v;
-	}
-	function valueFromObjectPath2(obj, path, def){
-		//console.log('VFOP',obj,path,def);
+	function valueFromObjectPath(obj, path, def){
 		for(var i = 0,path = path.split('.'),len = path.length; i < len; i++){
 			if(!obj || typeof obj !== 'object') return def;
 			obj = obj[path[i]];
@@ -210,6 +202,7 @@ $.fn.pouchUI = function(options) {
 		}
 	}
 	
+	// LATEST VERSION OF POUCH ONLY SUPPORTS PUTATTACHMENT UP TO 20M. OLDER VERSIONS COPED WITH UP TO 150M ??
 	function maxFileSize() {
 		if (options.maxFileSize) return options.maxFileSize 
 		else return 20*1024*1024;
@@ -262,7 +255,6 @@ $.fn.pouchUI = function(options) {
 		// BIND LIST EVENTS
 		bindEventsTo(list);
 		function startSync() {
-			//$('input,select,textarea',list).bind('change.pouch',onPouchInputChange);
 			// REMOTE SYNC ? - no need to wait because listening on local changes
 			if (d.pouchDb && d.pouchDbsource) {
 				console.log('START REMOTE SYNC DBSOURCE',d);
@@ -270,19 +262,15 @@ $.fn.pouchUI = function(options) {
 				pouch.sync(d.pouchDbsource,{live:true})
 				.on('change', function (info) {
 					console.log('sync change',info)
-					//updateList(list,options);
 				})
 				.on('complete', function (info) {
 					console.log('sync complete',info);
-						//updateList(list,options);
 				}); 
 			}	
 		}
 		// SHEET SOURCE ?
 		if (d.pouchSheetsource) {
-			//console.log("updatING from sheet");
 			importGoogleSheet(d.pouchDb,d.pouchSheetsource).then(function() {
-				//console.log('updated from sheet now refresh list');
 				startSync();
 				dfr.resolve();
 			});
@@ -298,8 +286,6 @@ $.fn.pouchUI = function(options) {
 		var a=url+'?alt=json-in-script&callback=pouchUI_captureGoogleSheet';
 		console.log('IGS',a);
 		$.getScript(a,function(res) {
-			//console.log('ajaxcomplete',res,this);
-			//console.log('ajaxcomplete DATA',pouchUI_googleSheetResult);
 			var records=[];
 			// FOR EACH SHEET ROW REPRESENTING A RECORDS
 			var dfrs=[];
@@ -314,23 +300,16 @@ $.fn.pouchUI = function(options) {
 				// GATHER THE RECORD FROM TEXT FORMAT
 				// LOOK IT UP
 				pouch.get(sheetRow._id).then(function(current) {
-					// NO SAVE IF RECORD ALREADY EXISTS
-					//console.log('loaded');
-					//var rev=current._rev;
-					// override with google latest values
-					//$.extend(current,sheetRow);
-					//console.log('got design doc',current);
-					// but keep the revision
-					//current._rev=rev;
+					$.extend(current,sheetRow);
 					// save import row
-					//pouch.validatingPost(current).then(function (info) {
+					pouch.validatingPost(current).then(function (info) {
 						//console.log('google sheet row saved');
-					//	dfr.resolve();
-					//}).catch(function (err) {
-					  //console.log('failed to save google sheet row',err);
-					//  dfr.resolve();
-					//});
-					dfr.resolve();
+						dfr.resolve();
+					}).catch(function (err) {
+					  console.log('failed to save google sheet row',err);
+					  dfr.resolve();
+					});
+					//dfr.resolve();
 				// FAILING TO FIND, THEN CREATE IT
 				}).catch(function(err) {
 					//console.log('create new',err);
@@ -349,7 +328,6 @@ $.fn.pouchUI = function(options) {
 				adfr.resolve();
 				console.log('IMPORTERRS',errors)
 				if (errors.length>0) alert("Sheet import error:\n"+errors.join("\n"));
-			//pouchUI_googleSheetResult=null;				
 			});
 		});
 		
@@ -359,26 +337,26 @@ $.fn.pouchUI = function(options) {
 	
 	function initialiseDesignDocuments(designDoc) {
 		var dfr=$.Deferred();
-		console.log('got design ',designDoc);
+		//console.log('got design ',designDoc);
 		// load existing design doc and update it
 		var promises=[];
 		// first delete databases if reset flag
 		$.each(designDoc,function(dkey,dval) {
 			promises.push(destroyDB(dkey));
 		});
-		console.log('dbs destroyed');
+		//console.log('dbs destroyed');
 		$.when.apply($,promises).then(function() {
 			//console.log('dbs destroyed forreal');
 			//console.log('DD',designDoc);
 			$.each(designDoc,function(dkey,dval) {
 				//console.log('now create designs ',dkey,dval);
 				var pouch=getDB(dkey);
-				console.log('now pouched',dval._id,pouch);
+				//console.log('now pouched',dval._id,pouch);
 				pouch.get(dval._id).then(function(current) {
-					console.log('got design doc',current);
+					//console.log('got design doc',current);
 					dval._rev=current._rev;
 					pouch.post(dval).then(function (info) {
-						console.log('design doc saved',info);
+						//console.log('design doc saved',info);
 						dfr.resolve();
 					}).catch(function (err) {
 					   console.log('design doc err',err);
@@ -388,7 +366,7 @@ $.fn.pouchUI = function(options) {
 				}).catch(function(err) {
 					//console.log('create new');
 					pouch.post(dval).then(function (info) {
-						console.log('design doc created info',info);
+						//console.log('design doc created info',info);
 						dfr.resolve();
 					});
 				});
@@ -477,7 +455,7 @@ $.fn.pouchUI = function(options) {
 					var path=parts.slice(0,parts.length-1).join("/");
 					if (path.length>0) path=path+'/';
 					var fileDOM=$('<div class="file pending"><span class="ui-button" data-pouch-action="deletefile" >X</span><a target="_new" >'+path+file.name+'</a></div>');
-					console.log(file)
+					//console.log(file)
 					fileDOM.attr('data-docid',folder+path+file.name);
 					fileDOM.attr('data-mime',file.type);
 					// remove files of same name
@@ -494,37 +472,7 @@ $.fn.pouchUI = function(options) {
 		
 	}
 	
-	function actionReloadList(iList) {
-		loadList(iList).then(function(res2) {
-			if (res2 && res2.rows && res2.rows.length>0)  {
-				renderList(res2,iList).then(function (items) {
-					var firstItem=$('.pouch-list-item',iList).first();
-					// start with list items that are immediate children
-					var allItems=$(iList).children('.pouch-list-item');
-					// for all children, look at their immediate children for list items
-					var secondLevel=$(iList).children();
-					$.each(secondLevel,function(sk,sv) {
-						allItems=allItems.add($(sv).children('.pouch-list-item'));
-					});
-					 //.add(secondChildren);
-					console.log('reloadlist',allItems);
-					
-					if ($(iList).data('pouchWrapstart')) firstItem.before($(iList).data('pouchWrapstart'));
-					var count=0;
-					$.each(items,function(rlk,rlv) {
-						if (count>0) firstItem.before($(iList).data('pouchSeperator'));
-						firstItem.before(rlv);
-						count++;
-					});
-					if ($(iList).data('pouchWrapend')) firstItem.before($(iList).data('pouchWrapend'));
-					allItems.remove();
-					$('.pouch-list-noresults',iList).remove();
-				});
-			} else {
-				showNoResults(iList);
-			}
-		});	
-	}
+	
 	
 	/*
 	SEARCH can be triggered by search button or change event in search form
@@ -570,25 +518,25 @@ $.fn.pouchUI = function(options) {
 		} else {
 			console.log('CANNOT FIND SEARCH FORM');
 		}
-		//console.log('criteria',start,end);
+		console.log('criteria',start,end);
 		
 		// FIND TARGETS
 		var targetLists={};
 		// TARGET ON TRIGGER
 		if (triggerElement.data('searchTarget') && triggerElement.data('searchTarget').length>0 && $('.pouch-list',$(triggerElement.data('searchTarget'))).length>0) {
-			targetLists=$('.pouch-list',$(triggerElement.data('searchTarget')));
+			targetLists=$('.pouch-list:not(.pouch-list .pouch-list)',$(triggerElement.data('searchTarget')));
 			//console.log('FOUND TARGET LISTS from trigger',targetLists);
 		// TARGET ON SIBLING SEARCH BUTTON
 		} else if (triggerSearchButton.length>0 && triggerSearchButton.data('searchTarget') && triggerSearchButton.data('searchTarget').length>0 && $('.pouch-list',$(triggerSearchButton.data('searchTarget'))).length>0) {
-			targetLists=$('.pouch-list',$(triggerSearchButton.data('searchTarget')));
+			targetLists=$('.pouch-list:not(.pouch-list .pouch-list)',$(triggerSearchButton.data('searchTarget')));
 			//console.log('FOUND TARGET LISTS from search button',targetLists);
 		// TARGET ON SEARCH FORM
 		} else if (searchForm.length>0 && searchForm.data('searchTarget') && searchForm.data('searchTarget').length>0 && $('.pouch-list',$(searchForm.data('searchTarget'))).length>0) {
-			targetLists=$('.pouch-list',$(searchForm.data('searchTarget')));
+			targetLists=$('.pouch-list:not(.pouch-list .pouch-list)',$(searchForm.data('searchTarget')));
 			//console.log('FOUND TARGET LISTS from sesarch form',targetLists);
 		// CONTAINING LIST
 		} else if (searchForm.parents('.pouch-list').length>0) {
-			targetLists=searchForm.parents('.pouch-list');
+			targetLists=searchForm.parents('.pouch-list').first();
 			//console.log('FOUND TARGET LISTS as parent of search form',targetLists);
 		} else {
 			console.log('FAILED TO FIND SEARCH TARGET LIST',triggerElement);
@@ -596,8 +544,16 @@ $.fn.pouchUI = function(options) {
 		if (targetLists.length>0) {
 			$.each(targetLists,function(splk,splv) {
 				// set params
-				$(splv).data('startkey',start);
-				$(splv).data('endkey',end);
+				if (start) {
+					$(splv).data('startkey',start);
+				} else {
+					$(splv).removeData('startkey');
+				}
+				if (end) {
+					$(splv).data('endkey',end);
+				} else {
+					$(splv).removeData('endkey');
+				}
 				//console.log('set search criteria in selected lists',$(splv).data());
 				// do search
 				actionReloadList($(splv));
@@ -610,14 +566,12 @@ $.fn.pouchUI = function(options) {
 	// render
 	function actionRenderSingle(id,targetLists) {
 		var dfr=$.Deferred();
-		//console.log('rendersingle',id,targetLists);
+		console.log('rendersingle',id,targetLists);
 		$.each(targetLists,function(tk,tv) {
 			if ($(tv).hasClass('pouch-list')) {
 				var d=$.extend({include_docs:true},options,$(tv).data())
 				$(tv).data('key',id);
-				loadList(tv).then(function(results) {
-					renderList(results,tv,$(tv));
-				});
+				actionReloadList($(tv));
 				dfr.resolve();
 			} else {
 				//console.log('look for child lists',tv	);
@@ -784,7 +738,7 @@ $.fn.pouchUI = function(options) {
 					$('.validationerror',currentListItem).remove();
 					var errMsg=$('<div class="validationerror" >'+err.message+'</div>');
 					$('.pouch-list-input',currentListItem).first().before(errMsg);
-					console.log(err,$('.pouch-list-input',currentListItem).first());
+					//console.log(err,$('.pouch-list-input',currentListItem).first());
 				});
 			} else {
 				if (attachmentsChanged) {
@@ -938,7 +892,7 @@ $.fn.pouchUI = function(options) {
 					button[0].click();
 					setTimeout(function(url) {
 						URL.revokeObjectURL(url);
-						console.log('revoke url');
+						//console.log('revoke url');
 					},5000);				
 				}); 
 			}
@@ -1070,7 +1024,7 @@ $.fn.pouchUI = function(options) {
 	 * END CLICK ACTIONS
 	 **************************************************************/
 
-	function getTemplate(path,recurse) {
+	function getTemplate(path) {
 		//console.log('gettemplate',path)
 		//console.log(pluginTemplate[0].outerHTML);
 		var v=$(path,$(pluginTemplate));
@@ -1078,17 +1032,236 @@ $.fn.pouchUI = function(options) {
 		return v;
 	}
 	
+	function updateListItem(resvalue,itemTmpl,list) {
+		console.log('updateListItem',resvalue,itemTmpl);
+		if (resvalue.doc) {
+			$.each($(itemTmpl).children('.pouch-list-value'),function(key,value) { 
+				updateListItemValues(value,resvalue,list);
+			});
+			$.each($('img[data-pouch-loadme="yes"]',$(list)),function() {
+				asyncLoadImage($(this));
+			});
+		}
+	}
 	function showNoResults(iList) {
-		//console.log('NORES',$(iList).data('templatepath'),getTemplate($(iList).data('templatepath'),2));
 		var firstItem=$('.pouch-list-item',iList).first();
-		var noRes=$('.pouch-list-noresults',getTemplate($(iList).data('templatepath'),2)).last();	
-		//noRes='<b>No Res</b>';
-		firstItem.after(noRes);
-		$('label',iList).remove();
-		firstItem.remove();
+		if (firstItem.length>0) {
+			//console.log('NORES',firstItem,$(iList).data('templatepath'),getTemplate($(iList).data('templatepath'),2));
+			var allItems=$(iList).children('.pouch-list-item');
+			// for all children, look at their immediate children for list items
+			var secondLevel=$(iList).children();
+			$.each(secondLevel,function(sk,sv) {
+				allItems=allItems.add($(sv).children('.pouch-list-item'));
+			});
+			var noRes=$('.pouch-list-noresults',getTemplate($(iList).data('templatepath'),2)).last();	
+			//noRes='<b>No Res</b>';
+			firstItem.after(noRes);
+			$('label',iList).remove();
+			firstItem.remove();
+			allItems.remove();
+		}
 	}
 	
+	
+	function actionReloadList(iList) {
+		loadList(iList).then(function(res2) {
+			updatePagination(iList,res2,'update');
+			if (res2 && res2.rows && res2.rows.length>0)  {
+				renderList(res2,iList).then(function (items) {
+					var firstItem=$('.pouch-list-item',iList).first();
+					if (firstItem.length==0) {
+						firstItem=$('.pouch-list-noresults',iList).first().show();
+						//
+					}
+					if (firstItem.length==0) {
+						firstItem=$('<div class="pouch-injection-marker">');
+						$(iList).prepend(firstItem);
+					}
+					console.log('RELOAD LIST APPEND TO ',firstItem)
+					// start with list items that are immediate children
+					var allItems=$(iList).children('.pouch-list-item');
+					// for all children, look at their immediate children for list items
+					var secondLevel=$(iList).children();
+					$.each(secondLevel,function(sk,sv) {
+						allItems=allItems.add($(sv).children('.pouch-list-item'));
+					});
+					 //.add(secondChildren);
+					//console.log('reloadlist',items);
+					
+					if ($(iList).data('pouchWrapstart')) firstItem.before($(iList).data('pouchWrapstart'));
+					var count=0;
+					$.each(items,function(rlk,rlv) {
+						//onsole.log('renderite',rlv,firstItem);
+						if (count>0) firstItem.before($(iList).data('pouchSeperator'));
+						firstItem.before(rlv);
+						count++;
+					});
+					if ($(iList).data('pouchWrapend')) firstItem.before($(iList).data('pouchWrapend'));
+					allItems.remove();
+					$('.pouch-list-noresults',iList).hide();
+					$.each($('img[data-pouch-loadme="yes"]',$(iList)),function() {
+						asyncLoadImage($(this));
+					});
+				});
+			} else {
+				showNoResults(iList);
+			}
+		});	
+	}
 
+	function updatePagination(list,res,from) {
+		var skip=$(list).data('pouchSkip');
+		if (skip===undefined || skip===NaN) skip=0;
+		var limit=parseInt($(list).data('pouchLimit'));
+		var maxRecords=parseInt(res.total_rows);
+		var next=skip+limit;
+		var previous=skip-limit;
+		if (previous<0) previous=0;
+		var last=maxRecords;
+		if (limit>0) last=Math.floor(maxRecords/limit)*limit;
+		
+		$('[data-pouch-action="paginate-first"]',list).data('pouchSkipTo',0);
+		$('[data-pouch-action="paginate-previous"]',list).data('pouchSkipTo',previous);
+		$('[data-pouch-action="paginate-next"]',list).data('pouchSkipTo',next);
+		$('[data-pouch-action="paginate-last"]',list).data('pouchSkipTo',last);
+		
+		//console.log(skip<limit,'SKIP',skip,'limit',limit,'max',maxRecords,'next',next,'prev',previous,'laset',last);
+		
+		if (skip == 0) { 
+			$('[data-pouch-action="paginate-first"]',list).addClass('disabled');
+		} else {
+			$('[data-pouch-action="paginate-first"]',list).removeClass('disabled');
+		}
+		if (skip < limit) {
+			//console.log('skip<limit');
+			$('[data-pouch-action="paginate-previous"]',list).addClass('disabled');
+		} else {
+			$('[data-pouch-action="paginate-previous"]',list).removeClass('disabled');
+		}
+		if (next >= maxRecords) {
+			$('[data-pouch-action="paginate-next"]',list).addClass('disabled');
+			$('[data-pouch-action="paginate-last"]',list).addClass('disabled');
+		} else {
+			$('[data-pouch-action="paginate-next"]',list).removeClass('disabled');
+			$('[data-pouch-action="paginate-last"]',list).removeClass('disabled');
+		}
+		if ($('[data-pouch-action="paginate-first"]',list).length>0) console.log('updatePagination',skip,next,previous,last,maxRecords,limit,from);
+		
+		// set limit DOM value in list
+		$('.pouch-limit',list).val(limit)
+		
+
+	}
+	
+	function updateListItemValues(value,resvalue,list) {
+		if ($(value).data('pouchField')=='_attachments') {
+			var attTmpl;
+			var saveTmpl=false;
+			// are we refreshing the list in which case we have already stashed the template
+			if ($('.filetemplate',value).length>0) {
+				attTmpl=$($('.filetemplate',value).html());
+				console.log('REFRESH',attTmpl);
+			// or are we getting the list template for the first time
+			} else {
+				attTmpl=$('<div class="file">'+$(value).html()+'</div>');
+				console.log('FRIST TIME',attTmpl);
+				saveTemplate=$('<div class="filetemplate" style="display:none" >'+attTmpl[0].outerHTML+'</div>');
+			}
+			console.log('att tmpl',attTmpl);
+			console.log('render attach',resvalue);
+			if (resvalue.doc['_attachments'])  {
+				console.log('have attach for this record');
+				// FILTER ATTACHMENTS BY FOLDER AND SORT
+				// if folder has trailing slash then include all files inside this path. If no trailing slash, only include files directly inside this folder.
+				var folder=$(value).data('pouchFolder');
+				if (!folder) folder=''; 
+				var folderTrailingSlash=false;
+				if (folder.substr(folder.length-1)=="/") folderTrailingSlash=true;
+				var folderNoTrailingSlash=folder;
+				if (folderTrailingSlash) folderNoTrailingSlash=folder.substr(0,folder.length-1);
+				else folderNoTrailingSlash='';
+				var folderPathDepth=folderNoTrailingSlash.split("/").length;
+				var attList=$('<div class="attachments" />');
+				var attachmentsToSort=[];
+				console.log('folder',folder,'hasSlash',folderTrailingSlash,folderNoTrailingSlash,folderPathDepth);
+				$.each(resvalue.doc['_attachments'],function(rvk,rvv) {
+					//console.log('ATTRC',rvk,rvv);
+					var filePathDepth=rvk.split("/").length;
+					//console.log('ATTRC2',rvk,rvv);
+					//console.log('filepathdetph',filePathDepth);
+					if (folder.length==0 || (rvk.indexOf(folder)==0 && (!folderTrailingSlash || (folderTrailingSlash && folderPathDepth==filePathDepth)))) {
+						//console.log('include this file');
+						rvv.name=rvk;
+						attachmentsToSort.push({key:rvk,content:rvv});
+					}
+				});
+				attachmentsToSort.sort(function(a,b) {if (a.key.toLowerCase()<b.key.toLowerCase()) return -1; else return 1;});
+				console.log('SORTED',attachmentsToSort);
+				// RENDER
+				$.each(attachmentsToSort,function(rvka,rvva) {
+					var attTmplCopy=$(attTmpl[0].outerHTML);
+					$('label',attTmplCopy).remove();
+					//console.log('COPIED',attTmpl[0].outerHTML);
+					var rvk=rvva.key;
+					var rvv=rvva.content;
+					var renderableImage=false;
+					if (rvv.content_type && (rvv.content_type=='image/jpeg' || rvv.content_type=='image/jpg' || rvv.content_type=='image/gif' || rvv.content_type=='image/png' || rvv.content_type=='image/svg+xml' || rvv.content_type=='image/bmp')) renderableImage=true;
+					var imageRendered=false;
+					var linkRendered=false;
+					if (renderableImage && $('img',attTmplCopy).length>0) {
+						$('img',attTmplCopy).attr('alt',rvv.name);
+						$('img',attTmplCopy).attr('title',rvv.name);
+						// async load image
+						$('img',attTmplCopy).attr('data-pouch-db',list.data('pouchDb'));
+						$('img',attTmplCopy).attr('data-pouch-id',resvalue.id);
+						$('img',attTmplCopy).attr('data-pouch-attachmentid',rvk);		
+						$('img',attTmplCopy).attr('data-pouch-loadme','yes');
+						imageRendered=true;
+					} else {
+						$('img',attTmplCopy).remove();
+					}
+					//console.log('RENDERED IMAGE',attTmplCopy)
+					if ($('a',attTmplCopy).length>0) {
+						// only render link text if no image
+						if (!imageRendered) { 
+							$('a',attTmplCopy).append(rvv.name);	
+						}
+						$('a',attTmplCopy).attr('href','#');
+						linkRendered=true;
+					}
+					if (!imageRendered && !linkRendered) {
+						//console.log('DEFAULT LINK RENDER');
+						attTmplCopy.append('<a href="#" >'+rvk+'</a>');
+					}
+					attList.append('<div class="file" data-attachment-id="'+rvk+'" >'+attTmplCopy.html()+'</div>');
+					//console.log('ATTMPL',attTmplCopy);
+				});
+				console.log('RENATTC',attList)
+				var label='';
+				if ($('label',value).length>0) label=$('label',value)[0].outerHTML;
+				$(value).html(label+attList[0].outerHTML);
+				$('label',value).show();
+			} else {
+				var label='';
+				if ($('label',value).length>0) label=$('label',value)[0].outerHTML;
+				$(value).html(label);
+				$('label',value).hide();
+			}
+			if (saveTemplate) $(value).prepend(saveTemplate); 
+		} else if (resvalue.doc[$(value).data('pouchField')]) {
+			var label='';
+			if ($('label',value).length>0) label=$('label',value)[0].outerHTML;
+			$(value).html(label+valueFromObjectPath(resvalue.doc,$(value).data('pouchField')));
+			$('label',value).show();
+		} else {
+			var label='';
+			if ($('label',value).length>0) label=$('label',value)[0].outerHTML;
+			$(value).html(label);
+			$('label',value).hide();
+		}
+	}
+	
+	
 	function renderList(res,list) {
 		var dfr=$.Deferred();
 		//var result=$('<div/>');
@@ -1097,6 +1270,7 @@ $.fn.pouchUI = function(options) {
 			if (!list.jquery) list=$(list);
 			var listTmpl=getTemplate(list.data('templatepath'));
 			var itemTmplBackup=listTmpl.find('.pouch-list-item').first().clone(true);
+			//console.log('RENDER LIST',res,itemTmplBackup,listTmpl)
 			if (res.rows && res.rows.length>0) {
 				$.each(res.rows,function(reskey,resvalue) {
 					if (resvalue.doc) {
@@ -1104,19 +1278,86 @@ $.fn.pouchUI = function(options) {
 						// SET ROW METADATA
 						itemTmpl.attr('data-pouch-id',resvalue.doc._id);
 						itemTmpl.attr('data-pouch-rev',resvalue.doc._rev);
+						// REPLACE LIST VALUES
 						$.each($(itemTmpl).children('.pouch-list-value'),function(key,value) { 
-							if (resvalue.doc[$(value).data('pouchField')]) {
-								var label='';
-								if ($('label',value).length>0) label=$('label',value)[0].outerHTML;
-								$(value).html(label+valueFromObjectPath(resvalue.doc,$(value).data('pouchField')));
-								$('label',value).show();
-							} else {
-								var label='';
-								if ($('label',value).length>0) label=$('label',value)[0].outerHTML;
-								$(value).html(label);
-								$('label',value).hide();
-							}
+							updateListItemValues(value,resvalue,list);
 						});
+						// REPLACE ITEM ATTRIBUTES
+						$.each(itemTmpl.data(),function(fk,fv) {
+							if (resvalue.doc[fv]) {
+								//console.log('REPLACE ATTR',fk,fv,resvalue.doc[fv]);
+								itemTmpl.attr(fk,resvalue.doc[fv]);
+								itemTmpl.removeAttr('data-'+fk);
+							}
+						});						
+						// REPLACE INPUT VALUES
+						$.each($(itemTmpl).children('.pouch-list-input'),function(key,value) {
+							$.each($('input,textarea,select',value).first(),function(ik,formInput) {
+								//console.log('HAVE input');
+								// REPLACE DOM ELEMENT HTML input WITH FIELD VALUE
+								// FILE
+								if ($(formInput).attr('type')=='file') {
+									var attachmentsAfter=$(formInput);
+									if ($(formInput).siblings('input[type="file"]').length>0) attachmentsAfter=$(formInput).siblings('input[type="file"]').last();
+									//console.log('filetypeinput');
+									var attachmentsDOM;
+									// ALLOW FOR VALUE UPDATE
+									if ($(formInput).siblings('.attachments').length>0) {
+										attachmentsDOM=$(formInput).siblings('.attachments').first();
+										$('.file:not(.file.pending)',attachmentsDOM).remove();
+									// OTHERWISE CREATE DOM FOR ATTACHMENT LIST
+									} else {
+										attachmentsDOM=$('<div class="attachments"></div>');
+										$(attachmentsAfter).after(attachmentsDOM);
+									}
+									// FILTER BY FOLDER ?  using data-pouch-folder attr - from pouch-list-input tag override by input type=file tag
+									var folder='';
+									if ($(value).data('pouchFolder') && $(value).data('pouchFolder').length>0) folder=$(value).data('pouchFolder');
+									if ($(formInput).data('pouchFolder') && $(formInput).data('pouchFolder').length>0) folder=$(formInput).data('pouchFolder');
+									var recursive=false;
+									if (folder.length>0 && folder.substr(folder.length-1,1)=="/") recursive=true;
+									var attachments={};
+									var attachmentsToSort=[];
+									//console.log('ARAW',resvalue.doc['_attachments']);
+									if (resvalue.doc['_attachments'])  {
+										//console.log('ARAWOK',resvalue.doc['_attachments']);
+										$.each(resvalue.doc['_attachments'],function(atk,atv) {
+											//console.log('test',atk)
+											if (atk.substr(0,folder.length)==folder) {
+												var remaining=atk.substr(folder.length)
+												var parts=remaining.split('/');
+												//console.log('match on start folder',remaining,parts);
+												if (recursive || parts.length==1) { 
+													//console.log('OK this one');
+													attachmentsToSort.push({key:atk,content:'<div class="file" data-docid="'+atk+'" data-mime="'+atv.content_type+'" ><span class="ui-button" data-pouch-action="deletefile" >X</span><a target="_new" >'+remaining+'</a></div>'});
+												}
+												
+											}
+										});
+										attachmentsToSort.sort(function(a,b) {if (a.key.toLowerCase()<b.key.toLowerCase()) return -1; else return 1;});
+										$.each(attachmentsToSort,function(k,v) {
+											$(attachmentsDOM).append(v.content);
+										});
+									}
+								// HAVE VALUE FOR FIELD	
+								} else if (resvalue.doc[$(value).data('pouchField')]) {
+									if (formInput.type=='textarea') {
+										$(formInput).html(valueFromObjectPath(resvalue.doc,$(value).data('pouchField')))
+									} else {
+										$(formInput).attr('value',valueFromObjectPath(resvalue.doc,$(value).data('pouchField')));
+									}
+								// NO VALUE FOR FIELD
+								} else {
+									if (formInput.type=='textarea') {
+										$(formInput).html('');
+									} else {
+										$(formInput).val('');
+									}
+								}	
+							});
+						});
+						//console.log('RENDER set vals');
+						// REPLACE LISTS
 						$.each(itemTmpl.children('.pouch-list'),function(key,iList) {
 							var field=$(iList).data('pouchField');
 							if (field && field.length>0 && resvalue.doc[field]) {
@@ -1130,6 +1371,8 @@ $.fn.pouchUI = function(options) {
 									if (res2 && res2.rows && res2.rows.length>0)  {
 										renderList(res2,iList).then(function (items) {
 											var firstItem=$('.pouch-list-item',iList).first();
+											//console.log('RENDER CHILD	 LIST APPEND TO ',firstItem)
+					
 											if ($(iList).data('pouchWrapstart')) firstItem.before($(iList).data('pouchWrapstart'));
 											var count=0;
 											$.each(items,function(rlk,rlv) {
@@ -1155,42 +1398,9 @@ $.fn.pouchUI = function(options) {
 				});
 			}
 		}
-		var skip=$(list).data('pouchSkip');
-		if (skip===undefined || skip===NaN) skip=0;
-		var limit=parseInt($(list).data('pouchLimit'));
-		var maxRecords=parseInt(res.total_rows);
-		var next=skip+limit;
-		var previous=skip-limit;
-		if (previous<0) previous=0;
-		var last=maxRecords;
-		if (limit>0) last=Math.floor(maxRecords/limit)*limit;
-		
-		$('[data-pouch-action="paginate-first"]',list).data('pouchSkipTo',0);
-		$('[data-pouch-action="paginate-previous"]',list).data('pouchSkipTo',previous);
-		$('[data-pouch-action="paginate-next"]',list).data('pouchSkipTo',next);
-		$('[data-pouch-action="paginate-last"]',list).data('pouchSkipTo',last);
-		
-		//console.log(skip<limit,'SKIP',skip,'limit',limit,'max',maxRecords,'next',next,'prev',previous,'laset',last);
-		
-		if (skip == 0) { 
-			$('[data-pouch-action="paginate-first"]',list).addClass('disabled');
-		}
-		if (skip < limit) {
-			//console.log('skip<limit');
-			$('[data-pouch-action="paginate-previous"]',list).addClass('disabled');
-		}
-		if (next > last) {
-			$('[data-pouch-action="paginate-next"]',list).addClass('disabled');
-			$('[data-pouch-action="paginate-last"]',list).addClass('disabled');
-		}
-		
-		// set limit DOM value in list
-		$('.pouch-limit',list).val(limit)
-		$.each($('img[data-pouch-loadme="yes"]',$(list)),function() {
-			asyncLoadImage($(this));
-		});
+
 		$(list).show();
-		//console.log('NORES',$('.pouch-list-noresults',list));
+		//console.log('listed',$('.pouch-list-noresults',list));
 		return dfr.resolve(items);
 	}
 	
@@ -1219,20 +1429,21 @@ $.fn.pouchUI = function(options) {
 		var d=$.extend({include_docs:true},options,$(list).data());
 		//console.log('list data',$(list).data());
 		if (d.keys) {
-			console.log("PREP KEYS",d.keys);
+			//console.log("PREP KEYS",d.keys);
 			d.keys=d.keys.split($(list).data('pouchMmseperator'));
-			console.log("PREPPED KEYS",d.keys);
+			//console.log("PREPPED KEYS",d.keys);
 		}
 		
 		if (limit>0) d.limit=parseInt(limit);
 		if (skip>0) d.skip=parseInt(skip);
-		console.log('now query local and rerender',d);
+		if (d.pouchIndex=="people/persons")  console.log('now query local',d);
 		// NOW LOAD RESULTS
 		var pouch=getDB(d.pouchDb);
 		if (d.pouchIndex) {
+			//console.log('now query local',d.pouchIndex);
 			//if (recurse>0) console.log('DBDBDB now queryindex',recurse,d.pouchIndex);
 			pouch.query(d.pouchIndex,d).then(function(res) {
-				console.log('DBDBDB query res',recurse,res)
+				if (d.pouchIndex=="people/persons") console.log('DBDBDB query res',d.pouchIndex,res)
 				dfr.resolve(res);
 			}).catch(function(err) {
 				console.log('Query index err',err);
@@ -1248,6 +1459,7 @@ $.fn.pouchUI = function(options) {
 	}
 			
 	function asyncLoadImage(image) {
+		console.log('ASUNC LOAD IMAGE',image);
 		if (image.data('pouchDb') && image.data('pouchId') && image.data('pouchAttachmentid')) {
 			var pouch=getDB(image.data('pouchDb'));
 			var docId=image.data('pouchId');
@@ -1265,7 +1477,7 @@ $.fn.pouchUI = function(options) {
 			console.log('ASYNC LOAD IMAGE MISSING META DATAS',image,image.data());
 		}
 	}
-
+	
 		
 	// START PLUGIN - ONCE OFF INITIALISATION ON PAGE LOAD
 	var pluginElements=this;
@@ -1290,7 +1502,7 @@ $.fn.pouchUI = function(options) {
 			if ($(v).data('pouchDbsource')) databaseConfigs[$(v).data('pouchDb')]['pouchDbsource']=$(v).data('pouchDbsource');	
 		}
 	});
-	console.log('PLUGIN TEMPLATE');
+	//console.log('PLUGIN TEMPLATE');
 	// gather top level lists for listening to changes
 	this.each(function() {
 		if ($(this).hasClass('pouch-list')) {
@@ -1324,46 +1536,33 @@ $.fn.pouchUI = function(options) {
 			var pouch=getDB(dk);
 			// CREATE
 			var changes = pouch.changes({ live: true,include_docs:true,since:'now'}).on('create', function(change) { 
-				//console.log('changes','.pouch-list-item[data-pouch-id="'+change.doc._id+'"]',$('.pouch-list-item[data-pouch-id="'+change.doc._id+'"]'));
-				$.each(dv,function (lk,currentList) {
-					loadList(currentList).then(function(results) {
-						//console.log('change new',results);
-						$(results).each(function(rk,rv) {
-							if (rv._id==change.doc_id)  {
-								//renderList(results,currentList).then(function(renRes) {
-								//	currentList.html(renRes);
-								//});;
-							}
-						});
+				//console.log('changes create','.pouch-list-item[data-pouch-id="'+change.doc._id+'"]',$('.pouch-list-item[data-pouch-id="'+change.doc._id+'"]'));
+				$('.pouch-list',pluginElements).each(function(pk,pv) {
+					loadList(pv).then(function(results) {
+						if (results && results.rows && results.rows.length>0) {
+							$.each(results.rows,function(k,row) {
+								//console.log('check',row);
+								if (row.id==change.doc._id) {
+									renderList(results,pv).then(function(rres) {
+										actionReloadList(pv);
+									});
+								}
+							});
+						}
 					});
 				});
 			});
 			// UPDATE
 			var changes = pouch.changes({ live: true,include_docs:true,since:'now'}).on('update', function(change) { 
-				//console.log('changes UPDATE','.pouch-list-item[data-pouch-id="'+change.doc._id+'"]',$('.pouch-list-item[data-pouch-id="'+change.doc._id+'"]'));
-				$.each(dv,function (lk,currentList) {
-					$('.pouch-list-item[data-pouch-id="'+change.doc._id+'"]',currentList).each(function(m,mm) {
-						//console.log('DO update item',m,mm);
-						//var send={rows:[{doc:change.doc}]};
-						//loadAttachments(pouch,send).then(function(res) {
-							//console.log('loaded with att',res);
-							//substituteRecordValues($(mm),change); //res.rows[0]);
-							$.each($('img[data-pouch-loadme="yes"]',mm),function() {
-								asyncLoadImage($(this));
-							});
-						//});
-					});
-				});
+				console.log('changes UPDATE','.pouch-list-item[data-pouch-id="'+change.doc._id+'"]',$('.pouch-list-item[data-pouch-id="'+change.doc._id+'"]'));
+				var item=$('.pouch-list .pouch-list-item[data-pouch-id="'+change.doc._id+'"]');
+				var list=item.parents('.pouch-list').first();
+				updateListItem(change,item,list);
 			});
 			// DELETE
 			var changes = pouch.changes({ live: true,include_docs:true,since:'now'}).on('delete', function(change) { 
-				console.log('changes DEL','.pouch-list-item[data-pouch-id="'+change.doc._id+'"]',$('.pouch-list-item[data-pouch-id="'+change.doc._id+'"]'));
-				$.each(dv,function (lk,currentList) {
-					$('.pouch-list-item[data-pouch-id="'+change.doc._id+'"]',currentList).each(function(m,mm) {
-						//console.log('DO delete item',m,mm,this);
-						$(mm).remove();
-					});
-				});
+				//console.log('changes DEL','.pouch-list-item[data-pouch-id="'+change.doc._id+'"]',$('.pouch-list-item[data-pouch-id="'+change.doc._id+'"]'));
+				$('.pouch-list .pouch-list-item[data-pouch-id="'+change.doc._id+'"]').remove();
 			});
 		});
 	},5000);

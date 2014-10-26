@@ -52,13 +52,19 @@ no save if unchanged
 search
 validation
 pagination
+smarter solutions for large files using server
+file upload - don't put unsaved attachments in DOM. Put them in the database in a temporary record and provide links. 
+	- Only images need to be loaded into DOM when they are displayed as images.
+recursive list rendering/activation
+MM CSV foreign keys
 
 BUGS
-- add/del images then save -> multiplication of images on rendering
-- slow rendering of images - make image loading async
+pagination + search
+NORES missing ?
+	- last item wrong nores
+
 
 TODO
-recursive list rendering/activation
 jquery mobile integration
 couchapp
 authentication
@@ -70,13 +76,16 @@ documentation
 plugin website	
 form types - password, dep select
 ensure error checking on all async operations
+oauth google
+send mail - gmail api
+no update design docs every request - only if absent or URL flag
+
+authentication - restrict read/write access to master database
+- filter functions to sync to local pouch based on auth object and whatever DB schema
 
 pagination optimisation based on startkey endkey
-file upload - don't put unsaved attachments in DOM. Put them in the database in a temporary record and provide links. 
-	- Only images need to be loaded into DOM when they are displayed as images.
 full text search https://github.com/nolanlawson/pouchdb-quick-search
-
-smarter solutions for large files using server
+form submit event capture - search and save
 
 SAMPLE APP
 content editing timeline

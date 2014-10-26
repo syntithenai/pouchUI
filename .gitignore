@@ -7,7 +7,7 @@ Desktop.ini
 
 # Recycle Bin used on file shares
 $RECYCLE.BIN/
-
+jquery-ui/
 # Windows Installer files
 *.cab
 *.msi
@@ -41,3 +41,5 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+
+*.bak
