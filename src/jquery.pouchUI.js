@@ -964,7 +964,7 @@ $.fn.pouchUI = function(options) {
 			} else if (cmd=='new' && target && targetList.length>0) {
 				function showList(list) {
 					//console.log('showlist',list);
-					var listTmpl=$($(list).data('listTemplate'));
+					var listTmpl=getTemplate($(list).data('templatepath'));
 					//console.log('tmpl',listTmpl);
 					$(list).html(listTmpl.html());
 					//console.log('injected');
@@ -1033,7 +1033,7 @@ $.fn.pouchUI = function(options) {
 	}
 	
 	function updateListItem(resvalue,itemTmpl,list) {
-		console.log('updateListItem',resvalue,itemTmpl);
+		//console.log('updateListItem',resvalue,itemTmpl);
 		if (resvalue.doc) {
 			$.each($(itemTmpl).children('.pouch-list-value'),function(key,value) { 
 				updateListItemValues(value,resvalue,list);
@@ -1077,7 +1077,7 @@ $.fn.pouchUI = function(options) {
 						firstItem=$('<div class="pouch-injection-marker">');
 						$(iList).prepend(firstItem);
 					}
-					console.log('RELOAD LIST APPEND TO ',firstItem)
+					//console.log('RELOAD LIST APPEND TO ',firstItem)
 					// start with list items that are immediate children
 					var allItems=$(iList).children('.pouch-list-item');
 					// for all children, look at their immediate children for list items
@@ -1164,13 +1164,13 @@ $.fn.pouchUI = function(options) {
 			// or are we getting the list template for the first time
 			} else {
 				attTmpl=$('<div class="file">'+$(value).html()+'</div>');
-				console.log('FRIST TIME',attTmpl);
+				//console.log('FRIST TIME',attTmpl);
 				saveTemplate=$('<div class="filetemplate" style="display:none" >'+attTmpl[0].outerHTML+'</div>');
 			}
-			console.log('att tmpl',attTmpl);
-			console.log('render attach',resvalue);
+			//console.log('att tmpl',attTmpl);
+			//console.log('render attach',resvalue);
 			if (resvalue.doc['_attachments'])  {
-				console.log('have attach for this record');
+				//console.log('have attach for this record');
 				// FILTER ATTACHMENTS BY FOLDER AND SORT
 				// if folder has trailing slash then include all files inside this path. If no trailing slash, only include files directly inside this folder.
 				var folder=$(value).data('pouchFolder');
@@ -1183,7 +1183,7 @@ $.fn.pouchUI = function(options) {
 				var folderPathDepth=folderNoTrailingSlash.split("/").length;
 				var attList=$('<div class="attachments" />');
 				var attachmentsToSort=[];
-				console.log('folder',folder,'hasSlash',folderTrailingSlash,folderNoTrailingSlash,folderPathDepth);
+				//console.log('folder',folder,'hasSlash',folderTrailingSlash,folderNoTrailingSlash,folderPathDepth);
 				$.each(resvalue.doc['_attachments'],function(rvk,rvv) {
 					//console.log('ATTRC',rvk,rvv);
 					var filePathDepth=rvk.split("/").length;
@@ -1196,7 +1196,7 @@ $.fn.pouchUI = function(options) {
 					}
 				});
 				attachmentsToSort.sort(function(a,b) {if (a.key.toLowerCase()<b.key.toLowerCase()) return -1; else return 1;});
-				console.log('SORTED',attachmentsToSort);
+				//console.log('SORTED',attachmentsToSort);
 				// RENDER
 				$.each(attachmentsToSort,function(rvka,rvva) {
 					var attTmplCopy=$(attTmpl[0].outerHTML);
@@ -1236,7 +1236,7 @@ $.fn.pouchUI = function(options) {
 					attList.append('<div class="file" data-attachment-id="'+rvk+'" >'+attTmplCopy.html()+'</div>');
 					//console.log('ATTMPL',attTmplCopy);
 				});
-				console.log('RENATTC',attList)
+				//console.log('RENATTC',attList)
 				var label='';
 				if ($('label',value).length>0) label=$('label',value)[0].outerHTML;
 				$(value).html(label+attList[0].outerHTML);
@@ -1459,7 +1459,7 @@ $.fn.pouchUI = function(options) {
 	}
 			
 	function asyncLoadImage(image) {
-		console.log('ASUNC LOAD IMAGE',image);
+		//console.log('ASUNC LOAD IMAGE',image);
 		if (image.data('pouchDb') && image.data('pouchId') && image.data('pouchAttachmentid')) {
 			var pouch=getDB(image.data('pouchDb'));
 			var docId=image.data('pouchId');

@@ -1,21 +1,14 @@
 ! pouchUI
 
 pouchUI is a jquery plugin for generating dynamic HTML interfaces using a pouchDB database.
-More than one content page is required to support templates beyond edit/search/submit buttons.
-The plugin works with a single HTML page containing multiple content pages identified by id and data-role="page" . 
-Edit links will use the #id for href so linking to show/focus content is native.
-Frameworks like jquery mobile provide page transitioning based on this style of linking. 
-
-The plugin looks for $('.pouch-list') and populates lists.
-The plugin adds event handling for the list and forms(.pouch-form) and buttons(.pouch-button)
-
+The plugin looks for $('.pouch-list') and populates these lists based on meta data in data attributes.
 Usage $('.dom-selector').pouchUI();
 
 The default usage will
-	- check all $('.pouch-list') for metadata, sync and load comment from pouch/couch databases for the list and load records from metadata selected index
+	- check all $('.pouch-list',DOMSELECTOR) for metadata, sync and load comment from pouch/couch databases for the list and load records from metadata selected index
 	- where an index has multiple dimension keys, manage view collation
 	- render [collated] rows	
-	- bind list, pouch buttons, pouch forms to filter/handle ->
+	- bind list events to filter/handle ->
 		- show - navigate to show#id preloaded with content from linked record
 		- edit - manipulate target nav to populate .pouch-form
 		- delete - ajax delete, remove parent content
@@ -26,6 +19,27 @@ The default usage will
 		- cancel button - navigation back
 		- search button - navigate to  parent (list) target, optionally set metadata and update list based on metadata
 	
+
+A list can have attribute to manage the item wrapping 
+	- data-pouch-seperator='<span>,</span>' 
+	- data-pouch-wrapstart='<span>{</span>' 
+	- data-pouch-wrapend='<span>}</span>'	
+	
+Within a pouch list the following DOM elements will be modified
+- attributes of the pouch list named data-XXX where XXX corresponds to a field in the incoming list row will be replaced by attributes XXX=<incoming value>
+- $('.pouch-list-value') element contents will be replaced by field value defined by attribute data-pouch-field
+- $('.pouch-list-input') element contents will be have the value of the first input field inside replaced by the field value defined by attribute data-pouch-field
+- $('.pouch-list') element contents will be replaced by recursive list rendering. Infinite depth of lists can be nested to support relationships
+	- The inner pouch list will have a key value set for filtering based on attribute data-pouch-field.
+	- Attribute data-pouch-mmseperator=';'  on inner lists will allow for MM relationships based on parent list fields containing multiple seperated values
+TODO - $('.pouch-list-collation') operate similarly to lists but offer collation of list results to allow for more efficient relationship queries
+	
+
+More than one content page is required to support templates beyond edit/search/submit buttons.
+The plugin works with a single HTML page containing multiple content pages identified by id and data-role="page" . 
+Edit links will use the #id for href so linking to show/focus content is native.
+Frameworks like jquery mobile provide page transitioning based on this style of linking. 
+
 
 relationships
 FOREIGN KEY IN CHILD POINTING TO PARENT- where there is a parent _id in a child record marking a relationship, the child records can be collated into the parent by using the parent _id as the first element of a a 2 dimensional array and the record type as the second
