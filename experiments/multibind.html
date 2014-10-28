@@ -1,0 +1,13 @@
+<script src='../lib/jquery/js/jquery-1.10.2.js' ></script>
+<button >EEEKE</button>
+
+<script>
+$('button').on('click',function() {
+	console.log('plain click');
+})
+$('button').on('click.custom',function() {
+	console.log('custom click');
+})
+$('button').off('click');
+
+</script>

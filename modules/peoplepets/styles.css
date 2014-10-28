@@ -1,0 +1,49 @@
+.sui-btn {
+	border: 1px solid black;
+	background-color:pink;
+	padding: 0.2em;
+	margin-right: 0.5em;
+	margin-top: 20px;
+	text-decoration:none;
+}
+.pagination {
+	margin-top: 0.3em;
+}
+.sui-btn.disabled {
+	background-color:grey;
+}
+.validationerror {
+	color: red;
+}
+.attachments, .buttonset {
+	margin-top: 0.7em;
+}
+#listtemplate {
+	float: left;
+	clear: none;
+	display: inline;
+	width: 400px;
+}
+#listtemplate .attachments {
+	dwidth: 500px;
+}
+#listtemplate .attachments .file {
+	ddisplay: inline;
+}
+#edittemplate {
+	float: right;
+	clear: none;
+}
+#loading {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+}
+.pouch-list-value .attachments {
+	max-width: 500px;
+}
+.pouch-list-value .attachments .file{
+	display: inline;
+}

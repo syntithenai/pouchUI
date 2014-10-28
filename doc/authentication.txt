@@ -1,0 +1,66 @@
+Authentication in Pouch UI
+
+Components
+- Login
+- Edit profile
+? recover password - send email with link for autologin OR security questions before autologin locally
+? register
+
+Typically
+- every database has a security object (maybe also couch default config for require valid user)  containing group names for admin and members
+- a user may register and be assigned a role that matches the members group 
+OR - for an approval before use situation - registered users have no roles or special newby role
+	-  perhaps a public database or seriously limited newregistrations database (filter synced)
+
+
+
+
+
+
+Where users are publishing website into design documents they need to be admins (do we need to publish a website in a design doc or can we just setup redirects to normal records ??) 
+
+
+
+Reference
+http://docs.couchdb.org/en/latest/intro/security.html
+http://docs.couchdb.org/en/latest/api/database/security.html
+http://docs.couchdb.org/en/latest/couchapp/ddocs.html#filterfun
+http://docs.couchdb.org/en/latest/couchapp/ddocs.html#validate-document-update-functions
+
+CouchDB Security Features
+Three types of users
+- admin by configuration of couchdb  can do everything
+- admin by roles can do everything
+- member by roles can view and edit everything except design docs and limits on security and user records
+
+
+Each database has security roles stored in _security
+{
+    "admins": {
+        "names": [
+            "Bob"
+        ],
+        "roles": []
+    },
+    "members": {
+        "names": [
+            "Mike",
+            "Alice"
+        ],
+        "roles": []
+    }
+  }
+
+
+Edit access can be restricted arbitrarily by update functions
+eg the following into a design doc
+{
+   "_id": "_design/myview",
+   "validate_doc_update": "function(newDoc, oldDoc, userCtx, secObj) {
+      if (newDoc.address === undefined) {
+         throw({forbidden: 'Document must have an address.'});
+      }"
+}
+
+
+

@@ -1065,9 +1065,11 @@ $.fn.pouchUI = function(options) {
 	
 	function actionReloadList(iList) {
 		loadList(iList).then(function(res2) {
+		console.log('RELOAD LIST',res2);
 			updatePagination(iList,res2,'update');
 			if (res2 && res2.rows && res2.rows.length>0)  {
 				renderList(res2,iList).then(function (items) {
+					console.log('RELOAD LIST rendered',items);
 					var firstItem=$('.pouch-list-item',iList).first();
 					if (firstItem.length==0) {
 						firstItem=$('.pouch-list-noresults',iList).first().show();

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="../../lib/jquery/js/jquery.js"  ></script>
+<script src="../../lib/jquery/js/jquery-ui.js"  ></script>
+<script src="../../lib/jquery/jq-mobile/jquery.mobile.js"  ></script>
+<script src='../../lib/pouchdb.js' ></script>
+<script src="../../lib/pouchdb.authentication.min.js" type="text/javascript" ></script>
+<script src='../../lib/pouchdb-validation.min.js' ></script>
+<script src="../../res/pageinit.js" type="text/javascript" ></script>
+<link rel="stylesheet" href="../../lib/jquery/jq-mobile/jquery.mobile.css" type="text/css"  charset="utf-8">
+<link rel="stylesheet" href="../../lib/jquery/css/smoothness/jquery-ui.css" type="text/css"  charset="utf-8">
+<link rel="stylesheet" href="../../res/styles.css" type="text/css"  charset="utf-8">
+</head>
+<body>
+<!-- HOME PAGE CONTENT -->
+<div data-role="page">
+	<h3 class='ui-bar ui-bar-a' >
+	pouchUI is a jquery plugin for generating dynamic HTML interfaces using a pouchDB database.
+	</h3>
+	<div class='ui-body' >
+
+	The plugin looks for $('.pouch-list') and populates these lists based on meta data in data attributes.
+	<b>Usage $('.dom-selector').pouchUI();</b>
+
+	The default usage will
+	<ul>
+		<li>check all $('.pouch-list',DOMSELECTOR) for metadata, sync and load comment from pouch/couch databases for the list and load records from metadata selected index</li>
+		<li>where an index has multiple dimension keys, manage view collation</li>
+		<li>render [collated] rows	</li>
+		<li>bind list events to filter/handle ->
+			<ul>
+			<li>show - navigate to show#id preloaded with content from linked record</li>
+			<li>edit - manipulate target nav to populate .pouch-form</li>
+			<li>delete - ajax delete, remove parent content</li>
+			<li>pagination_XXX, backnav</li>
+			<li>livesearch on inputs</li>
+			<li>submit form/save button - remain on error, navigate to link on save preloaded with content from saved record (could do preview/summary)</li>
+			<li>autosave on delayed change</li>
+			<li>cancel button - navigation back</li>
+			<li>search button - navigate to  parent (list) target, optionally set metadata and update list based on metadata</li>
+			</ul>
+		</li>
+	</ul>	
+
+	A list can have attribute to manage the item wrapping 
+	<ul>
+		<li>data-pouch-seperator='<span>,</span>' </li>
+		<li>data-pouch-wrapstart='<span>{</span>' </li>
+		<li>data-pouch-wrapend='<span>}</span>'	</li>
+	</ul>	
+	Within a pouch list the following DOM elements will be modified
+	<ul>
+	<li>attributes of the pouch list named data-XXX where XXX corresponds to a field in the incoming list row will be replaced by attributes XXX=incoming value</li>
+	<li>$('.pouch-list-value') element contents will be replaced by field value defined by attribute data-pouch-field</li>
+	<li>$('.pouch-list-input') element contents will be have the value of the first input field inside replaced by the field value defined by attribute data-pouch-field</li>
+	<li>$('.pouch-list') element contents will be replaced by recursive list rendering. Infinite depth of lists can be nested to support relationships
+		<ul>
+		<li>The inner pouch list will have a key value set for filtering based on attribute data-pouch-field.</li>
+		<li>Attribute data-pouch-mmseperator=';'  on inner lists will allow for MM relationships based on parent list fields containing multiple seperated values</li>
+		</ul>
+	</li>
+	<li>TODO - $('.pouch-list-collation') operate similarly to lists but offer collation of list results to allow for more efficient relationship queries</li>
+	</ul>
+	</div>
+</div>
+</body>
+</html>
+

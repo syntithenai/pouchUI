@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="../../lib/jquery/js/jquery.js"  ></script>
+<script src="../../lib/jquery/js/jquery-ui.js"  ></script>
+<script src="../../lib/jquery/jq-mobile/jquery.mobile.js"  ></script>
+<script src='../../lib/pouchdb.js' ></script>
+<script src="../../lib/pouchdb.authentication.min.js" type="text/javascript" ></script>
+<script src='../../lib/pouchdb-validation.min.js' ></script>
+<script src="../../res/pageinit.js" type="text/javascript" ></script>
+<link rel="stylesheet" href="../../lib/jquery/jq-mobile/jquery.mobile.css" type="text/css"  charset="utf-8">
+<link rel="stylesheet" href="../../lib/jquery/css/smoothness/jquery-ui.css" type="text/css"  charset="utf-8">
+<link rel="stylesheet" href="../../res/styles.css" type="text/css"  charset="utf-8">
+<style>
+button#users_edit_logout {margin-top: 4em;}
+</style>
+</head>
+<script> 
+// DECIDE WHAT PARTS OF THE PAGE SHOULD BE VISIBLE
+$(document).on( "pageinit",  function() {
+	console.log('pageinit',pouchUI)
+	var pouch=new PouchDB(pouchUI.couchHost+'_users');
+	// DETERMINE WHERE TO GO
+	if (window.location.hash=='') {
+		console.log('connected to ',pouch)
+		 pouch.getSession(function (err, response) {
+		  if (err) {
+			pouchUI.flashMessage('#users_login_generalerror');
+		  } else if (!response.userCtx.name) {
+			$.mobile.navigate('#users_login');
+		  } else{
+			$.mobile.navigate('#users_edit');
+		  }
+		});
+	// IF WE ARE EDITING, PREP EDIT FORM
+	} else if (window.location.hash=="#users_edit") {
+		pouch.getSession(function (err, session) {
+		console.log(session);
+		  if (err) {
+			pouchUI.flashMessage('#users_login_generalerror');
+		  } else if (!session.userCtx.name) {
+			$.mobile.navigate('#users_login');
+		  } else{
+			var isAdmin=false;
+			if ($.inArray('admin',session.userCtx.roles) || $.inArray('_admin',session.userCtx.roles)) isAdmin=true;
+			pouch.getUser(session.userCtx.name, function (err, response) {
+			  if (err) {
+				pouchUI.flashMessage('#users_login_generalerror');
+			  } else {
+				console.log(response);
+				$('#users_edit input[name="username"]').val(response.name).hide();
+				if ($('#users_edit_username_label').length==0) $('#users_edit input[name="username"]').after('<span id="users_edit_username_label" >'+response.name+'</span>');
+				$('#users_edit input[name="password"]').val('');
+				if (response.metadata) { 
+					if (response.metadata.name) $('#users_edit input[name="name"]').val(response.metadata.name);
+					else $('#users_edit input[name="name"]').val('');
+					if (response.metadata.email) $('#users_edit input[name="email"]').val(response.metadata.email);
+					else $('#users_edit input[name="email"]').val('');
+					if (isAdmin) $('#users_edit input[name="roles"]').show();
+					//$('#users_edit input[name="image"]').val(response.metadata.image);
+				}
+				$('#users_edit button[data-action="saveuser"]').bind('click',function() {
+					pouch.get(response._id).then(function(loadedUser) {
+						//user.roles=[];
+						//user.type='user';
+						if ($.type(loadedUser.metadata)!='object') loadedUser.metadata={}; 
+						loadedUser.metadata.name=$('#users_edit input[name="name"]').val();
+						loadedUser.metadata.email=$('#users_edit input[name="email"]').val();
+						//loadedUser.metadata.file=$('#users_edit input[name="image"]').val(response.metadata.image);
+						var pwOK=true;
+						if ($('#users_edit input[name="password"]').val() && $('#users_edit input[name="password"]').val().length>0) {
+							if ($('#users_edit input[name="repeatpassword"]').val() && $('#users_edit input[name="repeatpassword"]').val().length>0 &&$('#users_edit input[name="password"]').val()==$('#users_edit input[name="repeatpassword"]').val()) {
+								loadedUser.password=$('#users_edit input[name="password"]').val();
+								delete loadedUser.password_scheme;
+								delete loadedUser.salt;
+							} else {
+								pwOK=false;
+								pouchUI.flashMessage('#users_edit_passwordsdontmatch');
+							}
+						}
+						if (pwOK) {
+							console.log('save user',loadedUser);
+							pouch.post(loadedUser).then(function(res) {
+								pouchUI.flashMessage('#users_edit_saved');
+							}).catch(function(err) {
+								console.log(err,err.message);
+								pouchUI.flashMessage('#users_edit_nosave',err.message);
+							});
+						}
+					}).catch(function(err) {
+						pouchUI.flashMessage('#users_edit_nosave',err.message);
+					});
+				});
+			  }
+			});
+		  }
+		});
+	}
+	// BIND LOGIN BUTTON
+	$('#users_login button[data-action="login"]').bind('click',function() {
+		var username=$('#users_login input[name="user"]').val();
+		var password=$('#users_login input[name="password"]').val();
+		if (username && username.length>0 && password && password.length>0) {
+			pouch.login(username, password, function (err, response) {
+				if (err) {
+					if (err.name === 'unauthorized') {
+					  pouchUI.flashMessage('#users_login_invalid');
+					} else {
+					  pouchUI.flashMessage('#users_login_generalerror');
+					}
+				} else {
+					$.mobile.navigate('#users_edit');
+				}
+			});
+		} else {
+			$('#users_login_moredata').popup('open');
+			pouchUI.flashMessage('#users_login_moredata');
+		}
+	});
+	// BIND LOGOUT BUTTON
+	$('button[data-action="logout"]').bind('click',function() {
+		pouch.logout(function (err, response) {
+		  if (err) {
+			pouchUI.flashMessage('#users_login_generalerror');
+		  } else {
+			$.mobile.navigate('#users_login');
+		  }
+		})
+	});
+	
+});
+</script>
+<body>
+<!-- PAGES -->
+<div id="users_default" data-role="page" >
+Users  Module Default Page		 
+</div>
+
+
+<!-- LOGIN -->
+ <div  id="users_login" data-role="page" >
+	 <h3>Login</h3>
+	 <label style='display: none'>Database<select><option>http://localhost:5489/people</option></select></label>
+	 <label>User<input type='text' name='user' value='stever' ></label>
+	 <label>Password<input type='password' name='password' value='pojpoj'></label>
+	 <button data-action='login' class='ui-btn-inline' >Login</button>
+ </div>
+<!-- USER EDIT -->
+ <div id="users_edit" data-role="page"  >
+	 <h3>Edit User</h3>
+	 <button data-action='logout' id='users_edit_logout' class='ui-btn-inline ui-btn ui-btn-right'>Logout</button>
+	 <input type='hidden' name='newrecord' value='false' >
+	 <label>Username<input type='text' name='username'></label>
+	 <label>Password<input type='password' name='password'></label>
+	 <label>Repeat Password<input type='password' name='repeatpassword'></label>
+	 <label>Roles<select multiple='true' name='role' ><option>users</option><option>admin</option></select></label>
+	 <label>Name<input type='text' name='name' ></label>
+	 <label>Email<input type='text' name='email'></label>
+	 <!--label>Image<input type='file' name='image'></label-->
+	 <button data-action='saveuser' class='ui-btn ui-btn-inline' >Save</button>
+	 <button style='display: none' data-action='cancelsaveuser' class='ui-btn ui-btn-inline' >Cancel</button>
+ </div>
+
+
+
+<!-- COMPONENTS -->
+<div style='display:none'>
+
+<!-- POPUPS -->
+<div data-role="popup" id="users_login_moredata">
+<p>Enter a username and password to login</p>
+</div>
+<div data-role="popup" id="users_login_invalid">
+<p>Invalid login credentials</p>
+</div>
+<div data-role="popup" id="users_login_generalerror">
+<p>Login failed</p>
+</div>
+<div data-role="popup" id="users_edit_nosave">
+<p>Failed to save user details</p>
+</div>
+<div data-role="popup" id="users_edit_saved">
+<p>Saved user details</p>
+</div>
+<div data-role="popup" id="users_edit_passwordsdontmatch">
+<p>Passwords do not match</p>
+</div>
+</div>
+ 
+ 
+</body>
+</html>
+
