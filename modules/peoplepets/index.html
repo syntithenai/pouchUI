@@ -4,70 +4,58 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="../../lib/jquery/js/jquery.js"  ></script>
 <script src="../../lib/jquery/js/jquery-ui.js"  ></script>
-<!--script src="../../lib/jquery/jq-mobile/jquery.mobile.js"  ></script-->
+<script src="../../lib/jquery/jq-mobile/jquery.mobile.js"  ></script>
 <script src='../../lib/pouchdb.js' ></script>
 <script src="../../lib/pouchdb.authentication.min.js" type="text/javascript" ></script>
 <script src='../../lib/pouchdb-validation.min.js' ></script>
-<!--script src="../../res/pageinit.js" type="text/javascript" ></script>
+<script src="../../res/pageinit.js" type="text/javascript" ></script>
 <link rel="stylesheet" href="../../lib/jquery/jq-mobile/jquery.mobile.css" type="text/css"  charset="utf-8">
-<link rel="stylesheet" href="../../lib/jquery/css/smoothness/jquery-ui.css" type="text/css"  charset="utf-8"-->
+<link rel="stylesheet" href="../../lib/jquery/css/smoothness/jquery-ui.css" type="text/css"  charset="utf-8">
 <link rel="stylesheet" href="../../res/styles.css" type="text/css"  charset="utf-8">
-	<link rel="stylesheet" href="styles.css" type="text/css"  charset="utf-8">
-	<script src='../../src/jquery.pouchUI.js' ></script>
-	<script src='init.js' ></script>
-
+	
 
 </head>
 <body>
 
-	<div id='edittemplate' style='float:right' data-role="page"  >
-		<div style='display:none;' class='pouch-list' ddata-pouch-autosave='true' ddata-pouch-db='testdb2'  data-pouch-db='http://stever:wtfaid72@localhost:5984/people' data-pouch-index='people/all' data-key='-1' >
-			<div class='pouch-list-item' >
-				<h1>edit template</h1>
-				<div class='pouch-list-input' style='display:none'  data-pouch-field='type' ><input type='hidden' value='person' /></div>	
-				<fieldset class='ui-field-contain' ><div class='pouch-list-input' data-pouch-field='_id' ><input type='text' value='' /></div></fieldset>	
-				<fieldset class='ui-field-contain' ><label>Name: <div class='pouch-list-input' data-pouch-field='name' ><textarea ></textarea></div></label></fieldset>	
-				<fieldset class='ui-field-contain' ><label>Age: <div class='pouch-list-input' data-pouch-field='age' ><input type='text'  /></div></label>	</fieldset>	
-				<fieldset class='ui-field-contain' ><label>Date: <div class='pouch-list-input' data-pouch-field='date' ><input type='date'  /></div></label>	</fieldset>	
-				<fieldset class='ui-field-contain' ><label>Time: <div class='pouch-list-input' data-pouch-field='time' ><input type='time'  /></div></label></fieldset>	
-				<fieldset class='ui-field-contain' ><label>Number: <div class='pouch-list-input' data-pouch-field='number' ><input type='number'  /></label></div>
-				AAA/<div class='pouch-list-input' data-pouch-folder='aaa/' >Select Folder<input type='file'  webkitdirectory='webkitdirectory' />Select Files<input type='file' multiple="multiple"  /></div>	
-				BBB/<div class='pouch-list-input' data-pouch-folder='bbb/' >Select Folder<input type='file'  webkitdirectory='webkitdirectory' />Select Files<input type='file' multiple="multiple"  /></div>	
-				</fieldset>	
-				<div class='buttonset' >
-					<a class='ui-btn ui-btn-inline' href='#listtemplate' data-pouch-action='close' >Close</a>
-					<a class='ui-btn ui-btn-inline' href='#listtemplate' data-pouch-action='save' >Save</a>
-					<a class='ui-btn ui-btn-inline' href='#listtemplate' data-pouch-action='saveandclose' >Done</a>
-					<a class='ui-btn ui-btn-inline' href='#listtemplate' data-pouch-action='delete' >Delete</a>
-				</div>
-			</div>
-		</div> 
-	</div> 
-
-
 	<div id='listtemplate' data-role="page" >
-
-
-
-	<div data-search-target='#listtemplate' class='pouch-search' >
-	<input type='text' >
-	<!--input type='text'  >
-	<select><option>aaa</option><option>bbbb</option></select-->
-	<a class='ui-btn ui-btn-inline' data-pouch-action='search' >Search</a>
-	<a class='ui-btn ui-btn-inline' data-pouch-action='new'  href='#edittemplate' >New Record</a>
+		<link rel="stylesheet" href="styles.css" type="text/css"  charset="utf-8">
+		<script src='../../src/jquery.pouchUI.js' ></script>
+		<script src='init.js' ></script>
+		<div data-role="header" data-position="fixed" role="banner" class="ui-header ui-bar-inherit ui-header-fixed slidedown">
+			<a href="http://demos.jquerymobile.com/1.4.4/toolbar/" data-rel="back" class="ui-btn-left ui-alt-icon ui-nodisc-icon ui-btn ui-icon-carat-l ui-btn-icon-notext ui-corner-all" data-role="button" role="button">Back</a>
+			
+			<div class="ui-bar ui-bar-a">
+					<div class="left">
+						<button type="submit" data-pouch-action="search" class="ui-btn ui-btn-a ui-corner-all ui-mini">Search</button>
+						<button type="submit" data-pouch-action="paginate-first" class="ui-btn ui-btn-a ui-corner-all ui-mini">First</button>
+						<button type="submit" data-pouch-action="paginate-previous" class="ui-btn ui-btn-a ui-corner-all ui-mini">Previous</button>
+						<button type="submit" data-pouch-action="paginate-next" class="ui-btn ui-btn-a ui-corner-all ui-mini">Next</button>
+						<button type="submit" data-pouch-action="paginate-last" class="ui-btn ui-btn-a ui-corner-all ui-mini" >Last</button>
+						
+						<label for="search" class="ui-hidden-accessible">Search</label>
+						<input type="text" size=15" data-type="search" name="search" id="search" value="" placeholder="....">
+						<select  id="searchoption"' data-native-menu="false" ><option value='10' selected="true" >Show 10</option><option value='20' >Show 20</option><option value='50' >Show 50</option><option value='100' >Show 100</option></select>
+					</div>
+					<div class="right">
+						<button type="submit" data-pouch-action="new" class="ui-btn ui-btn-a ui-corner-all ui-mini ui-btn-right">New Record</button>
+					</div>
+				
+			</div>
+		</div>
+		
+	<div >
 	</div>
 
-	<div style='display:none;' class='pouch-list'  data-pouch-attachments='true' ddata-pouch-db='testdb2' data-pouch-index='people/persons'  ddata-pouch-sheetsource='https://spreadsheets.google.com/feeds/list/0AgNF3G4HQWMTdEJPTFFSV2VXTkM1WUowSmJBMnRGLVE/od7/public/basic'  data-pouch-db='http://stever:wtfaid72@localhost:5984/people'>
+	<div style='display:none;' class='pouch-list ui-content'  data-pouch-attachments='true' ddata-pouch-db='testdb2' data-pouch-index='people/persons'  ddata-pouch-sheetsource='https://spreadsheets.google.com/feeds/list/0AgNF3G4HQWMTdEJPTFFSV2VXTkM1WUowSmJBMnRGLVE/od7/public/basic'  data-pouch-db='http://stever:wtfaid72@localhost:5984/people'>
 	<!-- sdata-pouch-dbsource='http://stever:wtfaid72@localhost:5984/people' ddata-pouch-dbsource='http://stever:wtfaid72@localhost:5984/people' ddata-pouch-startkey='ddd'  ddata-pouch-endkey='gggg' -->
-	<h1 style='display:inline' >Owners</h1> 
 
-	<div class='pagination' ><a class='ui-btn ui-btn-inline' data-pouch-action='paginate-first' >First</a><a class='ui-btn ui-btn-inline' data-pouch-action='paginate-previous' >Previous</a><a class='ui-btn ui-btn-inline' data-pouch-action='paginate-next' >Next</a><a class='ui-btn ui-btn-inline' data-pouch-action='paginate-last' >Last</a>Limit<select class='pouch-limit'  data-mini="true" data-inline="true" ><option>5</option><option>10</option><option>20</option><option>50</option></select></div>
+	<h3 class="ui-title" role="heading" aria-level="1">Owners</h3>
 	<ul>
 		<li class='pouch-list-item'  data-myname='name' >
 			<div class='pouch-list-value' data-pouch-field='name' >eg xanthum</div>
 			<div class='pouch-list-value' data-pouch-field='age' ><label>Age: </label>eg 33</div>
-			<div class='pouch-list-value' data-pouch-field='date' ><label>Date: </label>1/1/99</div>
-			<div class='pouch-list-value' data-pouch-field='time' ><label>Time: </label>2:00PM</div>
+			<fieldset class='ui-field-contain' ><div class='pouch-list-value' data-pouch-field='date' ><label>Date: </label>1/1/99</div>
+			<div class='pouch-list-value' data-pouch-field='time' ><label>Time: </label>2:00PM</div></fieldset>
 			<div class='pouch-list-value' data-pouch-field='number' ><label>Number: </label>3</div>
 			<div class='pouch-list-value' data-pouch-field='_attachments' data-pouch-list-folder='/' ><label>Files: </label><a target='_blank' ><img width='100' /></a></div>
 			<div class='pouch-list' data-pouch-db='http://stever:wtfaid72@localhost:5984/people' data-pouch-index='people/petsbyowner' data-pouch-field='_id' data-pouch-seperator='<span>,</span>' data-pouch-wrapstart='<span>[</span>' data-pouch-wrapend='<span>]</span>' >
@@ -98,13 +86,52 @@
 		</li>
 		<li class='pouch-list-noresults' >No matching Results</li>
 	</ul>
-	<div class='pagination'><a class='ui-btn ui-btn-inline' data-pouch-action='paginate-first' >First</a><a class='ui-btn ui-btn-inline' data-pouch-action='paginate-previous' >Previous</a><a class='ui-btn ui-btn-inline' data-pouch-action='paginate-next' >Next</a><a class='ui-btn ui-btn-inline' data-pouch-action='paginate-last' >Last</a></div>
 	</div>
 </div>
 
+	<div id='edittemplate' style='float:right' data-role="page"  >
+		<div id='editheadertemplate' data-role="header" data-position="fixed" role="banner" class="ui-header ui-bar-inherit ui-header-fixed slidedown">
+			<a href="http://demos.jquerymobile.com/1.4.4/toolbar/" data-rel="back" class="ui-btn-left ui-alt-icon ui-nodisc-icon ui-btn ui-icon-carat-l ui-btn-icon-notext ui-corner-all" data-role="button" role="button">Back</a>			
+			<div data-role="controlgroup" data-type="horizontal" class="ui-mini ui-btn-left">
+				<a class='ui-btn ui-icon-back ui-btn-icon-left'  href='#listtemplate' data-pouch-action='close' >Close</a>
+				<a class='ui-btn ui-icon-delete  ui-btn-icon-left' href='#listtemplate' data-pouch-action='delete' >Delete</a>
+			</div>
+			<h3>Edit Person Details</h3>
+			<div data-role="controlgroup" data-type="horizontal" class="ui-mini ui-btn-right">
+				<a class='ui-btn ui-icon-check ui-btn-icon-left'  href='#listtemplate' data-pouch-action='save' >Save</a>
+				<a class='ui-btn ui-icon-check  ui-btn-icon-left'   href='#listtemplate' data-pouch-action='saveandclose' >Done</a>
+			</div>
+		</div>
+		<div style='display:none;' class='pouch-list' ddata-pouch-autosave='true' ddata-pouch-db='testdb2'  data-pouch-db='http://stever:wtfaid72@localhost:5984/people' data-pouch-index='people/all' data-key='-1' >
+			<div class='pouch-list-item' >
+				
+				<div class='pouch-list-input' style='display:none'  data-pouch-field='type' ><input type='hidden' value='person' /></div>	
+				<fieldset class='ui-field-contain pouch-list-input' data-pouch-field='_id' ><label>ID<input type='text' value='' /></label></fieldset>	
+				<fieldset class='ui-field-contain pouch-list-input' data-pouch-field='name'><label>Name:<textarea ></textarea></label></fieldset>	
+				<fieldset class='ui-field-contain pouch-list-input' data-pouch-field='age' ><label>Age:<input type='text'  /></label>	</fieldset>	
+				<fieldset class='ui-field-contain'  ><div class='pouch-list-input' data-pouch-field='date'  ><label>Date:<input type='date'  /></label>	</div>	
+				<div class='pouch-list-input' data-pouch-field='time' ><label>Time:<input type='time'  /></label></div></fieldset>		
+				<fieldset class='ui-field-contain pouch-list-input' data-pouch-field='number'><label>Number:<input type='number'  /></label></fieldset>
+				<fieldset class='ui-field-contain' ><label>Files:</label>
+					<fieldset class='ui-field-contain'><b>AAA/  </b><div class='pouch-list-input' data-pouch-folder='aaa/' >Select Folder<input type='file'  webkitdirectory='webkitdirectory' />Select Files<input type='file' multiple="multiple"  /></div></fieldset>
+					<fieldset class='ui-field-contain'><b>BBB/  </b><div class='pouch-list-input' data-pouch-folder='bbb/' >Select Folder<input type='file'  webkitdirectory='webkitdirectory' />Select Files<input type='file' multiple="multiple"  /></div>	</fieldset>
+				</fieldset>	
+				<div class='buttonset' >
+					<a class='ui-btn ui-btn-inline' href='#listtemplate' data-pouch-action='close' >Close</a>
+					<a class='ui-btn ui-btn-inline' href='#listtemplate' data-pouch-action='save' >Save</a>
+					<a class='ui-btn ui-btn-inline' href='#listtemplate' data-pouch-action='saveandclose' >Done</a>
+					<a class='ui-btn ui-btn-inline' href='#listtemplate' data-pouch-action='delete' >Delete</a>
+				</div>
+			</div>
+		</div> 
+	</div> 
 
 
 </body>
 </html>
 
+<!-- 
 
+
+
+-->

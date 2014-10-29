@@ -1,4 +1,4 @@
-.sui-btn {
+.dui-btn {
 	border: 1px solid black;
 	background-color:pink;
 	padding: 0.2em;
@@ -6,11 +6,21 @@
 	margin-top: 20px;
 	text-decoration:none;
 }
-.pagination {
-	margin-top: 0.3em;
+.ui-content {
+	dmargin-top: 4em;
 }
-.sui-btn.disabled {
+ddiv[data-role="page"] div[data-role="header"] {
+	margin-top:2.4em;
+}
+div[data-role="page"]  div.pouch-list  {
+		dmargin-top:0em;
+		margin-left:2em;
+}
+.ui-btn.disabled {
 	background-color:grey;
+}
+fieldset.ui-field-contain label,.pouch-list-input label,.pouch-list-value label {
+  font-weight: bold;
 }
 .validationerror {
 	color: red;
@@ -18,22 +28,22 @@
 .attachments, .buttonset {
 	margin-top: 0.7em;
 }
-#listtemplate {
-	float: left;
-	clear: none;
+.pouch-list-value .attachments {
+	dmax-width: 500px;
+}
+.pouch-list-value .attachments .file.image{
 	display: inline;
-	width: 400px;
 }
-#listtemplate .attachments {
-	dwidth: 500px;
+
+
+fieldset > .pouch-list-input, fieldset > .pouch-list-input label{
+	display: inline;
 }
-#listtemplate .attachments .file {
-	ddisplay: inline;
+label[for="search"] {
+	margin-left: 10em;
+	display: inline;
 }
-#edittemplate {
-	float: right;
-	clear: none;
-}
+
 #loading {
     position: fixed;
     top: 50%;
@@ -41,9 +51,38 @@
     -webkit-transform: translate(-50%, -50%);
     transform: translate(-50%, -50%);
 }
-.pouch-list-value .attachments {
-	max-width: 500px;
+/*form in toolbar*/
+.left {
+	float: left;
+	width: 88%;
+	margin-right: 2%;
 }
-.pouch-list-value .attachments .file{
-	display: inline;
+.right {
+	float: right;
+	width: 10%;
+}
+div.ui-input-search { width: 20em !important }
+div.ui-input-search { float: left; !important }
+
+#editheadertemplate [data-role="controlgroup"]{
+	margin-top:2.8em !important;
+	ddisplay: none !important;
+}
+.ui-input-search {
+	margin-left: 1.5em;
+	margin-top: -0.1em;
+}
+button[data-pouch-action="search"] {
+	margin-left: 1.5em !important;
+}
+.ui-select {
+	margin-top:0em !important; 
+	padding-left:0.6em !important; 
+	dfloat:left !important; 
+	display: inline !important;
+}
+
+
+button.ui-btn {
+	margin: 0;
 }
