@@ -2,19 +2,19 @@
 console.log('routing',window.location)
 
 function doRouting(to) {
-function goto(url) {
-	console.log('goto',url);
-	var link=$('<a style="didsplay:none" data-ajax="false"  href="'+url+'" >ddddd</a>');
-	//$('[data-role="page"]').append(link);
-	link.trigger('click');
-}
-var pouch=new PouchDB(pouchUI.couchHost+'_users');
+	function goto(url) {
+		console.log('goto',url);
+		var link=$('<a style="didsplay:none" data-ajax="false"  href="'+url+'" >ddddd</a>');
+		//$('[data-role="page"]').append(link);
+		link.trigger('click');
+	}
+	var pouch=new PouchDB(pouchUI.couchHost+'_users');
 	// DETERMINE WHERE TO GO
 	if (to=='users_default') {
 		console.log('connected to ',pouch)
 		 pouch.getSession(function (err, response) {
 		  if (err) {
-			pouchUI.flashMessage('#users_login_generalerror');
+			pouchUILib.view.flashMessage('#users_login_generalerror');
 		  } else if (!response.userCtx.name) {
 			console.log('goto login');
 			$.mobile.changePage('index.html#users_login');
@@ -28,13 +28,13 @@ var pouch=new PouchDB(pouchUI.couchHost+'_users');
 		pouch.getSession(function (err, session) {
 		console.log(session);
 		  if (err) {
-			pouchUI.flashMessage('#users_login_generalerror');
+			pouchUILib.view.flashMessage('#users_login_generalerror');
 		  } else if (!session.userCtx.name) {
 			$.mobile.changePage('#users_login');
 		  } else{
 			pouch.getUser(session.userCtx.name, function (err, response) {
 			  if (err) {
-				pouchUI.flashMessage('#users_login_generalerror');
+				pouchUILib.view.flashMessage('#users_login_generalerror');
 			  } else {
 				console.log(response);
 				$('#users_edit input[name="username"]').val(response.name).hide();

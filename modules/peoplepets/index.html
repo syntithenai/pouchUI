@@ -16,43 +16,52 @@
 
 </head>
 <body>
-
+	<!-- LIST PAGE -->
 	<div id='listtemplate' data-role="page" >
 		<link rel="stylesheet" href="styles.css" type="text/css"  charset="utf-8">
+		<script src='../../src/pouchUI.captureGoogleSheet.js' ></script>
+		<script src='../../src/mimeConverter.js' ></script>
 		<script src='../../src/jquery.pouchUI.js' ></script>
+		<script src='../../src/jquery.pouchUI.init.js' ></script>
+		<script src='../../src/jquery.pouchUI.model.js' ></script>
+		<script src='../../src/jquery.pouchUI.view.js' ></script>
+		<script src='../../src/jquery.pouchUI.controller.js' ></script>
 		<script src='init.js' ></script>
+		<!-- HEADER -->
 		<div data-role="header" data-position="fixed" role="banner" class="ui-header ui-bar-inherit ui-header-fixed slidedown">
 			<a href="http://demos.jquerymobile.com/1.4.4/toolbar/" data-rel="back" class="ui-btn-left ui-alt-icon ui-nodisc-icon ui-btn ui-icon-carat-l ui-btn-icon-notext ui-corner-all" data-role="button" role="button">Back</a>
-			
-			<div class="ui-bar ui-bar-a">
-					<div class="left">
-						<button type="submit" data-pouch-action="search" class="ui-btn ui-btn-a ui-corner-all ui-mini">Search</button>
-						<button type="submit" data-pouch-action="paginate-first" class="ui-btn ui-btn-a ui-corner-all ui-mini">First</button>
-						<button type="submit" data-pouch-action="paginate-previous" class="ui-btn ui-btn-a ui-corner-all ui-mini">Previous</button>
-						<button type="submit" data-pouch-action="paginate-next" class="ui-btn ui-btn-a ui-corner-all ui-mini">Next</button>
-						<button type="submit" data-pouch-action="paginate-last" class="ui-btn ui-btn-a ui-corner-all ui-mini" >Last</button>
-						
-						<label for="search" class="ui-hidden-accessible">Search</label>
-						<input type="text" size=15" data-type="search" name="search" id="search" value="" placeholder="....">
-						<select  id="searchoption"' data-native-menu="false" ><option value='10' selected="true" >Show 10</option><option value='20' >Show 20</option><option value='50' >Show 50</option><option value='100' >Show 100</option></select>
-					</div>
-					<div class="right">
-						<button type="submit" data-pouch-action="new" class="ui-btn ui-btn-a ui-corner-all ui-mini ui-btn-right">New Record</button>
-					</div>
-				
+			<div class="ui-bar ui-bar-a pouch-search">
+				<div class="left ><form class="pouch-search">
+					<button type="submit" data-pouch-action="search"  data-search-target="#listtemplate" class="ui-btn ui-btn-a ui-corner-all ui-mini">Search</button>
+					<button type="submit" data-pouch-action="paginate-first"  data-search-target="#listtemplate"  class="ui-btn ui-btn-a ui-corner-all ui-mini">First</button>
+					<button type="submit" data-pouch-action="paginate-previous"  data-search-target="#listtemplate" class="ui-btn ui-btn-a ui-corner-all ui-mini">Previous</button>
+					<button type="submit" data-pouch-action="paginate-next"  data-search-target="#listtemplate" class="ui-btn ui-btn-a ui-corner-all ui-mini">Next</button>
+					<button type="submit" data-pouch-action="paginate-last"  data-search-target="#listtemplate"  class="ui-btn ui-btn-a ui-corner-all ui-mini" >Last</button>
+					
+					<label for="search" class="ui-hidden-accessible">Search</label>
+					<input type="text" size=15" data-type="search" name="search" id="search" value="" placeholder="....">
+					<select  id="searchoption"' data-native-menu="false"  class='pouch-limit' ><option value='1' selected="true" >Show 1</option><option value='20' >Show 20</option><option value='50' >Show 50</option><option value='100' >Show 100</option></select>
+				</form></div>
+				<div class="right">
+					<a href="edit.html" type="submit" data-pouch-action="new" class="ui-btn ui-btn-a ui-corner-all ui-mini ui-btn-right">New Record</a>
+				</div>
 			</div>
-		</div>
-		
-	<div >
-	</div>
-
-	<div style='display:none;' class='pouch-list ui-content'  data-pouch-attachments='true' ddata-pouch-db='testdb2' data-pouch-index='people/persons'  ddata-pouch-sheetsource='https://spreadsheets.google.com/feeds/list/0AgNF3G4HQWMTdEJPTFFSV2VXTkM1WUowSmJBMnRGLVE/od7/public/basic'  data-pouch-db='http://stever:wtfaid72@localhost:5984/people'>
+		</div>		
+	<!-- DEFAULT LIST -->
+	<div style='display:none;' class='rootlist pouch-list ui-content'  data-pouch-attachments='true' ddata-pouch-db='testdb2' data-pouch-index='people/persons'  ddata-pouch-sheetsource='https://spreadsheets.google.com/feeds/list/0AgNF3G4HQWMTdEJPTFFSV2VXTkM1WUowSmJBMnRGLVE/od7/public/basic'  data-pouch-db='http://stever:wtfaid72@localhost:5984/people'>
 	<!-- sdata-pouch-dbsource='http://stever:wtfaid72@localhost:5984/people' ddata-pouch-dbsource='http://stever:wtfaid72@localhost:5984/people' ddata-pouch-startkey='ddd'  ddata-pouch-endkey='gggg' -->
 
 	<h3 class="ui-title" role="heading" aria-level="1">Owners</h3>
-	<ul>
-		<li class='pouch-list-item'  data-myname='name' >
-			<div class='pouch-list-value' data-pouch-field='name' >eg xanthum</div>
+	<div>
+	
+		<div class='pouch-list-item'  data-myname='name' >
+		<div class='buttonset editdelete'  >
+			<a href="edit.html#jonk"  class='ui-btn ui-btn-inline ui-corners-all ui-mini dpouch-updateattributes'>google</a>
+			<a class='ui-btn ui-btn-inline ui-corners-all ui-mini pouch-updateattributes' href='index.html#' data-href='_id'  data-pouch-action='delete' data-ajax="false" >Delete</a>
+			<a class='ui-btn ui-btn-inline ui-corners-all ui-mini dpouch-updateattributes' href='edit.html#jonk' ddata-href='_id'   ddata-pouch-action='edit' data-ajax="false" >Edit</a>
+			</div>
+				
+		<div class='pouch-list-value' data-pouch-field='name' >eg xanthum</div>
 			<div class='pouch-list-value' data-pouch-field='age' ><label>Age: </label>eg 33</div>
 			<fieldset class='ui-field-contain' ><div class='pouch-list-value' data-pouch-field='date' ><label>Date: </label>1/1/99</div>
 			<div class='pouch-list-value' data-pouch-field='time' ><label>Time: </label>2:00PM</div></fieldset>
@@ -77,55 +86,13 @@
 				</span>
 				<div class='pouch-list-noresults' >No pets</div>
 			</div>	
-			<div class='buttonset' >
-			<a class='ui-btn ui-btn-inline' dhref='#listtemplate' data-pouch-action='delete' >Delete</a>
-			<a class='ui-btn ui-btn-inline' href='#edittemplate' data-pouch-action='edit' >Edit</a>
-			</div>
 			<HR>
 			
-		</li>
-		<li class='pouch-list-noresults' >No matching Results</li>
-	</ul>
+		</div>
+		<div class='pouch-list-noresults' >No matching Results</div>
+	</div>
 	</div>
 </div>
-
-	<div id='edittemplate' style='float:right' data-role="page"  >
-		<div id='editheadertemplate' data-role="header" data-position="fixed" role="banner" class="ui-header ui-bar-inherit ui-header-fixed slidedown">
-			<a href="http://demos.jquerymobile.com/1.4.4/toolbar/" data-rel="back" class="ui-btn-left ui-alt-icon ui-nodisc-icon ui-btn ui-icon-carat-l ui-btn-icon-notext ui-corner-all" data-role="button" role="button">Back</a>			
-			<div data-role="controlgroup" data-type="horizontal" class="ui-mini ui-btn-left">
-				<a class='ui-btn ui-icon-back ui-btn-icon-left'  href='#listtemplate' data-pouch-action='close' >Close</a>
-				<a class='ui-btn ui-icon-delete  ui-btn-icon-left' href='#listtemplate' data-pouch-action='delete' >Delete</a>
-			</div>
-			<h3>Edit Person Details</h3>
-			<div data-role="controlgroup" data-type="horizontal" class="ui-mini ui-btn-right">
-				<a class='ui-btn ui-icon-check ui-btn-icon-left'  href='#listtemplate' data-pouch-action='save' >Save</a>
-				<a class='ui-btn ui-icon-check  ui-btn-icon-left'   href='#listtemplate' data-pouch-action='saveandclose' >Done</a>
-			</div>
-		</div>
-		<div style='display:none;' class='pouch-list' ddata-pouch-autosave='true' ddata-pouch-db='testdb2'  data-pouch-db='http://stever:wtfaid72@localhost:5984/people' data-pouch-index='people/all' data-key='-1' >
-			<div class='pouch-list-item' >
-				
-				<div class='pouch-list-input' style='display:none'  data-pouch-field='type' ><input type='hidden' value='person' /></div>	
-				<fieldset class='ui-field-contain pouch-list-input' data-pouch-field='_id' ><label>ID<input type='text' value='' /></label></fieldset>	
-				<fieldset class='ui-field-contain pouch-list-input' data-pouch-field='name'><label>Name:<textarea ></textarea></label></fieldset>	
-				<fieldset class='ui-field-contain pouch-list-input' data-pouch-field='age' ><label>Age:<input type='text'  /></label>	</fieldset>	
-				<fieldset class='ui-field-contain'  ><div class='pouch-list-input' data-pouch-field='date'  ><label>Date:<input type='date'  /></label>	</div>	
-				<div class='pouch-list-input' data-pouch-field='time' ><label>Time:<input type='time'  /></label></div></fieldset>		
-				<fieldset class='ui-field-contain pouch-list-input' data-pouch-field='number'><label>Number:<input type='number'  /></label></fieldset>
-				<fieldset class='ui-field-contain' ><label>Files:</label>
-					<fieldset class='ui-field-contain'><b>AAA/  </b><div class='pouch-list-input' data-pouch-folder='aaa/' >Select Folder<input type='file'  webkitdirectory='webkitdirectory' />Select Files<input type='file' multiple="multiple"  /></div></fieldset>
-					<fieldset class='ui-field-contain'><b>BBB/  </b><div class='pouch-list-input' data-pouch-folder='bbb/' >Select Folder<input type='file'  webkitdirectory='webkitdirectory' />Select Files<input type='file' multiple="multiple"  /></div>	</fieldset>
-				</fieldset>	
-				<div class='buttonset' >
-					<a class='ui-btn ui-btn-inline' href='#listtemplate' data-pouch-action='close' >Close</a>
-					<a class='ui-btn ui-btn-inline' href='#listtemplate' data-pouch-action='save' >Save</a>
-					<a class='ui-btn ui-btn-inline' href='#listtemplate' data-pouch-action='saveandclose' >Done</a>
-					<a class='ui-btn ui-btn-inline' href='#listtemplate' data-pouch-action='delete' >Delete</a>
-				</div>
-			</div>
-		</div> 
-	</div> 
-
 
 </body>
 </html>

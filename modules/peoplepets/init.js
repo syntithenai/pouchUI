@@ -64,6 +64,7 @@ designDoc['http://stever:wtfaid72@localhost:5984/people'] =  {
 		};
 $(document).ready(function() {
 	PouchDB.plugin(Validation);
-	console.log('PLUGINRET',$('#listtemplate ,#edittemplate').pouchUI({design:designDoc})); //dbOptions:{testdb2:{adapter:'idb'}}
+	//console.log('PLUGINRET',
+	$('#listtemplate ,#edittemplate,[data-role="header"],[data-role="footer"]').pouchUI({design:designDoc}); //dbOptions:{testdb2:{adapter:'idb'}}
 	
 });

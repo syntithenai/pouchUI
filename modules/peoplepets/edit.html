@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="../../lib/jquery/js/jquery.js"  ></script>
+<script src="../../lib/jquery/js/jquery-ui.js"  ></script>
+<script src="../../lib/jquery/jq-mobile/jquery.mobile.js"  ></script>
+<script src='../../lib/pouchdb.js' ></script>
+<script src="../../lib/pouchdb.authentication.min.js" type="text/javascript" ></script>
+<script src='../../lib/pouchdb-validation.min.js' ></script>
+<script src="../../res/pageinit.js" type="text/javascript" ></script>
+<link rel="stylesheet" href="../../lib/jquery/jq-mobile/jquery.mobile.css" type="text/css"  charset="utf-8">
+<link rel="stylesheet" href="../../lib/jquery/css/smoothness/jquery-ui.css" type="text/css"  charset="utf-8">
+<link rel="stylesheet" href="../../res/styles.css" type="text/css"  charset="utf-8">
+	
+
+</head>
+<body>	
+	<!-- EDIT PAGE -->
+	<div id='edittemplate'  data-role="page"  >
+		<link rel="stylesheet" href="styles.css" type="text/css"  charset="utf-8">
+		<script src='../../src/pouchUI.captureGoogleSheet.js' ></script>
+		<script src='../../src/mimeConverter.js' ></script>
+		<script src='../../src/jquery.pouchUI.js' ></script>
+		<script src='../../src/jquery.pouchUI.init.js' ></script>
+		<script src='../../src/jquery.pouchUI.model.js' ></script>
+		<script src='../../src/jquery.pouchUI.view.js' ></script>
+		<script src='../../src/jquery.pouchUI.controller.js' ></script>
+		<script src='init.js' ></script>
+		<script>
+		// if hash to id, load record
+		$(document).on("pageshow.pouchui",  function() {
+		console.log(window.location,window);
+		$('a').off('click');
+		var doRouting=function() {
+			if (window.location.hash && window.location.hash.length>0) {
+				//console.log('OPT',$('[data-pouch-root]').data(),$('[data-pouch-root]'));
+				var pouchRoot=$('div[data-pouch-root="true"]');
+				options=pouchRoot.data('options');
+				console.log('OPTIONSFROMDOM edit',options,pouchRoot);	
+				var key=window.location.hash.substring(1);
+				console.log('et',$('#edittemplate'))
+				$('#edittemplate').attr('data-key',key);
+				pouchUILib.controller.actionRenderSingle(key,$('#edittemplate'));
+			} else {
+			// blank form
+				pouchUILib.controller.actionShowNew($('#edittemplate'));
+			}
+		}
+		doRouting();
+		});
+		</script>
+		<!-- HEADER -->
+		<div id='editheadertemplate' data-role="header" data-position="fixed" role="banner" class="ui-header ui-bar-inherit ui-header-fixed slidedown">
+			<a href="index.html" data-rel="back" class="ui-btn-left ui-alt-icon ui-nodisc-icon ui-btn ui-icon-carat-l ui-btn-icon-notext ui-corner-all" data-role="button" role="button">Back</a>			
+			<div data-role="controlgroup" data-type="horizontal" class="ui-mini ui-btn-left">
+				<a class='ui-btn ui-icon-back ui-btn-icon-left'  href='index.html' data-pouch-action='close' >Close</a>
+				<!--a class='ui-btn ui-icon-delete  ui-btn-icon-left' href='#listtemplate' data-pouch-action='delete' >Delete</a-->
+			</div>
+			<h3>Edit Person Details</h3>
+			<div data-role="controlgroup" data-type="horizontal" class="ui-mini ui-btn-right">
+				<a class='ui-btn ui-icon-check ui-btn-icon-left'  href='index.html' data-pouch-action='save' >Save</a>
+				<!--a class='ui-btn ui-icon-check  ui-btn-icon-left'   href='#listtemplate' data-pouch-action='saveandclose' >Done</a-->
+			</div>
+		</div>
+		<!-- EDIT FORM -->
+		<div  class='pouch-list ui-content .pouch-list-editor' ddata-pouch-autosave='true' ddata-pouch-db='testdb2'  data-pouch-db='http://stever:wtfaid72@localhost:5984/people' data-pouch-index='people/all' data-key='-1' >
+			<div class='pouch-list-item' >
+				
+				<div class='pouch-list-input' style='display:none'  data-pouch-field='type' ><input type='hidden' value='person' /></div>	
+				<fieldset class='ui-field-contain pouch-list-input' data-pouch-field='_id' ><label>ID<input type='text' value='' /></label></fieldset>	
+				<fieldset class='ui-field-contain pouch-list-input' data-pouch-field='name'><label>Name:<textarea ></textarea></label></fieldset>	
+				<fieldset class='ui-field-contain pouch-list-input' data-pouch-field='age' ><label>Age:<input type='text'  /></label>	</fieldset>	
+				<fieldset class='ui-field-contain'  ><div class='pouch-list-input' data-pouch-field='date'  ><label>Date:<input type='date'  /></label>	</div>	
+				<div class='pouch-list-input' data-pouch-field='time' ><label>Time:<input type='time'  /></label></div></fieldset>		
+				<fieldset class='ui-field-contain pouch-list-input' data-pouch-field='number'><label>Number:<input type='number'  /></label></fieldset>
+				<fieldset class='ui-field-contain' ><label>Files:</label>
+					<fieldset class='ui-field-contain'><b>AAA/  </b><div class='pouch-list-input' data-pouch-folder='aaa/' >Select Folder<input type='file'  webkitdirectory='webkitdirectory' />Select Files<input type='file' multiple="multiple"  /></div></fieldset>
+					<fieldset class='ui-field-contain'><b>BBB/  </b><div class='pouch-list-input' data-pouch-folder='bbb/' >Select Folder<input type='file'  webkitdirectory='webkitdirectory' />Select Files<input type='file' multiple="multiple"  /></div>	</fieldset>
+				</fieldset>	
+			</div>
+		</div> 
+	</div> 
+
+
+</body>
+</html>
+
+<!-- 
+
+
+
+-->

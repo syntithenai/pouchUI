@@ -79,13 +79,22 @@ NORES missing ?
 
 
 TODO
+
+
+what can i take from cmfive
+	- menu as application base
+	- integrated login
+	- report wizards
+	
+	
 jquery mobile integration
-couchapp
-authentication
-click to edit
+couchapp - create a design doc and add files to it ..... DONE
+authentication  - todo 
+click to edit - hide pouch-input where pouch-value for same key exists in fieldset??
 samples 
 	- key types
 	- recursive list rendering
+	
 documentation
 plugin website	
 form types - password, dep select
@@ -93,6 +102,9 @@ ensure error checking on all async operations
 oauth google
 send mail - gmail api
 no update design docs every request - only if absent or URL flag
+
+IRRE example
+
 
 authentication - restrict read/write access to master database
 - filter functions to sync to local pouch based on auth object and whatever DB schema
@@ -113,4 +125,20 @@ content editing timeline
 	
 voice recognition
 bidirection sync with spreadsheets
+
+
+OTHER
+cm5 model using couch backend
+cm5 rest api same as couch except replication
+	- can i use couchdb to drive replication against php rest api ?
+
+
+cmfive questions
+- pagination
+- search/standards for joins 
+	- portability to other solutions eg couch
+	- portability GUI wizard
+	- allow for flexibility 
+	- partials in favor of joins
+
 

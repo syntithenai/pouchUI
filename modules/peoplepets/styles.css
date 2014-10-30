@@ -7,17 +7,17 @@
 	text-decoration:none;
 }
 .ui-content {
-	dmargin-top: 4em;
+	margin-top: 4em;
 }
 ddiv[data-role="page"] div[data-role="header"] {
 	margin-top:2.4em;
 }
 div[data-role="page"]  div.pouch-list  {
-		dmargin-top:0em;
+		margin-top:em;
 		margin-left:2em;
 }
 .ui-btn.disabled {
-	background-color:grey;
+	background-color:darkgrey !important;
 }
 fieldset.ui-field-contain label,.pouch-list-input label,.pouch-list-value label {
   font-weight: bold;
@@ -85,4 +85,18 @@ button[data-pouch-action="search"] {
 
 button.ui-btn {
 	margin: 0;
+}
+.pouch-list.rootlist > * > .pouch-list-item {
+	width : 25%;
+	float:left !important;
+	display :none;
+	display: inline  !important;
+	background : white;
+	border: 1px solid black;
+	padding : 0.3em;
+	margin: 1em;
+	border-radius: 5px;
+}
+.editdelete {
+	float: right;
 }
