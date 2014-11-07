@@ -1,0 +1,52 @@
+ENTRY web request/jqm ajax
+	controller.init
+		view.bindEventsTo
+		view.findSearchDOM
+		routing
+			view.showNew
+			view.renderSingle
+		init.initialiseDesignDocuments
+			init.destroyDB
+		init.initialiseList
+			init.importGoogleSheet
+		view.reloadList
+			model.loadList
+				view.findSearchDOM
+			view.updatePagination
+				view.findSearchDOM
+			view.renderList
+				view.updateListItemValues
+				view.updateListItemFileValues
+				view.renderValueWithLabel
+				view.collectChildrenButNotLists
+				view.replaceInputs
+				view.showNoResults
+				
+ENTRY BOUND EVENTS
+	user input
+		controller.onPouchClick
+			controller.actionDelete
+			controller.actionSave
+			controller.actionSearch
+			controller.actionLoadAndClickLink (download attachment)
+			view.renderSingle
+		controller.onPouchInputChange
+			controller.actionFileSelected
+		controller.onPouchInputKeyup	
+			controller.actionSearch
+	db changes
+		new
+			model.loadList
+			view.renderList
+			view.reloadList ???? are previous calls necessary - load recs is used to ensure change in list values matches changes feed event
+		update
+			view.updateListItem
+
+
+
+
+
+view.getTemplate
+controller.auth
+
+

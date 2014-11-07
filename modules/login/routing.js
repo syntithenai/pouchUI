@@ -14,7 +14,7 @@ function doRouting(to) {
 		console.log('connected to ',pouch)
 		 pouch.getSession(function (err, response) {
 		  if (err) {
-			pouchUILib.view.flashMessage('#users_login_generalerror');
+			plugin.api.view.flashMessage('#users_login_generalerror');
 		  } else if (!response.userCtx.name) {
 			console.log('goto login');
 			$.mobile.changePage('index.html#users_login');
@@ -28,13 +28,13 @@ function doRouting(to) {
 		pouch.getSession(function (err, session) {
 		console.log(session);
 		  if (err) {
-			pouchUILib.view.flashMessage('#users_login_generalerror');
+			plugin.api.view.flashMessage('#users_login_generalerror');
 		  } else if (!session.userCtx.name) {
 			$.mobile.changePage('#users_login');
 		  } else{
 			pouch.getUser(session.userCtx.name, function (err, response) {
 			  if (err) {
-				pouchUILib.view.flashMessage('#users_login_generalerror');
+				plugin.api.view.flashMessage('#users_login_generalerror');
 			  } else {
 				console.log(response);
 				$('#users_edit input[name="username"]').val(response.name).hide();

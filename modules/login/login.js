@@ -4,7 +4,7 @@ $(document).on( "pagebeforeshow", '#login_default,#login_edit', function() {
 	var pouch=new PouchDB(pouchUI.couchHost+'_users');
 	// DETERMINE WHERE TO GO
 	if (window.location.hash=='') {
-		pouchUILib.controller.auth(pouch).then(function(user) {
+		$.fn.pouchUI.api.controller.auth(pouch).then(function(user) {
 			if (user) {
 				// redirect to profile editing
 				$.mobile.changePage('#login_edit');
@@ -14,11 +14,11 @@ $(document).on( "pagebeforeshow", '#login_default,#login_edit', function() {
 			}
 		})
 		.fail(function(err) {
-			pouchUILib.view.flashMessage(err[0],err[1]);
+			$.fn.pouchUI.api.view.flashMessage(err[0],err[1]);
 		})
 	// IF WE ARE EDITING, PREP EDIT FORM
 	} else if (window.location.hash=="#login_edit") {
-		pouchUILib.controller.auth(pouch).then(function(user) {
+		$.fn.pouchUI.api.controller.auth(pouch).then(function(user) {
 			if (user) {
 				$('#login_edit input[name="username"]').val(user.name).hide();
 				if ($('#login_edit_username_label').length==0) $('#login_edit input[name="username"]').after('<span id="login_edit_username_label" >'+user.name+'</span>');
@@ -40,7 +40,7 @@ $(document).on( "pagebeforeshow", '#login_default,#login_edit', function() {
 				$.mobile.changePage('#login_login');
 			}
 		}).fail(function(err) {
-			pouchUILib.view.flashMessage(err[0],err[1]);
+			$.fn.pouchUI.api.view.flashMessage(err[0],err[1]);
 		})
 	}
 });
@@ -56,7 +56,7 @@ $(document).on( "pageinit", '#login_edit,#login_login', function() {
 			pouch.login(username, password, function (err, response) {
 				if (err) {
 					if (err.name === 'unauthorized') {
-					  pouchUILib.view.flashMessage('#login_login_invalid');
+					  $.fn.pouchUI.api.view.flashMessage('#login_login_invalid');
 					}
 				} else {
 					$.mobile.changePage('#login_edit');
@@ -64,14 +64,14 @@ $(document).on( "pageinit", '#login_edit,#login_login', function() {
 			});
 		} else {
 			$('#login_login_moredata').popup('open');
-			pouchUILib.view.flashMessage('#login_login_moredata');
+			$.fn.pouchUI.api.view.flashMessage('#login_login_moredata');
 		}
 	});
 	// BIND LOGOUT BUTTON
 	$('button[data-action="logout"]').bind('click',function() {
 		pouch.logout(function (err, response) {
 			if (err) {
-				pouchUILib.view.flashMessage('#login_login_generalerror');
+				$.fn.pouchUI.api.view.flashMessage('#login_login_generalerror');
 			} else {
 				$.mobile.changePage('#login_login');
 			}
@@ -79,7 +79,7 @@ $(document).on( "pageinit", '#login_edit,#login_login', function() {
 	});
 	// BIND SAVE BUTTON
 	$('#login_edit button[data-action="saveuser"]').bind('click',function() {
-		pouchUILib.controller.auth(pouch).then(function(user) {
+		$.fn.pouchUI.api.controller.auth(pouch).then(function(user) {
 			if (user) {
 				pouch.get(user._id).then(function(loadedUser) {
 					if ($.type(loadedUser.metadata)!='object') loadedUser.metadata={}; 
@@ -94,27 +94,27 @@ $(document).on( "pageinit", '#login_edit,#login_login', function() {
 							delete loadedUser.salt;
 						} else {
 							pwOK=false;
-							pouchUILib.view.flashMessage('#login_edit_passwordsdontmatch');
+							$.fn.pouchUI.api.view.flashMessage('#login_edit_passwordsdontmatch');
 						}
 					}
 					if (pwOK) {
 						console.log('save user',loadedUser);
 						pouch.post(loadedUser).then(function(res) {
-							pouchUILib.view.flashMessage('#login_edit_saved');
+							$.fn.pouchUI.api.view.flashMessage('#login_edit_saved');
 						}).catch(function(err) {
 							console.log(err,err.message);
-							pouchUILib.view.flashMessage('#login_edit_nosave',err.message);
+							$.fn.pouchUI.api.view.flashMessage('#login_edit_nosave',err.message);
 						});
 					}
 				}).catch(function(err) {
-					pouchUILib.view.flashMessage('#login_edit_nosave',err.message);
+					$.fn.pouchUI.api.view.flashMessage('#login_edit_nosave',err.message);
 				});
 			} else {
 				// redirect to login
 				$.mobile.changePage('#login_login');
 			}
 		}).fail(function(err) {
-			pouchUILib.view.flashMessage(err[0],err[1]);
+			$.fn.pouchUI.api.view.flashMessage(err[0],err[1]);
 		});
 	});
 });

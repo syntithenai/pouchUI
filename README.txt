@@ -71,29 +71,28 @@ file upload - don't put unsaved attachments in DOM. Put them in the database in 
 	- Only images need to be loaded into DOM when they are displayed as images.
 recursive list rendering/activation
 MM CSV foreign keys
+jquery mobile integration
+authentication  - todo 
+no update design docs every request - only if absent or URL flag
 
 BUGS
 pagination + search
 NORES missing ?
 	- last item wrong nores
 
-
 TODO
-
-
 what can i take from cmfive
 	- menu as application base
 	- integrated login
 	- report wizards
+		- objectvssql data modelling/app dev
 	
-	
-jquery mobile integration
 couchapp - create a design doc and add files to it ..... DONE
-authentication  - todo 
 click to edit - hide pouch-input where pouch-value for same key exists in fieldset??
 samples 
 	- key types
 	- recursive list rendering
+IRRE example
 	
 documentation
 plugin website	
@@ -101,9 +100,10 @@ form types - password, dep select
 ensure error checking on all async operations
 oauth google
 send mail - gmail api
-no update design docs every request - only if absent or URL flag
+tabs in forms
+panel menu left/right (context)
+swipe slide
 
-IRRE example
 
 
 authentication - restrict read/write access to master database
@@ -141,4 +141,30 @@ cmfive questions
 	- allow for flexibility 
 	- partials in favor of joins
 
+
+DOC
+when plugin is called.
+- cache global template
+- cache global options
+
+- bind all matching elements for click and inner input/select/checkbox etc for delayed keyup
+- 
+
+
+- all functions declared in api run in scope of init function
+	- options, templates
+
+
+- drawing from conf - options used by 
+getdb
+design docs init
+filesize
+auth
+
+global - apply to all lists
+
+
+
+HAZARDS
+pouchdb uses different promises implementation so .then,.catch as compared to jq with .then,.fail
 

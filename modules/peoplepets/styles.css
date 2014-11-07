@@ -70,7 +70,7 @@ div.ui-input-search { float: left; !important }
 }
 .ui-input-search {
 	margin-left: 1.5em;
-	margin-top: -0.1em;
+	dmargin-top: -0.1em;
 }
 button[data-pouch-action="search"] {
 	margin-left: 1.5em !important;

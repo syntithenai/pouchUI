@@ -12,142 +12,57 @@
  
  * 
  *********************************************************/
-var pouchUILib = {
-	
-
-}
-
 var methods = {
 	init : function(options) {
 		// START PLUGIN - ONCE OFF INITIALISATION ON PAGE LOAD
-		var pluginElements=this;
-		var pouchLists=[];
-		var databasesToListen={};
-		var databaseConfigs={};
-		var pluginTemplate='';
-		// mash all elements handed to jquery into a single template and 
-		// - set a path on all pouch-lists
-		// - extract configuration per database
-		$(this).each(function(tk,tv) {
-			$(tv).attr('data-root-pouch','true')
-			pluginTemplate=pluginTemplate+tv.outerHTML;
-		});
+		// SCOPE/CONFIGURATION EXISTS FOR 
+		// - PER PLUGIN (ONE INSTANCE FOR ALL SELECTED DOM)
+		// - PER SELECTED ELEMENT WHERE JQUERY PASSES MANY ELEMENTS AS THIS.
+		//		- .settings and .api  
+		//		- allows $('#pluginselector')[0].api.model.refresh();		
+		// - PER LIST
+		var databaseConfigs={}; // CONFIGURATION COLLATED BY DATABASE
+		var pluginTemplate='';  // CONCATENATED HTML OF ALL SELECTED ELEMENTS 
+		var pouchLists=[];  // TOP LEVEL LISTS
 		
-		//console.log("PTEMP",pluginTemplate);
-		pluginTemplate=$('<div id="root">'+pluginTemplate+'</div>');
-		// set path for every list regardless of nesting depth
+		// private internal copy of options for this instance of the plugin
+		var settings=$.extend(true,{},$.fn.pouchUI.defaultOptions);
+		// init parameters
+		if(options) {
+			$.extend(true,settings, options);
+		}
+		// set a path on all pouch-lists and collate shared database config
 		$('.pouch-list',pluginTemplate).each(function(k,v) {
-			$(v).attr('data-templatepath',pouchUILib.view.getDomPath(v,1));
+			$(v).attr('data-templatepath',$.fn.pouchUI.api.view.getDomPath(v,2));
+			// extract configuration per database
 			if ($(v).data('pouchDb')) {
 				if ($.type(databaseConfigs[$(v).data('pouchDb')])!='object') databaseConfigs[$(v).data('pouchDb')]={};
 				if ($(v).data('pouchSheetsource')) databaseConfigs[$(v).data('pouchDb')]['pouchSheetsource']=$(v).data('pouchSheetsource');
 				if ($(v).data('pouchDbsource')) databaseConfigs[$(v).data('pouchDb')]['pouchDbsource']=$(v).data('pouchDbsource');	
 			}
 		});
-		//console.log('PLUGIN TEMPLATE');
-		// gather top level lists for listening to changes
-		this.each(function() {
-			if ($(this).hasClass('pouch-list')) {
-				pouchLists.push($(this));
-				$(this).attr('data-templatepath',pouchUILib.view.getDomPath(this,2));
-			}
-			else $('.pouch-list:not(.pouch-list .pouch-list)',$(this)).each(function() {
-				pouchLists.push($(this));
-				$(this).attr('data-templatepath',pouchUILib.view.getDomPath(this,2));
-				//console.log('TT',typeof databasesToListen[$(this).data('pouchDb')]);
-				if (typeof databasesToListen[$(this).data('pouchDb')] === 'undefined' ) databasesToListen[$(this).data('pouchDb')]=[]; 
-				databasesToListen[$(this).data('pouchDb')].push($(this));
-			});
-			// BIND CLICK AND KEYUP EVENTS ON SEARCH FORMS THAT ARE NOT INSIDE OF POUCH-LISTS
-			$(this).data('options',options);
-			$(this).addClass('data-pouch-root');
-			pouchUILib.view.bindEventsTo($(this));	
+		//console.log('INIT',settings);
+		// CONCATENTATE HTML OF ALL PLUGIN CONTENT, MARK ALL LISTS WITH TEMPLATE PATH AND COLLATE CONFIG PER DB THEN CACHE FOR TEMPLATING
+		$(this).each(function(tk,tv) {
+			//$(tv).attr('data-root-pouch','true')
+			pluginTemplate=pluginTemplate+tv.outerHTML;
 		});
-			
-		// init and activate lists
-		pouchUILib.init.initialiseDesignDocuments(options.design,options).then(function() {
-			$.each(pouchLists,function(lk,lv) {
-				//console.log('ini/load/render',lv,$(lv).data())
-				pouchUILib.init.initialiseList(lv,options).then(function() {
-					//console.log('ini');
-					pouchUILib.controller.actionReloadList(lv,options);
-				});
-			});
-		});	
-		// LISTEN TO CHANGES ON LOCAL DB AND UPDATE CONTENT
-		setTimeout(function() {
-			$.each(databasesToListen,function(dk,dv) {
-				var pouch=pouchUILib.model.getDB(dk,options);
-				// CREATE
-				var changes = pouch.changes({ live: true,include_docs:true,since:'now'}).on('create', function(change) { 
-					//console.log('changes create','.pouch-list-item[data-pouch-id="'+change.doc._id+'"]',$('.pouch-list-item[data-pouch-id="'+change.doc._id+'"]'));
-					$('.pouch-list',pluginElements).each(function(pk,pv) {
-						pouchUILib.model.loadList(pv,options).then(function(results) {
-							if (results && results.rows && results.rows.length>0) {
-								$.each(results.rows,function(k,row) {
-									//console.log('check',row);
-									if (row.id==change.doc._id) {
-										pouchUILib.view.renderList(results,pv,options).then(function(rres) {
-											pouchUILib.controller.actionReloadList(pv,options);
-										});
-									}
-								});
-							}
-						});
-					});
-				});
-				// UPDATE
-				var changes = pouch.changes({ live: true,include_docs:true,since:'now'}).on('update', function(change) { 
-					console.log('changes UPDATE','.pouch-list-item[data-pouch-id="'+change.doc._id+'"]',$('.pouch-list-item[data-pouch-id="'+change.doc._id+'"]'));
-					var item=$('.pouch-list .pouch-list-item[data-pouch-id="'+change.doc._id+'"]');
-					var list=item.parents('.pouch-list').first();
-					pouchUILib.view.updateListItem(change,item,list);
-				});
-				// DELETE
-				var changes = pouch.changes({ live: true,include_docs:true,since:'now'}).on('delete', function(change) { 
-					//console.log('changes DEL','.pouch-list-item[data-pouch-id="'+change.doc._id+'"]',$('.pouch-list-item[data-pouch-id="'+change.doc._id+'"]'));
-					$('.pouch-list .pouch-list-item[data-pouch-id="'+change.doc._id+'"]').remove();
-				});
-			});
-		},5000);
-
-		jhg
-		
-		
-		var db=null;
-		// private internal copy of options for this instance of the plugin
-		var settings=$.extend(true,{},$.fn.quickDB.defaultOptions);
-		// init parameters
-		if(options) {
-			$.extend(true,settings, options);
-		}
+		pluginTemplate=$('<div id="root">'+pluginTemplate+'</div>');
+		//console.log("PTEMP",pluginTemplate);
+		// EXTRACT SETTINGS PER ITEM PASSED IN SO SEARCHFORM AND LIST CAN HAVE DIFFERENT SETTINGS
+		// BIND METHODS INSIDE PLUGIN AND CALL CONTROLLER INIT
 		return this.each(function() {
 			var plugin = this;
-			//console.log('iniit plugin on ',this)
-		
-			plugin.saveCallbackStack=[]; 	
-			// DOM configuration through data attributes
-			$.extend(true,settings, $(plugin).data());
-			// access to settings for methods in other scopes
+			plugin.pluginTemplate=pluginTemplate;
+			plugin.databaseConfigs=databaseConfigs;
+			plugin.pouchLists=pouchLists;
+			plugin.databasesToListen={};
 			plugin.settings = settings;
-			plugin.DBInitialised=false;
-			// plugin.settings.db is wholy generated
-			plugin.settings.db = {table:{}};
-			//plugin.settings.db.table.fields={};
-			// ensure DOM targets for list/form/searcher with default of this plugin
-			if (plugin.settings.formtarget && $(plugin.settings.formtarget).length>0) plugin.formTarget=$(plugin.settings.formtarget);
-			else plugin.formTarget=$(plugin);
-			if (plugin.settings.listtarget && $(plugin.settings.listtarget).length>0) plugin.listTarget=$(plugin.settings.listtarget);
-			else plugin.listTarget=$(plugin);
-			if (plugin.settings.searchtarget && $(plugin.settings.searchtarget).length>0) plugin.searchTarget=$(plugin.settings.searchtarget);
-			else plugin.searchTarget=$(plugin);
-			//console.log('set targets',plugin.searchTarget,plugin.listTarget,plugin.formTarget);
-			
 			// bind functions in with plugin scope
 			var pluginMethods=[];
-			if ($.fn.quickDB && $.fn.quickDB.api) {
+			if ($.fn.pouchUI.api) {
 				//console.log('bind plaugin to api',plugin);
-				$.each($.extend(true,{},$.fn.quickDB.api),function(key,value) {
+				$.each($.extend(true,{},$.fn.pouchUI.api),function(key,value) {
 					if ($.isFunction(value)) { 	
 						pluginMethods[key]=value.bind(plugin);
 					} else {
@@ -162,13 +77,36 @@ var methods = {
 			}
 			// access to api for functions defined in other scopes
 			plugin.api = pluginMethods;
-			// single form wrapper around whole plugin
-			$(plugin).wrap("<form></form>");
+			// gather top level lists for initialisation, setting template path and collating db 
+			if ($(plugin).hasClass('pouch-list')) {
+				plugin.pouchLists.push($(this));
+				$(plugin).attr('data-templatepath',plugin.api.view.getDomPath(plugin,2));
+			}
+			else $('.pouch-list:not(.pouch-list .pouch-list)',$(plugin)).each(function() {
+				plugin.pouchLists.push($(this));
+				$(this).attr('data-templatepath',plugin.api.view.getDomPath(plugin,2));
+				//console.log('TT',typeof databasesToListen[$(this).data('pouchDb')]);
+				if (typeof plugin.databasesToListen[$(this).data('pouchDb')] === 'undefined' ) {
+					plugin.databasesToListen[$(this).data('pouchDb')]=[]; 
+				}	
+				plugin.databasesToListen[$(this).data('pouchDb')].push($(plugin));
+			});
 			// kickstart
 			plugin.api.controller.init.apply(plugin);
 		});
+	},
+	doit : function(name) {
+		//console.log('DONE',name);
 	}
 };
+/**********************************************************************************
+ * Initialise content 
+ * @input this - DOM provided to jquery plugin. All this DOM is bound for events. Some of this DOM is rerendered using pouch data.
+ * @param method - can take multiple forms
+	- method parameter empty or as object calls the init method and passes the parameter object eg $('body').pouchUI({db:'pets',maxSize:898798})
+	- method parameter as string matching existing methods defined in the top level of the methods object above calls the method. eg $('body').pouchUI('doit');
+ * @return initialised plugin instance with properties .settings and .api for programmatic access to pouchUI methods.
+ **********************************************************************************/
 $.fn.pouchUI = function(method) {
 	// PUBLIC METHODS - TODO with jquery style method calls $('dd').plugin('methodName',restOfParams) with direct access to plugins.api
 	// support for nesting as per model,view,controller subkeys of api
@@ -179,7 +117,7 @@ $.fn.pouchUI = function(method) {
 		return methods.init.apply(this, arguments);
 	} 
 	else {
-		$.error("Method " +  method + " does not exist on jQuery.quickDB");
+		$.error("Method " +  method + " does not exist on jQuery.pouchUI");
 	}    
 };
 	

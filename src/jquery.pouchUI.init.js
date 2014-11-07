@@ -1,17 +1,16 @@
-var pouchUILib = {
+$.fn.pouchUI.api = {
 	/**************************************************************
 	 * START INIT FUNCTIONS
 	 **************************************************************/
 	init : {
-		/* INIT EVENTS, SYNC and PRELOAD SHEET DATA IF AVAILABLE*/
-		initialiseList : function(list,options) {
+		// INITIALISE DATA SOURCES AND DATABASE SYNC
+		initialiseList : function(list) {
+			var plugin=this;
 			list.hide();
 			var dfr=$.Deferred();
-			var d=$.extend({include_docs:true},options,list.data());
-			var pouch=pouchUILib.model.getDB(d.pouchDb,options);
+			var d=$.extend({include_docs:true},plugin.settings,list.data());
+			var pouch=plugin.api.model.getDB(d.pouchDb);
 			//console.log('initialise conf',d);
-			// BIND LIST EVENTS
-			//pouchUILib.view.bindEventsTo(list);
 			function startSync() {
 				// REMOTE SYNC ? - no need to wait because listening on local changes
 				if (d.pouchDb && d.pouchDbsource) {
@@ -28,7 +27,7 @@ var pouchUILib = {
 			}
 			// SHEET SOURCE ?
 			if (d.pouchSheetsource) {
-				pouchUILib.init.importGoogleSheet(d.pouchDb,d.pouchSheetsource,options).then(function() {
+				plugin.api.init.importGoogleSheet(d.pouchDb,d.pouchSheetsource).then(function() {
 					startSync();
 					dfr.resolve();
 				});
@@ -38,7 +37,9 @@ var pouchUILib = {
 			}
 			return dfr;
 		},
-		importGoogleSheet : function (db,url,options) {
+		// IMPORT DATA FROM A GOOGLE SHEET INTO POUCH
+		importGoogleSheet : function (db,url) {
+			var plugin=this;
 			var adfr=$.Deferred();
 			var a=url+'?alt=json-in-script&callback=pouchUI_captureGoogleSheet';
 			console.log('IGS',a);
@@ -46,7 +47,7 @@ var pouchUILib = {
 				var records=[];
 				// FOR EACH SHEET ROW REPRESENTING A RECORDS
 				var dfrs=[];
-				var pouch=pouchUILib.model.getDB(db,options);
+				var pouch=plugin.api.model.getDB(db);
 				var errors=[];
 				var rowNum=1;
 				$.each(pouchUI_googleSheetResult,function(key,sheetRow) {
@@ -90,47 +91,51 @@ var pouchUILib = {
 			
 			return adfr;
 		},
-		initialiseDesignDocuments : function (designDoc,options) {
+		// CREATE/UPDATE NECESSARY DESIGN DOCSS
+		initialiseDesignDocuments : function (designDoc) {
+			var plugin=this;	
 			var dfr=$.Deferred();
-			//console.log('got design ',designDoc);
-			// load existing design doc and update it
-			var promises=[];
-			// first delete databases if reset flag
-			$.each(designDoc,function(dkey,dval) {
-				promises.push(pouchUILib.init.destroyDB(dkey,options));
-			});
-			//console.log('dbs destroyed');
-			$.when.apply($,promises).then(function() {
-				//console.log('dbs destroyed forreal');
-				//console.log('DD',designDoc);
+				var promises=[];
+				// first delete databases if reset flag
+				if (!designDoc) designDoc={};
 				$.each(designDoc,function(dkey,dval) {
-					//console.log('now create designs ',dkey,dval);
-					var pouch=pouchUILib.model.getDB(dkey,options);
-					//console.log('now pouched',dval._id,pouch);
-					pouch.get(dval._id).then(function(current) {
-						//console.log('got design doc',current);
-						dval._rev=current._rev;
-						pouch.post(dval).then(function (info) {
-							//console.log('design doc saved',info);
-							dfr.resolve();
-						}).catch(function (err) {
-						   console.log('design doc err',err);
-						   dfr.resolve();
-						});
-					// failing that create a new one
-					}).catch(function(err) {
-						//console.log('create new');
-						pouch.post(dval).then(function (info) {
-							//console.log('design doc created info',info);
-							dfr.resolve();
+					promises.push(plugin.api.init.destroyDB(dkey));
+				});
+				// try to load each existing design doc and update it
+				$.when.apply($,promises).then(function() {
+					$.each(designDoc,function(dkey,dval) {
+						//console.log('now create designs ',dkey,dval);
+						var pouch=plugin.api.model.getDB(dkey);
+						pouch.get(dval._id).then(function(current) {
+							if (document.location.search=="?pouch-init=true" || plugin.settings.init.refreshDesignDocs===true ) {
+								dval._rev=current._rev;
+								pouch.post(dval).then(function (info) {
+									//console.log('design doc saved',info);
+									dfr.resolve();
+								}).catch(function (err) {
+								   console.log('design doc err r',err);
+								   dfr.resolve();
+								});
+							} else {
+								dfr.resolve();
+							}
+						// failing that create a new one
+						}).catch(function(err) {
+							//console.log('create new');
+							pouch.post(dval).then(function (info) {
+								//console.log('design doc created info',info);
+								dfr.resolve();
+							});
 						});
 					});
+					
 				});
-				
-			});
+			
 			return dfr;
 		},
-		destroyDB : function (db,options) {
+		// DESTROY POUCH DATABASE 
+		destroyDB : function (db) {
+			var plugin=this;
 			return;
 			var dfr=$.Deferred();
 			// SWITCH ON URL PARAMETER ?reset=yes
@@ -138,7 +143,7 @@ var pouchUILib = {
 				dfr.resolve();
 			} else {
 				console.log('RESET'); //?',$.trim(location.search.split('reset=')[1]).length,location.search,location.search.split('reset=')[1]);
-				var pouch=pouchUILib.model.getDB(db,options);
+				var pouch=plugin.api.model.getDB(db);
 				// RESET DATABASE
 				pouch.destroy()
 				.then(function(err,res) {

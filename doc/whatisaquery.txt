@@ -1,0 +1,107 @@
+Greg and I gonna get together (here Greg) on Wednesday to go over CM5 and see if we can put ourselves to something useful.
+The skinny version is "now is a good time to add priorities.... to github"
+
+And the extension is some thoughts on model frameworks
+
+------------------------------------------------------------------------------------
+AIM: To gather thoughts about abstracting database queries.
+
+INTRO:
+Why - standardisation/portability/features - validation, persistence, supported common, simple queries eg findBy(field,value), rendering, synchronisation
+What abstraction we can share for working with persistent models and in particular relationships?
+What are the approaches and challenges and appropriate use cases for various persistence frameworks.
+What is desirable in the development of CM5? Minimal. Performant. Flexible! Easy to step outside. Simple/Learnable! mysql based.
+What makes for interesting ways of looking at things? What is possible ?
+
+
+[Aside:
+Carsten mentioned that he felt CM5 was primarily about business applications. In part because it was too heavy for a high performance website. 
+It makes me think of the questions. 
+- Is it slower than wordpress ? What advantage does wordpress have over CM5 as a content management system (when a basic content editing module is added)?
+- Where are the performance bottlenecks? Are there optimisations or alternatives including more dynamic user interfaces (appcache/precache)?
+- Do Carsten and Liam see 2PI software growing primarily as a web based software company? 
+- What would you guys like to be building ? What kinds of software? Business applications.... resources management .... compliance  .... efficiency 
+- ? games, phone/tablet apps, education, multimedia content
+It's obviously driven by paying customers but also how you guys think about it.
+]
+
+Justification (for abstracting queries)
+- client UI search abstraction/reporting tools - javascript widget to generate queries
+- clarity/standardisation/training
+- ease/features eg support for traversing a normalised data model
+- automatic SQL INJECTION protection
+- validation or rendering from metadata
+- portability between storage systems
+- compatibility with javascript model frameworks, can facilitate distribution/sync
+
+How can we model a query?
+An API for a data store needs at least 1. put information 2. search/get information 3. delete information
+Example
+- PUT/POST/GET/DELETE REST api
+- active record pattern obj.save(obj.insert/obj.update)/obj.get/obj.findby/obj.delete 
+That's the easy bit. The tricky bit is when you start to ask questions of the data store that traverse it's storage model.
+
+Frameworks to provide an abstraction to SQL SELECT can be limiting and prevent the full expresiveness of SQL.
+What kind of advanced queries are hard to abstract? Examples in sql.
+	Joins across many tables||| (type fields)
+	Group by || (REDUCE)
+	Subqueries || (recursive UI widgets/collation joins/caching objects that may be rereferenced)
+	Views
+More ..................... input please
+What are the boundaries? At what point does it become impossible to use abstracted querys.
+
+How does any modeling impact on the request transformation/validation framework. Or even the rendering framework.
+	
+Frameworks
+PHPDBO classes used in CM5 provide automatic join generation by referencing fields in table.field notation.	
+Others include doctrine, db.zend, cakephp. I know cake has relational support in building the model with hasMany() used to define a model supporting the ORM functions.
+Anything memorably useful ?
+Event framework. eg Changed.  Relational save.
+Memorably annoying ?
+object based meta data object that needs to defined before the ORM works. Automagically by convention ....
+
+	
+What difference in modelling an object database ? 
+I'm not seriously suggesting migration to object databases on the server anytime soon.
+I do think it's worthy being aware of the possibility and issues in how that may affect design now. Is it worth framing approaches that would allow an application to work seamlessly with multiple underlying data sources including SQL and NOSQL. In the context of considering a client query chooser .....  Object databases are available in the browser and so object storage on the server is easy to sync with particularly with couch and pouch. 
+
+Create/edit/delete/get is all transparently transferable (more or less). 
+Foreign keys are still a basis for working with relationships in the model data.
+There are also different mechanisms for storing data as structured information inside an object.
+And retrieving data and relationships between data with any kind of criteria is a totally different ball game.
+
+Joins can be replicated in part -
+- using nested objects inside each object that does have a primary key.
+OR - at the application or UI level using nested or recursive components. Ideally supported by a caching mechanism for MM where records are reused. This idea is similar to partials in CM5.
+OR - for Map/Reduce databases (couch/mongo/hadoop/riak/cassandra) 
+	- all objects in one database flagged with type/table attributes and foreign keys same as normal.
+	- parent and children object are returned on an index sorted by id in child and fk in parent then sorted by this key (COLLATION)
+		- the relationship could be reversed or expanded to support MM through token seperated fk values.
+
+Queries (Initially seems horrible from a SQL point of view)
+In map/reduce you need to define an index or indexes allowing for any combinations of your search criteria.
+A single criteria leads to the requirement for application level filtering (where the transfer cost is small ie local database).
+You only get one parameter that can be applied against an index although it can have multiple values.
+Querying overlaps with collation and pagination in access to key parameter.
+Keys can reflect multiple columns and a record can be in an index many time for different key combinations allowing some flexibility with search criteria.
+
+
+Me
+I'm interested in how to build an app with heavy use of local browser storage and synchronisation back to a server storage. Offline first. Responsive not only visually between devices but FAST.
+Underpinning that for me is how to sync a client database back to mysql or some servers side storage. 
+
+At the moment I have that for free between pouch and a couch database. I believe implementing the pouch restful API from PHP will allow me to use the pouch javascript client to drive the live multi master replication between local storage and a mysql database through it's REST api. Be a neat trick if it works! :)
+
+Another thought experiment is what would it mean for CM5 if the DBObject class where replaced by one reliant on a Map/Reduce object database.... It's all the custom queries, reporting. 
+
+[Aside:Strengths/weaknesses CM5 working with javascript so we can build zippy interfaces. Routing works beautifully with appcache. RESTFUL API is great. HTTP access to partials ? Support for unobtrusive scripts with metadata from tags provided in rendering layer? OR at least Standards in templates (or automation) to ensure classes and ids or other data attributes supporting js libraries.
+]
+
+
+Summary
+Having put all that down I have the following suggestions
+
+- findBy(field,value) for model class
+- 
+
+

@@ -1,11 +1,15 @@
-pouchUILib.model = {
-	getDB : function(db,options) {
+$.fn.pouchUI.api.model = {
+	// CONNECT TO POUCH AND RETURN DATABASE HANDLE
+	getDB : function(db) {
+		var plugin=this;
 		var dbOptions={};
-		if (options && options['dbOptions'] && options['dbOptions'][db]) dbOptions=options['dbOptions'][db];
+		if (plugin.settings && plugin.settings['dbOptions'] && plugin.settings['dbOptions'][db]) dbOptions=plugin.settings['dbOptions'][db];
 		//console.log('CONNECT DB',db,options['dbOptions'][db],options['dbOptions'],options,dbOptions);
 		return new PouchDB(db,dbOptions);
 	},
+	// CHECK IF DATABASE IS LOCAL POUCH OR ONLINE COUCH
 	isCouch : function(db) {
+		var plugin=this;
 		var p=db.substr(0,7);
 		if (p=='http://' || p=='https:/') {
 			// have config but connect string not http://
@@ -14,14 +18,20 @@ pouchUILib.model = {
 			return false;
 		}
 	},
+	// RETURN THE MAX FILE SIZE SUPPORTED BY POUCH FOR FILE UPLOADS
 	// LATEST VERSION OF POUCH ONLY SUPPORTS PUTATTACHMENT UP TO 20M. OLDER VERSIONS COPED WITH UP TO 150M ??
-	maxFileSize : function(options) {
-		if (options.maxFileSize) return options.maxFileSize 
+	maxFileSize : function() {
+		var plugin=this;
+		if (plugin.settings.maxFileSize) return plugin.settings.maxFileSize 
 		else return 20*1024*1024;
 	},
-	// CALLED ON INIT AND ON CHANGES TO GET RECENT DATA AND CALL UPDATE LIST
-	loadList : function(list,recurse,options) {
-		var buttonDOM=pouchUILib.view.findSearchDOM(list);
+	// LOAD RECORDS BASED ON LIST META DATA
+	// @ return deferred 
+	// @ resolve list results
+	// uses list data - pouchDb, pouchIndex, pouchLimit, pouchSkip, pouchMmseperator 
+	loadList : function(list,recurse) {
+		var plugin=this;
+		var buttonDOM=plugin.api.view.findSearchDOM(list);
 		//console.log('LOAD LIST',$(list).data(),buttonDOM.html())
 		//$(list).html('<b>eek</b>')
 		var dfr=$.Deferred();
@@ -39,11 +49,11 @@ pouchUILib.model = {
 			limit=$(list).data('pouchLimit');
 			//console.log('limit from attr',limit);
 		}
-		if ($(list).data('pouchSkip')>0) {
-			skip=$(list).data('pouchSkip');
-			//console.log('limit from attr',limit);
+		if ($(list).attr('data-pouch-skip')>0) {
+			skip=$(list).attr('data-pouch-skip');
+			console.log('limit from attr',limit);
 		}
-		var d=$.extend({include_docs:true},options,$(list).data());
+		var d=$.extend({include_docs:true},plugin.settings,$(list).data());
 		//console.log('list data',$(list).data());
 		if (d.keys) {
 			//console.log("PREP KEYS",d.keys);
@@ -53,18 +63,32 @@ pouchUILib.model = {
 		
 		if (limit>0) d.limit=parseInt(limit);
 		if (skip>0) d.skip=parseInt(skip);
-		if (d.pouchIndex=="people/persons")  console.log('now query local',d);
+		//if (d.pouchIndex=="people/persons")  
+		console.log('now query local',d);
 		// NOW LOAD RESULTS
-		var pouch=pouchUILib.model.getDB(d.pouchDb,options);
+		var pouch=plugin.api.model.getDB(d.pouchDb);
 		if (d.pouchIndex) {
-			console.log('now query local',d.pouchIndex,d.key);
+			console.log('now query local',d.pouchIndex,d);
+			//if (d.descending) d.skip=0;
+			if (d.descending) {
+				var backup=d.endkey;
+				if (d.startkey) d.endkey=d.startkey;
+				if (backup) d.startkey=backup;
+			}
 			//if (recurse>0) console.log('DBDBDB now queryindex',recurse,d.pouchIndex);
 			pouch.query(d.pouchIndex,d).then(function(res) {
-				if (d.pouchIndex=="people/persons") console.log('DBDBDB query res',d.pouchIndex,res)
+				// reverse array again so keys count forward
+				if (d.descending && res.rows) {
+					console.log('REVERSE');
+					res.rows=res.rows.reverse();
+					$(list).data('descending',false);
+				}
+				//if (d.pouchIndex=="people/persons") console.log('DBDBDB query res',d.pouchIndex,res)
 				//console.log('RESULTS query',res,list);	
 				dfr.resolve(res);
 			}).catch(function(err) {
 				console.log('Query index err',err);
+				dfr.reject();
 			});
 		} else {
 			//console.log('now alldocs');
