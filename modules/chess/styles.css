@@ -1,0 +1,167 @@
+/*
+.ui-content {
+	margin-top: 4em;
+}
+ddiv[data-role="page"] div[data-role="header"] {
+	margin-top:2.4em;
+}
+div[data-role="page"]  div.pouch-list  {
+		margin-top:em;
+		margin-left:2em;
+}
+ 
+fieldset.ui-field-contain label,.pouch-list-input label,.pouch-list-value label {
+  font-weight: bold;
+}
+.attachments, .buttonset {
+	margin-top: 0.7em;
+}
+.pouch-list-value .attachments {
+	dmax-width: 500px;
+}
+.pouch-list-value .attachments .file.image{
+	display: inline;
+}
+
+.drootlist { height: 800px !important; background-color: pink !important; }
+
+
+fieldset > .pouch-list-input, fieldset > .pouch-list-input label{
+	display: inline;
+}
+label[for="search"] {
+	margin-left: 10em;
+	display: inline;
+}
+
+#loading {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+}
+
+.ui-input-search {
+	margin-left: 1.5em;
+	dmargin-top: -0.1em;
+}
+button[data-pouch-action="search"] {
+	margin-left: 1.5em !important;
+}
+.ui-select {
+	margin-top:0em !important; 
+	padding-left:0.6em !important; 
+	dfloat:left !important; 
+	display: inline !important;
+}
+
+.board,.headrow,.footrow {
+ float:left;
+ clear:both;
+}
+button.ui-btn {
+	margin: 0;
+}
+.pouch-list.rootlist > * > .pouch-list-item {
+	width : 370px;
+	float:left !important;
+	display :none;
+	display: inline  !important;
+	background : white;
+	border: 1px solid black;
+	padding : 0.3em;
+	margin: 1em;
+	border-radius: 5px;
+}
+.editdelete {
+	float: right;
+}
+.PgnTextBox {
+	width: 96%;
+}
+*/
+/* TOOLBAR  */
+.toolbarleft {
+	float: left;
+	width: 88%;
+	margin-right: 2%;
+}
+.toolbarright {
+	float: right;
+	width: 10%;
+}
+ .stats .pouch-list-value {
+ float:left !important;
+ ddisplay:inline;
+
+}
+.data-pouch-field-pgn {
+ float:none !important;
+ clear:both;
+ 
+}
+div.ui-input-search { 
+	width: 20em !important ;
+	float: left !important ;
+	margin-right: 1em;
+}
+/*  BOARD */
+.PgnTextBox,.output,.FenTextBox {
+	width: 96%;
+}
+.headrow  {
+ display:block !important;
+}
+.headrow, .footrow,.board,.PgnTextBox,.output,.FenTextBox {
+	position: relative;
+	clear: both;
+}
+.buttonsleft {
+	sdisplay: inline;
+	dwidth: 70%;
+	float:left;
+}
+.buttonsright {
+	ddisplay: inline;
+	swidth: 25%;
+	float:right;
+	dtext-align:right;
+}
+.pouch-list.rootlist > * > .pouch-list-item {
+	width : 370px;
+	float:left !important;
+	display :none;
+	display: inline  !important;
+	background : white;
+	border: 1px solid black;
+	padding : 0.3em;
+	margin: 1em;
+	border-radius: 5px;
+}
+.pouch-list.rootlist > * > .pouch-list-item.wide {
+	width : 740px !important;
+}
+.boardpanel td {
+ vertical-align:top;
+}
+
+
+/*  POUCHUI */
+.validationerror {
+	color: red;
+}
+#editheadertemplate [data-role="controlgroup"]{
+	margin-top:2.8em !important;
+}
+.ui-btn {
+	border: 1px solid black;
+	background-color:pink;
+	dpadding: 0.2em;
+	dmargin-right: 0.5em;
+	dmargin-top: 20px;
+	text-decoration:none;
+}
+.ui-btn.disabled {
+	background-color:darkgrey !important;
+}

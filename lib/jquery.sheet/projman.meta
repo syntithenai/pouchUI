@@ -1,0 +1,100 @@
+var quickDBMeta={
+	tables:{		
+		categories:{
+			fields: {
+				name: {type:'text',label:'Name'},
+				name: {type:'image',label:'Image'},
+			},
+			views: {
+				label: { fields:'categories.name as label' },
+				default: { fields:'categories.name as name,file,password,sheet' }
+			}
+		},
+		products : {
+			fields: {
+				name: {type:'text',label:'Name'},
+				price: {type:'text',label:'Price'},
+			},
+			joins:{
+				accounts:{
+					label:'Accounts',
+					table:'accounts',
+					condition:'accounts.banks=banks.rowid',
+					allow : {select :'false'}
+				},	
+				categories: {
+					label:'Categories',
+					table:'categories',
+					mmTable:'mm_bankscategories',
+					condition:'banks.rowid=mm_bankscategories.banks and categories.rowid=mm_bankscategories.categories',
+				}
+			},
+			views: {
+				label: { fields:'products.name as label' },
+				default : { joins: 'accounts,categories',fields:"banks.name name,GROUP_CONCAT(accounts.name,',') as accounts,','||GROUP_CONCAT(accounts.rowid,',')||',' as _accounts_ids,GROUP_CONCAT(categories.name,',') as categories,','||GROUP_CONCAT(categories.rowid,',')||',' as _categories_ids",groupBy:'banks.rowid',filter:'' ,collateFields:'accounts,categories',collateToken:','
+				}
+				//,form:{} // copied from default and tweaked below
+			},
+			searchers: {
+				default : {
+					search: {
+						label:'Search',
+						name: {type: 'text','fields':'banks.name,accounts.name,accounts.number'}
+					}	
+				}
+			}
+		},
+		accounts: {
+			fields: {
+				name: {type:'text', label:'Account'},
+				number: {type:'text', label:'Number'}
+			},
+			joins: {
+				banks:{
+					label:'Bank',
+					table:'banks',
+					condition:"accounts.banks=banks.rowid",
+					render:'select',
+					allow : {edit :'false'}
+				},
+				transactions: {
+					label:'Transactions',
+					table:'transactions',
+					condition:'transactions.accounts=accounts.rowid',
+					allow : {select :'false'}	
+				}	
+			},
+			views: {
+				label:{fields:"accounts.name || ' ' || accounts.number as label"	},
+				default: { joins: 'banks', fields:"accounts.name name,accounts.number as number,banks.name as banks,banks.rowid as _banks_ids",groupBy:'accounts.rowid'}	,
+			}
+		},
+		transactions:{
+			fields: {
+				date: {type:'date', label:'Date'},
+				description: {type:'text', label:'Description'},
+				amount: {type:'text', label:'Amount'}
+			},
+			joins: {
+				banks:{
+					label:'Bank',
+					table:'banks',
+					condition:'accounts.banks=banks.rowid',
+					render:'value'
+				},
+				accounts:{
+					label:'Account',
+					table:'accounts',
+					condition:'accounts.rowid=transactions.accounts',
+					render:'value'
+				}		
+			},
+			views: {
+				label:{ fields:"date || ' $' || amount || ' ' || description as label" },
+				default: { joins: 'accounts', fields:"accounts.rowid as _accounts_ids,transactions.description as description,transactions.amount as amount,transactions.date as date,accounts.name||accounts.number as accounts"}	
+			}
+		}
+	}
+}
+// TWEAKS
+//quickDBMeta.tables.banks.views.form = $.extend({},quickDBMeta.tables.banks.views.default,{myextrafield:'this is the goods'});

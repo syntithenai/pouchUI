@@ -1,4 +1,6 @@
 ! pouchUI
+Author: Steve Ryan <stever@syntithenai.com>
+
 
 pouchUI is a jquery plugin for generating dynamic HTML interfaces using a pouchDB database.
 The plugin looks for $('.pouch-list') and populates these lists based on meta data in data attributes.

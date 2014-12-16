@@ -1,0 +1,55 @@
+<html> 
+  <head> 
+    <title>GarboChess Javascript</title> 
+ <meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="../../lib/jquery/js/jquery.js"  ></script>
+<script src="../../lib/jquery/js/jquery-ui.js"  ></script>
+
+   <script type="text/javascript" src="js/garbochess.js"></script>
+	<script type="text/javascript" src="jquery.garbochess.js"></script>
+	<script type="text/javascript">
+	   var b,c;
+	    $(document).ready(function () {
+	        g_timeout = 1000;
+	        //UINewGame();
+	        b=$('.gc1').garboChess().get(0);
+	        console.log(b);
+	        // b.api.UINewGame();
+	       // c=$('.gc2').garboChess().get(0);
+			//c.api.UINewGame();
+	        //.garboChess('resetGame');
+	       
+	    });
+    </script> 
+    <link rel="stylesheet" href="../../lib/jquery/css/smoothness/jquery-ui.css" type="text/css"  charset="utf-8">
+      <style type="text/css">
+		  .ui-btn-left {
+			float: left;  
+			display:inline;
+		  }
+		  .ui-btn-right {
+			float: right;  
+			display:inline;
+		  }
+          .ui-btn {
+				border: 1px solid black;
+				background-color:pink;
+				padding: 0.2em;
+				margin-right: 0.5em;
+				margin-top: 0.2em;
+				margin-bottom: 0.2em;
+				text-decoration:none;
+				display: inline;
+			}
+		   div.garbochess {float:left; margin-right: 1em;}
+		  
+		  
+      </style>
+  </head> 
+  <body> 
+    <div class='garbochess gc1' align="center">
+        
+     </div> 
+     
+  </body> 
+</html> 

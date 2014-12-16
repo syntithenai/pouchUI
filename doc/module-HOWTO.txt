@@ -1,0 +1,107 @@
+PouchUI is a jquery plugin containing a dynamic list widget hooked up to the PouchDB api. PouchDB is wrapper for the various localstorage solutions available in web browsers and a client for the CouchDB object database.
+PouchDB supports the REST based CouchDB replication protocol so it is ideal for implementing collaborative user interfaces.
+
+!!QUICKSTART
+
+! The basics
+To use the plugin first include the javascript and css files, then initialise the DOM target with the PouchUI plugin.
+
+<script src='src/jquery.pouchUI.js' ></script>
+<script>
+$('.pouch-list').pouchUI();
+</script>
+
+Configuration can be provided as an initialisation parameter and/or as data attributes of the list.
+
+! HTML Rendering
+It can be used in a HTML page to populate a list by using 
+<div class='pouch-list' data-pouch-db='items' >
+	My items <div class='pouch-list-item'    >
+		For <span class='pouch-list-value' data-pouch-field="name" >Steve</span>
+		 amount is 
+		<span class='pouch-list-value' data-pouch-field="amount" >eg 7</span>
+	</div>
+	<div class='pouch-list-noresults' > I have no items</div>
+</div>
+
+! HTML Markers
+Inside a .pouch-list .pouch-list-item the following are used as markers for dynamic replacement
+- .pouch-list-value  [data-pouch-field]
+where the HTML content of the element is replaced by the the database value for the field
+- .pouch-list-input [data-pouch-field] 
+where the value of the first input/select/checkbox/textarea inside is set to the database value for the field
+- .pouch-updateattributes.[data-pouch-attribute-<attr>="<fieldToAppend>"]
+where the  tag attribute matching <attr> has the database value of <fieldToAppend> appended to it. 
+eg <a class='pouch-replaceattributes' href='index.php?id='  data-pouch-attribute-href="pageid" >
+- .pouch-list (nested list)
+
+- .pouch-collation (joined nested list)
+
+
+! Importing data into the list
+- data-pouch-sheetsource
+- data-pouch-dbsource
+
+!Querying a list
+[Sad but true, WebSQL is not a path forward for developing cross platform browser apps. Index support using Map/Reduce is what we have.]
+Map/Reduce is a very different way of thinking compared to using joins in SQL.
+Storage is object based and arbitrary depth nested objects are stored seamlessly.
+Each object is assigned a unique id attribute if one is not provided when saved.
+Tables are typically emulated by using a type field.
+Storage models can be relationally normalised in parallel to a SQL database which is useful to minimise conflicts in a multiple editing scenario.
+Querying is done by building an index with Map/Reduce. Once an index is created it can be queried by key,keys,[startkey,endkey]. 
+An index is configured by providing a map function that emits the value that you want to search on. Multiple values can be emitted.
+
+var peopleOlderThanSeven= function(doc) {
+	if (type='person' && doc.age>7) emit([doc.name,doc.age]);
+}
+----------------------
+var designDoc['items'] =  {
+		  _id: '_design/people',
+		  views: {
+			'peopleOlderThanSeven': {
+			  map: peopleOlderThanSeven.toString()
+			},
+
+To restrict a list use the data-pouch-index attribute to point to one of the views configured in the designDoc
+<div class='pouch-list' data-pouch-db='items'  data-pouch-index="people/peopleOlderThanSeven"  data-startkey="a" data-endkey="c" >
+
+The default basic search is implemented using startkey and endkey.
+The default pagination buttons are implementing using the skip and limit parameters that can be applied to queries on the index.
+
+
+
+data-key='-1' to cause a list to display blank when first rendered
+
+
+
+
+
+!Buttons/Actions
+Buttons are links styled with ui-button. Buttons that have an attribute data-pouch-action are considered when the list (or anything inside) is clicked on.
+The base framework provides some actions that are useful in implementing more extensive user interfaces including search and editing.
+- data-pouch-action="new"
+- data-pouch-action="save"
+- data-pouch-action="close"
+- data-pouch-action="delete"
+- data-pouch-action="edit",data-pouch-action="view"
+- data-pouch-action="paginate-first",data-pouch-action="paginate-next",data-pouch-action="paginate-previous",data-pouch-action="paginate-last"
+
+
+
+
+
+!! Programmatic Access
+!!! Events 
+- listReloaded.pouchUI
+
+
+
+!! REFERENCE
+
+
+
+
+
+
+

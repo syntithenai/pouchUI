@@ -9,7 +9,21 @@ var validateMe=function(newDoc, oldDoc, userCtx, secObj) {
 		}
 	}
 }
-designDoc['http://stever:wtfaid72@localhost:5984/people'] =  {
+designDoc[0]={};
+designDoc[0]['http://stever:wtfaid72@localhost:5984/people'] =  {
+		  _id: '_design/pets',
+		  validate_doc_update : validateMe.toString(),
+		  views: {
+			'all' : {
+				map: function(doc) {
+					if (doc.type=='pet' && doc.owner) emit(doc._id);
+				}.toString()
+			},
+  
+		  }
+}
+designDoc[1]={};
+designDoc[1]['http://stever:wtfaid72@localhost:5984/people'] =  {
 		  _id: '_design/people',
 		  validate_doc_update : validateMe.toString(),
 		  views: {

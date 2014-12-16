@@ -41,6 +41,12 @@ What makes for a good tool ?
 - additional tools support
 
 
+Outcomes/Purposes
+rapid development
+offline support - NOT JUST OFFLINE FIRST ==> snappy UI, local security (encryption)
+customised interfaces/wizards - GREG
+
+
 At 2PI Software some of the tools include
 - github
 - basecamp

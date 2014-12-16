@@ -1,8 +1,4 @@
 $.fn.pouchUI.api.controller = {
-	test: function(name) {
-		var plugin=this;
-		//console.log('TEST',name);
-	},
 	auth: function (pouch) {
 		var plugin=this;
 	// load session and then user
@@ -103,32 +99,23 @@ $.fn.pouchUI.api.controller = {
 	},
 	/*
 	SEARCH can be triggered by search button or change event in search form
-	search can take effect on a number of pouch-lists the identity of which are determined by
-	- data-search-target attribute set on the trigger element
-	- data-search-target attribute set on a sibling search button of the trigger element
-	- data-search-target attribute set on the search form
 	*/
-	actionSearch : function (triggerElement) {
+	actionSearch : function (triggerElement,suggestedTargetList) {
 		var plugin=this;
 		var dfr=$.Deferred();
-		console.log('search ',triggerElement);
+		//console.log('search ',triggerElement);
 		var criteriaDOM;
 		var start,end;
-		var searchForm;
+		var searchForm=plugin.api.view.findSearchDOM(triggerElement);
 		var triggerSearchButton;
-		if (triggerElement.hasClass('pouch-search')) {
-			console.log('on the button');
-			searchForm=triggerElement;
-			triggerSearchButton=triggerElement.find('[data-pouch-action="search"]').first();
-		} else {
-			console.log('look for parents as search form');
-			searchForm=triggerElement.parents('form.pouch-search').first();
-			triggerSearchButton=$('[data-pouch-action="search"]',searchForm).first();
+		// if trigger is not a form, pass it as the search button to findsearchtargetlist
+		if (!$(triggerElement).hasClass('pouch-search')) {
+			triggerSearchButton=triggerElement;
 		}
-		console.log('SEARCH BUTTON',searchForm,'BUTTON',triggerSearchButton.data());
+		//console.log('SEARCH BUTTON',searchForm,'BUTTON',triggerSearchButton.data());
 		
 		// FIND CRITERIA
-		if (searchForm.length>0) {
+		if (searchForm && searchForm.length>0) {
 			criteriaDOM=$('input,select',searchForm);
 			//console.log('critdom',criteriaDOM);
 			//$.each(criteriaDOM,function(splk,splv) {
@@ -148,59 +135,32 @@ $.fn.pouchUI.api.controller = {
 		} else {
 			console.log('CANNOT FIND SEARCH FORM');
 		}
-		//console.log('criteria',start,end);
-		
-		// FIND TARGETS
-		var targetLists=[];
-		// TARGET ON TRIGGER
-		var href=triggerSearchButton.attr('href');
-		var hrefParts;
-		if (href && href.length>0) hrefParts=href.split('#');
-		var hash;
-		if (hrefParts && hrefParts.length==2) {
-			hash=hrefParts[1];
-		}
-		if (hash && hash.length>0) {
-			if ($('#'+hash).hasClass('pouch-list')) {
-				targetLists.push($('#'+hash));
+		// console.log('criteria',start,end);
+		var targetList=plugin.api.view.findSearchTargetList(searchForm,triggerSearchButton,suggestedTargetList);
+		if (targetList.length>0) {
+			// reset pagination on search
+			//$(targetList).attr('data-pouch-skip',"0");
+			if (start) {
+				$(targetList).data('startkey',start);
 			} else {
-				targetLists=$('.pouch-list:not(.pouch-list .pouch-list)',$('#'+hash));
+				$(targetList).removeData('startkey');
 			}
-		}
-		//console.log('DDDD',href,hash);
-		// OK
-		if (targetLists.length>0) {
-			//console.log('FOUND SEARCH TARGET LIST',targetLists)
-		// OTHER WISE LOOK FOR CONTAINING LIST
-		} else if (searchForm.parents('.pouch-list').length>0) {
-			targetLists=searchForm.parents('.pouch-list').first();
-			//console.log('FOUND TARGET LISTS as parent of search form',targetLists);
-		} else {
-			console.log('FAILED TO FIND SEARCH TARGET LIST',triggerElement);
-		}
-		if (targetLists.length>0) {
-			$.each(targetLists,function(splk,splv) {
-				// set params
-				$(splv).attr('data-pouch-skip',"0");
-				if (start) {
-					$(splv).data('startkey',start);
-				} else {
-					$(splv).removeData('startkey');
-				}
-				if (end) {
-					$(splv).data('endkey',end);
-				} else {
-					$(splv).removeData('endkey');
-				}
-				//console.log('set search criteria in selected lists',$(splv).data());
-				// do search
-				plugin.api.view.reloadList($(splv));
-			});
+			if (end) {
+				$(targetList).data('endkey',end);
+			} else {
+				$(targetList).removeData('endkey');
+			}
+			
+			//console.log('set search criteria in selected lists',$(targetList).data());
+			// do search
+			plugin.api.view.reloadList($(targetList));
 		} 
 		return dfr;
 	},
 	actionDelete : function(db,id,listItem,target,e) {
 		var plugin=this;
+		//console.log('Really Delete?');
+		//return true;
 		if (confirm('Really Delete?')) {
 			plugin.api.view.startWaiting();
 			var pouch=plugin.api.model.getDB(db);
@@ -235,7 +195,8 @@ $.fn.pouchUI.api.controller = {
 	actionSave : function (list,currentListItem,closeAfter) {
 		var plugin=this;
 		var dfr=$.Deferred();
-		//console.log('save ',currentListItem);
+		//console.log('save ',currentListItem); //,closeAfter,list);
+	//	return dfr.resolve(false);
 		var d=$.extend({include_docs:true},plugin.settings,$(list).data());
 		var pouch=plugin.api.model.getDB(d.pouchDb);
 		var changed=false;
@@ -340,8 +301,9 @@ $.fn.pouchUI.api.controller = {
 			var plugin=this;
 			//console.log('DO SAVE',changed,finalDoc,currentListItem,closeAfter,attachmentsChanged,foundAttachments,updatedAttachments);
 			if (changed) {
+				//console.log('changed');
 				pouch.validatingPost(finalDoc).then(function(rs) {
-					//console.log('DONE SAVE',rs);
+					console.log('DONE SAVE',rs);
 					currentListItem.attr('data-pouch-id',rs.id);
 					currentListItem.attr('data-pouch-rev',rs.rev);
 					finalDoc._id=rs.id;
@@ -358,14 +320,17 @@ $.fn.pouchUI.api.controller = {
 					}
 					$('.validationerror',currentListItem).remove();
 				}).catch(function(err) {
+					console.log(err);
 					$('.validationerror',currentListItem).remove();
 					var errMsg=$('<div class="validationerror" >'+err.message+'</div>');
 					$('.pouch-list-input',currentListItem).first().before(errMsg);
 					dfr.reject('Failed to save record');
-					//console.log(err,$('.pouch-list-input',currentListItem).first());
+					
 				});
 			} else {
+				console.log('not changed');
 				if (attachmentsChanged) {
+					console.log('att changed');
 					doSaveAttachments(finalDoc,collateAttachments(foundAttachments,updatedAttachments),currentListItem,closeAfter).then(function() {
 						dfr.resolve();
 					}).fail(function() {
@@ -419,12 +384,20 @@ $.fn.pouchUI.api.controller = {
 					} else {
 						var fn=$(ivv).data('pouchField');
 						var getDataFrom=$('select,input,textarea',ivv).first();
+						//console.log('Data FIELD',fn,getDataFrom)
 						$.each(getDataFrom,function (rik,riv) {
 						//console.log('getdata from',riv);
-							if (finalDoc[fn]!=$(riv).val()) {
+							if (finalDoc[fn]!=$(riv).val() || ($(riv).is('textarea') && $(riv).html().length>0)) {
 								//console.log('change value');
 								changed=true;
+								/*if ($(riv).is('textarea')) {
+									console.log('change value frm text area ',$(riv).val());
+									finalDoc[fn]=$(riv).text();
+								} else {
+									finalDoc[fn]=$(riv).val();
+								}*/
 								finalDoc[fn]=$(riv).val();
+								//console.log("FINAL VALUE FOR UPDATE",finalDoc);
 							}
 						});
 					}
@@ -462,13 +435,14 @@ $.fn.pouchUI.api.controller = {
 			});
 		// SAVE NEW
 		} else {
+			//console.log('SAVE NEW')
 			changed=true;
 			var foundAttachments={};
 			var updatedAttachments={};
 			var attachmentsChanged=false;
 			// ID from form data
 			if (finalDoc['_id'] && finalDoc['_id'].length>0) {
-				//console.log('id from post');
+				console.log('id from post');
 			// TODO - COMPLETE THESE CASES
 			// ID from idFunction
 			} else if (false)  {
@@ -492,10 +466,22 @@ $.fn.pouchUI.api.controller = {
 					var fn=$(ivv).data('pouchField');
 					var getDataFrom=$('select,input,textarea',ivv).first();
 					$.each(getDataFrom,function (rik,riv) {
+						/*if ($(riv).is('textarea')) {
+							finalDoc[fn]=$(riv).text();
+						} else {
+							finalDoc[fn]=$(riv).val();
+						}*/
 						finalDoc[fn]=$(riv).val();
 					});
 				}
 			});
+			// if type is blank ensure that type is set, either from parent list or undefined
+			var parentList=$(currentListItem).parents('.pouch-list').first();
+			if (parentList.data('index') && !finalDoc.type) {
+				finalDoc.type=parentList.data('index').split("/")[0];
+			}
+			if (!finalDoc.type) finalDoc.type='undefined'; 
+			
 			doSave(changed,finalDoc,currentListItem,closeAfter,attachmentsChanged,foundAttachments,updatedAttachments);
 		}	
 		return dfr;
@@ -527,13 +513,13 @@ $.fn.pouchUI.api.controller = {
 				}); 
 			}
 		} else {
-			console.log('ASYNC LOAD IMAGE MISSING META DATAS',docId);	
+			//console.log('ASYNC LOAD IMAGE MISSING META DATAS',docId);	
 		}
 	},
 	onPouchClick : function(e) {
 		var returnVal=true;
 		var plugin=this;
-		//return true;
+		console.log('CLICK',e.target,e);
 		// chrome
 		var theElement=e.target;
 		// firefox
@@ -542,190 +528,137 @@ $.fn.pouchUI.api.controller = {
 		if (theElement) {
 			var button=$(theElement);
 			var cmd=button.data('pouchAction');
-			console.log('have action button',cmd,button);
 			if (cmd && cmd.length>0)  {
-				var target=button.attr('href');
-				var targetParts=[];
-				if (target && target.length>0) targetParts=target.split('#');
-				var hash=targetParts[1];
+				//console.log('have action button',cmd,button);
+				//console.log('CLICK',e.target,e);
+				//return true;
+				//return false;
+		
+				// determine target list
 				var targetList;
-				if (hash) targetList=$('#'+hash);
-				var parentList;
-				var parentListItem;
-				var id;
-				// some buttons take action on their containing item or list
-				// buttons that have moved to the header take action on the first item or list they can find at the top of the active page
-				if (button.parents('.pouch-list').length>0) {
-					var parentList=button.parents('.pouch-list').first();
-					var parentListItem=button.parents('.pouch-list-item').first();
+				var targetListItem;
+				if (button.data('pouchTarget')) {
+					// explicit target for button?	
+					targetList=$(button.data('pouchTarget')) ;
+				} else if (button.parents('.pouch-list').length>0) {
+					// list is parent of button 
+					//console.log(' list is parent of button ');
+					targetList=button.parents('.pouch-list').first();
+					targetListItem=button.parents('.pouch-list-item').first();
 				} else {
-					// specified in href?
-					if (targetList && targetList.length>0) {
-						if (targetList && targetList.hasClass('pouch-list')) {
-							parentList=targetList;
-						} else {
-							parentList=$('.pouch-list',targetList).first();
-						}
-						parentListItem=$('.pouch-list-item',parentList).first();
-					// first list in page
-					} else {
-						var base=button.parents('[data-role="page"]');
-						// allow for buttons that have been pulled up into the header
-						parentList=$('.pouch-list',base).first();
-						parentListItem=$('.pouch-list-item',parentList).first();
-						console.log('headrer but click ',parentList);
+					// fallback to first list in page/body
+					var page=$('body');
+					if ($.jqmData) { 
+						page=button.parents('[data-role="page"]').first();
 					}
-				}
+					targetList=$('.pouch-list',page).first();
+					targetListItem=$('.pouch-list-item',targetList).first();
+				} 
 				var id;
-				if (parentListItem) id=parentListItem.data('pouchId');
-				console.log('pouchclick',id,'CMMD',cmd,target); //,parentListItem,parentList,,targetList,e,e.target
+				if (targetListItem) id=targetListItem.data('pouchId');
 				
-				// target to update is 
-				//	- the element identified by the href attribute of the button clicked that has class .pouch-list
-				//  - OR any children of this element that has class .pouch-list
-				//  - OR the parent .pouch-list containing the clicked button
-				//if (!targetList.hasClass('.pouch-list')) {
-				//	targetList=parentList;
-				//}
-				//console.log('click',cmd,target,button,targetList);
-				//console.log('click',button.parents('.file').length,theElement.nodeName);
 				// FILE BUTTONS
+					// DELETE
 				if (cmd=='deletefile') {
 					button.parents('.file').first().remove();
-					if (parentList.length>0 && parentList.attr('data-pouch-autosave')=='true') {
-						plugin.api.controller.actionSave(parentList,parentListItem,false);
+					// autosave ?
+					if (targetList.length>0 && targetList.length>0 && targetList.attr('data-pouch-autosave')=='true') {
+						plugin.api.controller.actionSave(targetList,targetListItem,false);
 					}
+					// DOWNLOAD IMAGE/FILE 	
 				} else if (button.parents('.file').length>0 && (theElement.nodeName=='A' || theElement.nodeName=="IMG" && button.parents('a').length>0)) {
-					e.preventDefault();
-					e.stopImmediatePropagation();
-					var attachmentId=button.parents('.file').first().data('attachmentId');
-					var theLink;
-					if (theElement.nodeName=="A") theLink=button;
-					else theLink=button.parents('a').first();
-					//console.log('clicked file link',id,attachmentId,theLink,parentList.data('pouchDb'));
-					plugin.api.controller.actionLoadAndClickLink(id,attachmentId,theLink,parentList.data('pouchDb'));
+					if (targetList.length>0) { 
+						e.preventDefault();
+						e.stopImmediatePropagation();
+						var attachmentId=button.parents('.file').first().data('attachmentId');
+						var theLink;
+						if (theElement.nodeName=="A") theLink=button;
+						else theLink=button.parents('a').first();
+						//console.log('clicked file link',id,attachmentId,theLink,parentList.data('pouchDb'));
+						plugin.api.controller.actionLoadAndClickLink(id,attachmentId,theLink,targetList.data('pouchDb'));
+					}
 				// FORM BUTTONS
-				} else if ((cmd=='edit'||cmd=='view') ) {
-					console.log('edit');
-					/*if (targetList.hasClass('pouch-list')) {
-						console.log('edit',id,targetList);
-						plugin.api.view.renderSingle(id,targetList)
-					} else {
-						$('.pouch-list',targetList).each(function() {
-							console.log('editi',id,targetList);
-							plugin.api.view.renderSingle(id,targetList)
-						});
-					}*/
+				} else if (cmd=='edit') {
+					// force things for jquery mobile
+					// console.log('EDIT CLICK');
+					if ($(button).attr('href').length>0) document.location=$(button).attr('href');
+					returnVal=false;
+					//plugin.api.view.renderSingle(id,targetList);
 				} else if (cmd=='delete') {
-					plugin.api.controller.actionDelete(parentList.data('pouchDb'),id,parentListItem,target,e);
+					//console.log('DEL',targetList.data('pouchDb'),id,targetListItem,target,e);
+					plugin.api.controller.actionDelete(targetList.data('pouchDb'),id,targetListItem,targetList,e);
+					returnVal=false;
 				} else if (cmd=='save') {
 					returnVal=false;
 					//e.preventDefault();
-					plugin.api.controller.actionSave(parentList,parentListItem,false);
+					plugin.api.controller.actionSave(targetList,targetListItem,false);
 				} else if (cmd=='saveandclose') {
-					plugin.api.controller.actionSave(parentList,parentListItem,true).then(function() {
-						
+					returnVal=false;
+					plugin.api.controller.actionSave(targetList,targetListItem,true).then(function() {
+						if ($(button).attr('href').length>0) document.location=$(button).attr('href');
 					}).fail(function() {
-						returnVal=false;
-					});;
-				} else if (cmd=='cancel'||cmd=='close') {
-					console.log('close');
-					//history.back(-1);
-					//returnVal=false;
-					//e.preventDefault();
-					//parentListItem.remove();
-				// LIST BUTTONS
+						//returnVal=false;
+					});
+					return false;
 				} else if (cmd=='search') {
-					plugin.api.controller.actionSearch(button);
+					$(targetList).attr('data-pouch-skip',"0");
+					targetList.attr('data-pouch-skip','0');
+					plugin.api.controller.actionSearch(button,targetList);
 				} else if (cmd=='paginate-first' || cmd=='paginate-last' || cmd=='paginate-next' || cmd=='paginate-previous') {
 					if (!button.hasClass('disabled')) {
 						// discover last
 						if (cmd=="paginate-last")  {
 							
-							var currentVal=parentList.data('descending');
+							var currentVal=targetList.data('descending');
 							//console.log('paglast',currentVal);
 							//if (currentVal=="true") {
 							//	parentList.data('descending',"false");
 							//	parentList.data('skip',"0");
 							//} else {
-								parentList.data('descending',"true");
-								parentList.data('skip',"0");
+								targetList.data('descending',"true");
+								targetList.data('skip',"0");
+								targetList.removeData('startkey');
+								targetList.removeData('endkey');
 							//}
 						}
-						console.log('paginate',button.attr('data-pouch-skip-to'))
-						parentList.attr('data-pouch-skip',button.attr('data-pouch-skip-to'));
-						plugin.api.view.reloadList(parentList);
+						//console.log('paginate',button.attr('data-pouch-skip-to'))
+						//console.log('targetlsitdata',targetList.data());
+						targetList.attr('data-pouch-skip',button.attr('data-pouch-skip-to'));
+						plugin.api.controller.actionSearch(button,targetList);
 					}
-				} else if (cmd=='new' && target  && targetList && targetList.length && targetList.length>0) {
-					console.log('CREATE NEW',targetList);
-					
-					if (targetList.hasClass('pouch-list')) {
-						plugin.api.view.showNew(targetList);
-					} else {
-						$('.pouch-list',targetList).each(function() {
-							plugin.api.view.showNew(this);
-						});
-					}
-					//console.log('aa',$('.pouch-list',targetList),$('input',targetList));
-					
-				} else if (cmd=='newchild' && target  && targetList && targetList.length && targetList.length>0) {
-					console.log('CREATE NEW child',targetList);
-					returnVal=false;
-					e.preventDefault();
-					/*
-					if (targetList.hasClass('pouch-list')) {
-						plugin.api.view.showNew(targetList);
-					} else {
-						$('.pouch-list',targetList).each(function() {
-							plugin.api.view.showNew(this);
-						});
-					}*/
-					//console.log('aa',$('.pouch-list',targetList),$('input',targetList));
-					
-				} 
-			} else {
-				console.log('Button has no action');
+				}
 			}
 		} else {
 			console.log('Missing event toElement on click');
 		}
-		console.log('click return',returnVal);
+		//console.log('click return',returnVal);
 		return returnVal;
 	},
 	onPouchInputChange : function (e) {
 		var plugin=this;
 		var target;
 		var value;
-		console.log('INPUT CHANGE',e);
-		//console.log('::e');
-		//console.log($(e));
-		//return;
-		
-		if (false && e.originalEvent) {
-			target=e.originalEvent.target;
-			value=$(e.originalEvent.target).val();
-		} else {
-			target=e.target;
-			value=$(e.target).val();
-		}
+		//console.log('INPUT CHANGE',e);
+		target=e.target;
+		value=$(e.target).val();
 		//console.log('EE',target,value);
-		if (target && $(target).attr('href')) {
-			var parentSearch=$(target).parents('.pouch-search');
-			var href=$(target).attr('href');
-			var hrefParts=[];
-			var targetList;
-			if (href) hrefParts=href.split('#'); 
-			if (hrefParts.length==2) targetList=$('#'+hrefParts[1]);   //parents('.pouch-list').first();
-			
+		if (target) { // && $(target).attr('href')) {
 			// CHANGE LIMIT
 			if ($(target).attr('type')=='file') {
 				plugin.api.controller.actionFileSelected(e.originalEvent);
 			} else if ($(target).hasClass('pouch-limit')) {
-				console.log('change limit',targetList,value);
-				plugin.api.view.reloadList($(targetList));
+				var targetList;
+				var parentSearch=$(target).parents('.pouch-search');
+				var hash=plugin.api.view.hashFromUrl($(target).attr('href'));
+				if (hash.length>0) targetList=$('#'+hash);
+				var targetList=plugin.api.view.findSearchTargetList(parentSearch,target,targetList);
+				//console.log('change limit',targetList,value);
+				$(targetList).attr('data-pouch-limit',value);
+				$(targetList).data('pouchLimit',value);
+				plugin.api.controller.actionSearch(target,targetList);
 			}
 		} else {
-			console.log('ignored change event',e);
+			//console.log('ignored change event',e);
 		}
 	},
 	onPouchInputKeyup: function (e) {
@@ -744,162 +677,121 @@ $.fn.pouchUI.api.controller = {
 			target=e.target;
 			value=$(e.target).val();
 		}
+		
 		//console.log('EE',target,value);
 		if (target) {
 			var parentSearch=$(target).parents('.pouch-search');
 			var targetList=$(target).parents('.pouch-list').first();
+			//console.log('EE2',targetList);
 			// LIVE SEARCH
 			if (parentSearch.length>0) {
 				//console.log('keyup SEARCH',targetList,value);
-				plugin.api.controller.actionSearch($(target));
+				$(targetList).attr('data-pouch-skip',"0");
+				plugin.api.controller.actionSearch(target,targetList);
 			// LIVE SAVE
 			} else if (targetList.length>0 && targetList.attr('data-pouch-autosave')=='true') {
-				//console.log('TL',targetList);
+				//console.log('TL',targetList,target);
 				var targetItem=$(target).parents('.pouch-list-item').first();
 				// NO AUTOSAVE ON ID FIELD
 				if (targetItem.data('pouchField')!=='_id') {
-				//console.log('keyup SAVE',targetList,targetItem,value);
+					//console.log('keyup SAVE',targetList,targetItem,value);
 					plugin.api.controller.actionSave(targetList,targetItem,false);
 				}
 			}
 		} else {
 			console.log('ignored keyup event',e);
 		}
-	}
-	,	
+	},
+	doRouting:function(plugin) {
+		//console.log('Route',plugin);
+		var template;
+		if ($(plugin).hasClass('pouch-list')) {
+			template=$(plugin);
+		} else {
+			template=$('.pouch-list',plugin).first();
+		}
+		//console.log('temdat',template);
+		//console.log('temdat',template.data(),plugin.pluginTemplate);
+		var key='';
+		var keyParts=[];
+		if (window.location.search) key=window.location.search.substring(1);
+		if (key) keyParts=key.split('&');
+		//console.log('route KEYPARTS',keyParts);
+		function routeList() {
+			//console.log('ROUTE LIST');
+			//return;
+			$.each(plugin.pouchLists,function(lk,lv) {
+				var searchers=plugin.api.view.findSearchDOM(lv);
+				$(lv).attr('data-pouch-limit',$('select.pouch-limit',searchers).val());
+				plugin.api.controller.actionSearch(lv);
+			});
+			
+		}
+		//return;
+		
+		if (keyParts.length>0) { 
+			$.each(keyParts,function(k,v) {
+				var valueParts=v.split('=');
+				if ($.trim(valueParts[0])=='id') {
+					//console.log(valueParts);
+					if (valueParts[1] && $.trim(valueParts[1]).length>0) {
+						//console.log(valueParts);
+						//console.log('ROUTE EDIT');
+						// have value for id parameter - EDIT
+						template.attr('data-key',valueParts[1]);
+						plugin.api.view.renderSingle(valueParts[1],template);
+					} else {
+						//console.log('ROUTE NEW',template);
+					// id param but blank - CREATE NEW
+						plugin.api.view.showNew(template);
+					}
+				} else {
+					routeList();
+				}
+			});
+		} else {
+			routeList();
+		}
+	},	
 	init: function(name) {
 		var plugin=this;
-		var databasesToListen={};
-		//console.log('INIT CONTROLE',name);
+		//console.log('INIT CONTROLE',plugin);
 		//console.log('INIT CONTROLE',plugin.settings,plugin.api);
 		//console.log('PLUGIN TEMPLATE');
 	
 		// BIND CLICK AND KEYUP EVENTS ON SEARCH FORMS THAT ARE NOT INSIDE OF POUCH-LISTS
 		//$(plugin).addClass('data-pouch-root');
-		plugin.api.view.bindEventsTo($(plugin));	
+		//console.log('bind to ',plugin);
+		plugin.api.view.bindEventsTo($(plugin));
+		// ALLOW FOR TRIGGER INPUTS/BUTTONS OUTSIDE OF PLUGIN
+		// JQ MOBILE only current page
+		var triggerContainer=$('body');
+		if ($.jqmData) {
+			if ($(plugin).parents('[data-role="page"]').first().length>0) triggerContainer=$(plugin).parents('[data-role="page"]');
+		}
+		//console.log('also bind to ',triggerContainer);
 		
+		//$('.pouch-triggers',triggerContainer).each(function() {
+		//	console.log('also bind to ',this);
+		//	plugin.api.view.bindEventsTo($(this));
+		//});
+			
+		//console.log("EEEKLL DONE");
+		//return;
 		//console.log('OPUCHLISTS',plugin.pouchLists);	
 		//$(document).on("pageshow.pouchui",  function() {
 		//console.log('PAGE SHOW');
 		//console.log(window.location,window);
 		//$('a').off('click');
-		var doRouting=function() {
-			console.log('Route',plugin);
-			var template;
-			if ($(plugin).hasClass('pouch-list')) {
-				template=$(plugin);
-			} else {
-				template=$('.pouch-list',plugin).first();
-			}
-			console.log('temdat',template);
-			//console.log('temdat',template.data(),plugin.pluginTemplate);
-			var key='';
-			var keyParts=[];
-			if (window.location.search) key=window.location.search.substring(1);
-			if (key) keyParts=key.split('&');
-			console.log('KEYPARTS',keyParts);
-			function routeList() {
-				console.log('ROUTE LIST');
-				$(plugin).off('pageshow.pouchUI');
-				$(plugin).on('pageshow.pouchUI',doRouting);
-				plugin.api.init.initialiseDesignDocuments(plugin.settings.design).then(function() {
-					$.each(plugin.pouchLists,function(lk,lv) {
-						var searchers=plugin.api.view.findSearchDOM(lv);
-						$(lv).attr('data-pouch-limit',$('select.pouch-limit',searchers).val());
-						//console.log('ini/load/render',lv,$(lv).data())
-						plugin.api.init.initialiseList(lv).then(function() {
-							console.log('page show ini',lv);
-							plugin.api.view.reloadList(lv);
-						});
-					});
-				});
-			}
-			if (keyParts.length>0) { 
-				$.each(keyParts,function(k,v) {
-					var valueParts=v.split('=');
-					if ($.trim(valueParts[0])=='id') {
-						console.log(valueParts);
-						if (valueParts[1] && $.trim(valueParts[1]).length>0) {
-							console.log(valueParts);
-							console.log('ROUTE EDIT');
-						// have value for id parameter - EDIT
-							template.attr('data-key',valueParts[1]);
-							plugin.api.view.renderSingle(valueParts[1],template);
-						} else {
-							console.log('ROUTE NEW',template);
-						// id param but blank - CREATE NEW
-							plugin.api.view.showNew(template);
-						}
-					} else {
-						routeList();
-					}
-				});
-			} else {
-				routeList();
-			}
-					
-			/*
-			if (template.data('pouchIdFromHash')==true) {
-				console.log('inisingle');
-				if (window.location.hash && window.location.hash.length>0) {
-					var key=window.location.hash.substring(1);
-					//console.log('et',template,key,template.data())
-					template.attr('data-key',key);
-					//console.log('OPT');
-					plugin.api.view.renderSingle(key,template);
-				 
-				} else {
-					// blank form
-					console.log('SHOW NEW');
-					//template.attr('data-key','-1');
-					plugin.api.view.showNew(template);
-				}
-			} else {
-				console.log('inilist NADA');
-				// support pagination
-				
-				// done on pagecreate
-			}*/
+		
+		if ($('.pouch-list',plugin).length>0)  {
+			plugin.api.controller.doRouting(plugin);
+			//$(plugin).off('pageshow.pouchUI');
+			//$(plugin).on('pageshow.pouchUI',doRouting);
+			//console.log('DONE init routing');
+			
 		}
-		doRouting();
-		// LISTEN TO CHANGES ON LOCAL DB AND UPDATE CONTENT
-		setTimeout(function() {
-			console.log('bind change listeners',plugin.databasesToListen);
-			$.each(plugin.databasesToListen,function(dk,dv) {
-				var pouch=plugin.api.model.getDB(dk);
-				// CREATE
-				var changes = pouch.changes({ live: true,include_docs:true,since:'now'}).on('create', function(change) { 
-					console.log('changes create','.pouch-list-item[data-pouch-id="'+change.doc._id+'"]',$('.pouch-list-item[data-pouch-id="'+change.doc._id+'"]'));
-					$.each(dv,function(pk,pv) {
-						plugin.api.model.loadList(pv).then(function(results) {
-							//plugin.api.view.updatePagination(pv,results,'update');
-							if (results && results.rows && results.rows.length>0) {
-								$.each(results.rows,function(k,row) {
-									//console.log('check',row,pv);
-									if (row.id==change.doc._id) {
-										plugin.api.view.renderList(results,pv).then(function(rres) {
-											plugin.api.view.reloadList(pv);
-										});
-									}
-								});
-							}
-						});
-					});
-				});
-				// UPDATE
-				var changes = pouch.changes({ live: true,include_docs:true,since:'now'}).on('update', function(change) { 
-					console.log('changes UPDATE','.pouch-list-item[data-pouch-id="'+change.doc._id+'"]',$('.pouch-list-item[data-pouch-id="'+change.doc._id+'"]'));
-					var item=$('.pouch-list .pouch-list-item[data-pouch-id="'+change.doc._id+'"]');
-					var list=item.parents('.pouch-list').first();
-					plugin.api.view.updateListItem(change,item,list);
-				});
-				// DELETE
-				var changes = pouch.changes({ live: true,include_docs:true,since:'now'}).on('delete', function(change) { 
-					console.log('changes DEL','.pouch-list-item[data-pouch-id="'+change.doc._id+'"]',$('.pouch-list-item[data-pouch-id="'+change.doc._id+'"]'));
-					$('.pouch-list .pouch-list-item[data-pouch-id="'+change.doc._id+'"]').remove();
-				});
-			});
-		},5000);
+		//},5000);
 		
 		
 	}

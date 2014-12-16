@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="../../lib/jquery/js/jquery.js"  ></script>
+<script src="../../lib/jquery/js/jquery-ui.js"  ></script>
+<script src="../../lib/jquery/jq-mobile/jquery.mobile.js"  ></script>
+<script src='../../lib/pouchdb.js' ></script>
+<script src="../../lib/pouchdb.authentication.min.js" type="text/javascript" ></script>
+<script src='../../lib/pouchdb-validation.min.js' ></script>
+<script src="../../res/pageinit.js" type="text/javascript" ></script>
+<link rel="stylesheet" href="../../lib/jquery/jq-mobile/jquery.mobile.css" type="text/css"  charset="utf-8">
+<link rel="stylesheet" href="../../lib/jquery/css/smoothness/jquery-ui.css" type="text/css"  charset="utf-8">
+<link rel="stylesheet" href="../../res/styles.css" type="text/css"  charset="utf-8">
+	
+
+</head>
+<body>
+	<!-- LIST PAGE -->
+	<div id='listtemplate' data-role="page" data-dom-cache="true" >
+		<link rel="stylesheet" href="styles.css" type="text/css"  charset="utf-8">
+		<script src='../../src/pouchUI.captureGoogleSheet.js' ></script>
+		<script src='../../src/mimeConverter.js' ></script>
+		<script src='../../src/jquery.pouchUI.js' ></script>
+		<script src='../../src/jquery.pouchUI.init.js' ></script>
+		<script src='../../src/jquery.pouchUI.model.js' ></script>
+		<script src='../../src/jquery.pouchUI.view.js' ></script>
+		<script src='../../src/jquery.pouchUI.controller.js' ></script>
+		<script src='init.js' ></script>
+		<script>
+		$(document).ready(function() {
+			PouchDB.plugin(Validation);
+			$('#listtemplate').pouchUI({design:designDoc,init: {refreshDesignDocs:true}}); //dbOptions:{testdb2:{adapter:'idb'}} //  ,[data-role="header"],[data-role="footer"]
+			//$(document).off("pagecreate.pouchui");
+			console.log('MSGONCE:index');
+			// custom event on list rendering update
+			$('body').on('reloadList.pouchUI',function() {
+				//alert('pouchui reload list');
+			});
+		});
+		//console.log('MSG:index');
+		</script>
+		<!-- HEADER -->
+		<div data-role="header" data-position="fixed" role="banner" class="ui-header ui-bar-inherit ui-header-fixed slidedown">
+			<a href="#" data-rel="back" class="ui-btn-left ui-alt-icon ui-nodisc-icon ui-btn ui-icon-carat-l ui-btn-icon-notext ui-corner-all" data-role="button" role="button">Back</a>
+			<div class="ui-bar ui-bar-a pouch-search pouch-triggers">
+				<div class="left" ><form class="pouch-search" action='index.html#listtemplate' >
+					<!--button type="submit" data-pouch-action="search"  data-search-target="#listtemplate" class="ui-btn ui-btn-a ui-corner-all ui-mini">Search</button-->
+					<a href="index.html#listtemplate" data-pouch-action="paginate-first"   class="ui-btn ui-btn-a ui-corner-all ui-mini">First</a>
+					<a href="index.html#listtemplate" data-pouch-action="paginate-previous" class="ui-btn ui-btn-a ui-corner-all ui-mini">Previous</a>
+					<a href="index.html#listtemplate" data-pouch-action="paginate-next"  class="ui-btn ui-btn-a ui-corner-all ui-mini">Next</a>
+					<a href="index.html#listtemplate" data-pouch-action="paginate-last"  class="ui-btn ui-btn-a ui-corner-all ui-mini" >Last</a>
+					
+					<label for="search" class="ui-hidden-accessible">Search</label>
+					<input type="text"  data-type="search" name="search" id="search" value="" placeholder="...." data-pouch-action='search' >
+					<select  id="searchoption"  data-native-menu="true"  class='pouch-limit' ><option value='1'  >Show 1</option><option value='2'  >Show 2</option><option value='20' >Show 20</option><option value='50' selected="true" >Show 50</option><option value='100' >Show 100</option></select>
+				</form></div>
+				<div class="right pouch-triggers">
+					<a href="edit.html?id="  data-pouch-action="new" class="ui-btn ui-btn-a ui-corner-all ui-mini ui-btn-right">New Record</a>
+				</div>
+			</div>
+		</div>		
+	<!-- DEFAULT LIST -->
+	<div style='display:none;' class='rootlist pouch-list ui-content'  ddata-pouch-db='testdb2' data-pouch-index='texteditdocument/all'    data-pouch-db='http://stever:wtfaid72@localhost:5984/textedit' ddata-pouch-sheetsource='https://spreadsheets.google.com/feeds/list/0AgNF3G4HQWMTdEJPTFFSV2VXTkM1WUowSmJBMnRGLVE/od5/public/values' >
+	
+	<div>
+		<div class='pouch-list-item'  data-myname='name' >
+		<div class='buttonset editdelete'  >
+			<a class='ui-btn ui-btn-inline ui-corner-all ui-btn-a ui-mini pouch-updateattributes' href='index.html?id=' data-pouch-attribute-href='_id' data-pouch-action='delete'  >Delete</a>
+			<a class='ui-btn ui-btn-inline ui-corner-all ui-btn-a ui-mini pouch-updateattributes' href='edit.html?id=' data-pouch-attribute-href='_id'   data-pouch-action='edit'  >Edit</a>
+		</div>
+				
+		<div class='pouch-list-value' data-pouch-field='name' >name</div>
+		<span class='pouch-list' data-pouch-db='http://stever:wtfaid72@localhost:5984/textedit' data-pouch-index='texteditdocumentfragment/bydocument' data-pouch-field='_id' >
+				<span class='pouch-list-item pouch-list-value' data-pouch-field='name'  >
+					
+				</span>	
+		</span>
+		<div class='pouch-list-noresults' >No matching Results</div>
+	</div>
+	</div>
+</div>
+
+</body>
+</html>

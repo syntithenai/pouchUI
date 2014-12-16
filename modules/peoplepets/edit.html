@@ -16,7 +16,7 @@
 </head>
 <body>	
 	<!-- EDIT PAGE -->
-	<div id='edittemplate'  data-role="page"  >
+	<div id='edittemplate'  data-role="page" data-dom-cache="true" >
 		<link rel="stylesheet" href="styles.css" type="text/css"  charset="utf-8">
 		<script src='../../src/pouchUI.captureGoogleSheet.js' ></script>
 		<script src='../../src/mimeConverter.js' ></script>
@@ -27,46 +27,45 @@
 		<script src='../../src/jquery.pouchUI.controller.js' ></script>
 		<script src='init.js' ></script>
 		<script>
-		$(document).on("pagecreate.pouchui",function() {
+		$(document).ready(function() {
 			PouchDB.plugin(Validation);
-			$('#edittemplate').pouchUI({design:designDoc,init: {refreshDesignDocs:true}}); //dbOptions:{testdb2:{adapter:'idb'}} //  ,[data-role="header"],[data-role="footer"]
-			$(document).off("pagecreate.pouchui");
+			$('#edittemplate').pouchUI({design:designDoc,init: {drefreshDesignDocs:true}}); //dbOptions:{testdb2:{adapter:'idb'}} //  ,[data-role="header"],[data-role="footer"]
 			console.log('MSGONCE:edit');
 		});
-		console.log('MSG:edit');
+		console.log('MSGout:edit');
 		</script>
 		
 		<!-- HEADER -->
 		<div id='editheadertemplate' data-role="header" data-position="fixed" role="banner" class="ui-header ui-bar-inherit ui-header-fixed slidedown">
 			<a href="index.html" data-rel="back" class="ui-btn-left ui-alt-icon ui-nodisc-icon ui-btn ui-icon-carat-l ui-btn-icon-notext ui-corner-all" data-role="button" role="button">Back</a>			
 			<div data-role="controlgroup" data-type="horizontal" class="ui-mini ui-btn-left">
-				<a class='ui-btn ui-icon-back ui-btn-icon-left ui-btn-a ui-corner-all ui-mini'  href='index.html' data-rel="back" ddata-pouch-action='close' >Close</a>
+				<a class='ui-btn ui-icon-back ui-btn-icon-left ui-btn-a ui-corner-all ui-mini'  href='index.html' data-rel="back"  >Close</a>
 				<!--a class='ui-btn ui-icon-delete  ui-btn-icon-left' href='#listtemplate' data-pouch-action='delete' >Delete</a-->
 			</div>
 			<h3>Edit Person Details</h3>
-			<div data-role="controlgroup" data-type="horizontal" class="ui-mini ui-btn-right">
-				<a class='ui-btn ui-icon-check ui-btn-icon-left ui-btn-a ui-corner-all ui-mini'  href='edit.html'  data-pouch-action='save' >Save</a>
-				<a class='ui-btn ui-icon-check ui-btn-icon-left ui-btn-a ui-corner-all ui-mini'  href='index.html'  data-pouch-action='saveandclose' >Done</a>
-				<!--a class='ui-btn ui-icon-check  ui-btn-icon-left'   href='#listtemplate' data-pouch-action='saveandclose' >Done</a-->
+			<div data-role="controlgroup" data-type="horizontal" class="ui-mini ui-btn-right  pouch-triggers" >
+				<a class='ui-btn ui-icon-check ui-btn-icon-left ui-btn-a ui-corner-all ui-mini'  href='index.html#listtemplate'  data-pouch-action='saveandclose' >Save</a>
+				<!--a class='ui-btn ui-icon-check ui-btn-icon-left ui-btn-a ui-corner-all ui-mini'  href='index.html'  data-pouch-action='saveandclose' >Done</a>
+				<a class='ui-btn ui-icon-check  ui-btn-icon-left'   href='#listtemplate' data-pouch-action='saveandclose' >Done</a-->
 			</div>
 		</div>
 		<!-- EDIT FORM -->
 		<div  class='pouch-list ui-content .pouch-list-editor' ddata-pouch-autosave='true' data-pouch-id-from-hash="true" ddata-pouch-db='testdb2'  data-pouch-db='http://stever:wtfaid72@localhost:5984/people' data-pouch-index='people/all' data-key='-1' >
 			<div class='pouch-list-item' >
+				<div class='pouch-list-input' style='display:none'  data-pouch-field='type' data-pouch-default='person'  ><input type='hidden' value='' /></div>	
 				
-				<div class='pouch-list-input' style='display:none'  data-pouch-field='type' ><input type='hidden' value='person' /></div>	
 				<div class='pouch-list' data-pouch-db='http://stever:wtfaid72@localhost:5984/people' data-pouch-index='people/petsbyowner' data-pouch-field='_id' data-pouch-seperator='' data-pouch-wrapstart='<div class="pets" >' data-pouch-wrapend='</div>' >
 				<label>List of all pets <a href="pets.html?id="  data-pouch-action="newchild" data-pouch-newchild-relation="fkinchild" data-pouch-newchild-relation-field="owner_id" class="ui-btn ui-btn-a ui-corner-all ui-mini ui-btn-inline" >New Record</a></label>
 				
 				<div class='pouch-list-item' >
 						<span class='pouch-list-value' data-pouch-field='name' data-pouch-link='true' >eg Joe</span>
-						<a class='ui-btn ui-btn-inline ui-corner-all ui-btn-a ui-mini pouch-updateattributes' href='pets.html?id=' data-href='_id' data-ajax="false"  data-pouch-action='edit'  >Edit</a>
+						<a class='ui-btn ui-btn-inline ui-corner-all ui-btn-a ui-mini pouch-updateattributes' href='pets.html?id=' data-pouch-attribute-href='_id' data-pouch-action='edit'  >Edit</a>
 						<span class='pouch-list' data-pouch-db='http://stever:wtfaid72@localhost:5984/people' data-pouch-index='people/foods' data-pouch-field='eats' data-pouch-mmseperator=';'  >
 							<span>who eats </span>
 							
 							<span class='pouch-list-item' >
 								<span class='pouch-list-value' data-pouch-field='name' >what they eat</span>
-								<a class='ui-btn ui-btn-inline ui-corner-all ui-btn-a ui-mini pouch-updateattributes' href='foods.html#' data-href='_id' data-ajax="false"  data-pouch-action='edit'  >Edit</a>
+								<a class='ui-btn ui-btn-inline ui-corner-all ui-btn-a ui-mini pouch-updateattributes' href='foods.html#' data-pouch-attribute-href='_id'   data-pouch-action='edit'  >Edit</a>
 								
 								<span class='pouch-list' data-pouch-db='http://stever:wtfaid72@localhost:5984/people' data-pouch-index='people/ingredients' data-pouch-field='contains' data-pouch-seperator='<span>,</span>' data-pouch-wrapstart='' data-pouch-wrapend='' >
 									<label style="display:inline" >containing</label>
@@ -80,7 +79,7 @@
 				</div>
 				<div class='pouch-list-noresults' >No pets</div>
 			</div>	
-				<fieldset class='ui-field-contain pouch-list-input' data-pouch-field='_id' ><label>ID<input type='text' value='' /></label></fieldset>	
+				<!--fieldset class='ui-field-contain pouch-list-input' data-pouch-field='_id' ><label>ID<input type='text' value='' /></label></fieldset-->	
 				<fieldset class='ui-field-contain pouch-list-input' data-pouch-field='name'><label>Name:<textarea ></textarea></label></fieldset>	
 				<fieldset class='ui-field-contain pouch-list-input' data-pouch-field='age' ><label>Age:<input type='text'  /></label>	</fieldset>	
 				<fieldset class='ui-field-contain'  ><div class='pouch-list-input' data-pouch-field='date'  ><label>Date:<input type='date'  /></label>	</div>	

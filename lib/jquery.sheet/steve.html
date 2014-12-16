@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge"/>
+	<meta http-equiv="Pragma" content="no-cache">
+	<meta http-equiv="Expires" content="-1">
+	<meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+	<meta content="utf-8" http-equiv="encoding">
+	<title>jQuery.sheet - The Web Based Spreadsheet</title>
+	<link rel="stylesheet" type="text/css" href="jquery-ui/theme/jquery-ui.min.css" />
+	<script type="text/javascript" src="jquery-1.8.3.min.js"></script>
+	<script type="text/javascript" src="jquery-ui/ui/jquery-ui.min.js"></script>
+	<script type="text/javascript" src="jquery.sheet.js"></script>
+	<script type="text/javascript">
+		var menuLeft='<div><a href="#" onclick="sheetInstance.toggleFullScreen(); $(\'#lockedMenu\').toggle(); return false;" title="Toggle Full Screen"><img alt="Toggle Full Screen" src="images/arrow_out.png"/></a><a onclick="sheetInstance.cellUndoable.undoOrRedo(true); return false;" title="Undo"><img src="images/arrow_undo.png"/></a><a onclick="sheetInstance.cellUndoable.undoOrRedo(); return false;" title="Redo"><img src="images/arrow_redo.png"/></a><a onclick="sheetInstance.merge(); return false;" title="Merge"><img src="images/arrow_join.png"/></a><a onclick="sheetInstance.unmerge(); return false;" title="Unmerge"><img src="images/arrow_divide.png"/></a><a href="#" onclick="sheetInstance.cellStyleToggle(\'styleWrap\'); return false;" title="Wrap Text"><img  src="images/text_horizontalrule.png"/></a><a href="#" onclick="sheetInstance.fillUpOrDown(); return false;" title="Fill Down"><img alt="Fill Down" src="images/arrow_down.png"/></a><a href="#" onclick="sheetInstance.fillUpOrDown(true); return false;" title="Fill Up"><img alt="Fill Up" src="images/arrow_up.png"/></a></div>';
+		var menuRight='<div><a class="cellStyleToggle" onclick="sheetInstance.fontReSize(\'up\');  return false;" title="Font Size -"><img src="images/font_add.png"/></a><a class="cellStyleToggle" onclick="sheetInstance.fontReSize(\'down\'); return false;" title="Font Size +"><img src="images/font_delete.png"/></a>  <a href="#" onclick="sheetInstance.cellStyleToggle(\'styleBold\'); return false;" title="Bold"><img alt="Bold" src="images/text_bold.png"/></a><a href="#" onclick="sheetInstance.cellStyleToggle(\'styleItalics\'); return false;" title="Italic"><img alt="Italic" src="images/text_italic.png"/></a><a href="#" onclick="sheetInstance.cellStyleToggle(\'styleUnderline\', \'styleLineThrough\'); return false;" title="Underline"><img alt="Underline" src="images/text_underline.png"/></a><a href="#" onclick="sheetInstance.cellStyleToggle(\'styleLineThrough\', \'styleUnderline\'); return false;" title="Strikethrough"><img alt="Strikethrough" src="images/text_strikethrough.png"/></a><a href="#" onclick="sheetInstance.cellStyleToggle(\'styleLeft\', \'styleCenter styleRight\'); return false;" title="Align Left"><img alt="Align Left" src="images/text_align_left.png"/></a><a href="#" onclick="sheetInstance.cellStyleToggle(\'styleCenter\', \'styleLeft styleRight\'); return false;" title="Align Center"><img alt="Align Center" src="images/text_align_center.png"/></a><a href="#" onclick="sheetInstance.cellStyleToggle(\'styleRight\', \'styleLeft styleCenter\'); return false;" title="Align Right"><img alt="Align Right" src="images/text_align_right.png"/></a><span class="colorPickers"><input title="Foreground color" class="colorPickerFont" style="background-image: url(\'images/palette.png\') ! important; width: 16px; height: 16px;"/><input title="Background Color" class="colorPickerCell" style="background-image: url(\'images/palette_bg.png\') ! important; width: 16px; height: 16px;"/></span></div>';	
+	
+		$.sheet.preLoad('');
+		$(function() {
+			$('.form-spreadsheet').sheet({
+				menuLeft: function(jS) { return  menuLeft.replace(/sheetInstance/g, "$.sheet.instance[" + jS.I + "]"); },
+				menuRight: function(jS) { 
+					var menu = menuRight.replace(/sheetInstance/g, "$.sheet.instance[" + jS.I + "]"); menu = $(menu); menu.find('.colorPickerCell').colorPicker().change(function(){ $.sheet.instance[jS.I].cellChangeStyle('background-color', $(this).val()); }); menu.find('.colorPickerFont').colorPicker().change(function(){ $.sheet.instance[jS.I].cellChangeStyle('color', $(this).val());}); menu.find('.colorPickers').children().eq(1).css('background-image', "url('images/palette.png')");  menu.find('.colorPickers').children().eq(3).css('background-image', "url('images/palette_bg.png')");return menu;}
+			});
+		});
+	</script>
+</head>
+<body>
+<div class="form-spreadsheet"  title="Steve">
+	<table title="My First Sheet">
+		<tbody>
+		<tr>
+			<td class="styleBold styleCenter">a</td>
+			<td class="styleBold styleCenter">b</td>
+			<td class="styleBold styleCenter">c </td>
+			<td class="styleBold styleCenter">d</td>
+			<td class="styleBold styleCenter">e</td>
+		</tr>
+		<tr><!--asc-->
+			<td>1</td>
+			<td>96</td>
+			<td>87</td>
+			<td data-formula="=AVERAGE(a1:c1)"></td>
+			<td></td>
+		</tr>
+		</tbody>
+	</table>
+</div>
+</body>
+</html>

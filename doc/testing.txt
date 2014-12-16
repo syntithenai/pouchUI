@@ -1,0 +1,15 @@
+TESTING
+
+- formal testing styles
+- UNIT testing
+
+realistically
+- acceptance testing
+BUT formalise here
+	MIN REQ
+	- 1. importable testing data set and 
+	- 2. written test procedure outline for each module and action with consideration for action special features
+	- 3. Checklist spreadsheet with field for tester name and test date.
+	- THEN
+		- import data suite
+		- for each view, CRUD with consideration of special view features (to some extent scriptable ?)

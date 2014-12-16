@@ -27,10 +27,10 @@
 		<script src='../../src/jquery.pouchUI.controller.js' ></script>
 		<script src='init.js' ></script>
 		<script>
-		$(document).on("pagecreate.pouchui",function() {
+		$(document).ready(function() {
 			PouchDB.plugin(Validation);
 			$('#petstemplate').pouchUI({design:designDoc,init: {refreshDesignDocs:true}}); //dbOptions:{testdb2:{adapter:'idb'}} //  ,[data-role="header"],[data-role="footer"]
-			$(document).off("pagecreate.pouchui");
+			//$(document).off("pagecreate.pouchui");
 		});
 		</script>
 		

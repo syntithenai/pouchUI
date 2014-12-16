@@ -27,10 +27,11 @@
 		<script src='../../src/jquery.pouchUI.controller.js' ></script>
 		<script src='init.js' ></script>
 		<script>
-		$(document).on("pagecreate.pouchui",function() {
+		$(document).ready(function() {
 			PouchDB.plugin(Validation);
-			$('#petstemplate').pouchUI({design:designDoc,init: {refreshDesignDocs:true}}); //dbOptions:{testdb2:{adapter:'idb'}} //  ,[data-role="header"],[data-role="footer"]
-			$(document).off("pagecreate.pouchui");
+			$('#petstemplate').pouchUI({design:designDoc,init: {refreshDesignDocs:true}}); 
+			//dbOptions:{testdb2:{adapter:'idb'}} //  ,[data-role="header"],[data-role="footer"]
+			//$(document).off("pagecreate.pouchui");
 		});
 		</script>
 		
@@ -49,10 +50,10 @@
 			</div>
 		</div>
 		<!-- EDIT FORM -->
-		<div  class='pouch-list ui-content .pouch-list-editor' ddata-pouch-autosave='true' data-pouch-id-from-hash="true" ddata-pouch-db='testdb2'  data-pouch-db='http://stever:wtfaid72@localhost:5984/people' data-pouch-index='people/all' data-key='-1' >
+		<div  class='pouch-list ui-content .pouch-list-editor' ddata-pouch-autosave='true' data-pouch-id-from-hash="true" ddata-pouch-db='testdb2'  data-pouch-db='http://stever:wtfaid72@localhost:5984/people' data-pouch-index='pets/all' data-key='-1' >
 			<div class='pouch-list-item' >
 				
-				<div class='pouch-list-input' style='display:none'  data-pouch-field='type' ><input type='hidden' value='pet' /></div>	
+				<div class='pouch-list-input' style='display:none'  data-pouch-field='type' data-pouch-default='pet' ><input type='hidden' value='pet' /></div>	
 			
 				<fieldset class='ui-field-contain pouch-list-input' data-pouch-field='_id' ><label>ID<input type='text' value='' /></label></fieldset>	
 				<fieldset class='ui-field-contain pouch-list-input' data-pouch-field='name'><label>Name:<textarea ></textarea></label></fieldset>	

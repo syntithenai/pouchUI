@@ -1,0 +1,82 @@
+stuff 
+
+
+<div data-role='page' id='a' >
+<a href='http://localhost/pouchUI/experiments'>Exp</a>	
+<a href='#a'>AAA</a>
+<a href='#b'>BBB</a>
+<a href='#c'>CCC</a>
+AAAAAAAAAAAAAAAAAAAAlkajsdhf lkjhas dfkljhasd fkljha sdfkljha sdfjkha sdlkfjh aslkjdf 
+</div>
+<div data-role='page' id='b' >
+<a href='#a'>AAA</a>
+<a href='#b'>BBB</a>
+<a href='#c'>CCC</a>
+BBBBBBBBBBBBBBBBBBBBBlkajsdhf lkjhas dfkljhasd fkljha sdfkljha sdfjkha sdlkfjh aslkjdf 
+</div>
+
+<div data-role='page' id='c' >
+<a href='#a'>AAA</a>
+<a href='#b'>BBB</a>
+<a href='#c'>CCC</a>
+$CCCCCCCCCCCCCCCCCCCClkajsdhf lkjhas dfkljhasd fkljha sdfkljha sdfjkha sdlkfjh aslkjdf 
+</div>
+
+<script src="../lib/jquery/js/jquery.js"  ></script>
+<script src="../lib/jquery/js/jquery-ui.js"  ></script>
+<script src="../lib/jquery/jq-mobile/jquery.mobile.js"  ></script>
+<link rel="stylesheet" href="../lib/jquery/jq-mobile/jquery.mobile.css" type="text/css"  charset="utf-8">
+<link rel="stylesheet" href="../lib/jquery/css/smoothness/jquery-ui.css" type="text/css"  charset="utf-8">
+<link rel="stylesheet" href="../res/styles.css" type="text/css"  charset="utf-8">
+<script>
+	
+$(document).ready(function(e) {
+	console.log('docready');
+});	
+
+$(document).on( "pagebeforeload", function(e) {
+	console.log('pagebeforeload',e);
+});	
+$(document).on( "pageload", function(e) {
+	console.log('pageload',e);
+});	
+$(document).on( "pageloadfailed",function(e) {
+	console.log('pageloadfailed',e);
+});	
+
+$(document).on( "pagebeforechange", function(e) {
+	console.log('pagebeforechange',e);
+});	
+$(document).on( "pagechange", function(e) {
+	console.log('pagechange',e);
+});	
+$(document).on( "pagechangefailed", function(e) {
+	console.log('pagechangefailed',e);
+});	
+
+$(document).on( "pagebeforeshow", function(e) {
+	console.log('pagebeforeshow',e);
+});	
+$(document).on( "pagebeforehide", function(e) {
+	console.log('pagebeforehide',e);
+});	
+$(document).on( "pageshow", function(e) {
+	console.log('pageshow',e);
+});	
+$(document).on( "pagehide", function(e) {
+	console.log('pagehide',e);
+});	
+
+$(document).on( "pagebeforecreate", function(e) {
+	console.log('pagebeforecreate',e);
+});
+$(document).on( "pagecreate", function(e) {
+	console.log('pagecreate',e);
+});
+$(document).on( "pageinit", function(e) {
+	console.log('pageinit',e);
+});
+$(document).on( "pageremove", function(e) {
+	console.log('pageremove',e);
+});
+</script>

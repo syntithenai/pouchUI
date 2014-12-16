@@ -98,7 +98,7 @@ $(document).on( "pageinit", '#login_edit,#login_login', function() {
 						}
 					}
 					if (pwOK) {
-						console.log('save user',loadedUser);
+						//console.log('save user',loadedUser);
 						pouch.post(loadedUser).then(function(res) {
 							$.fn.pouchUI.api.view.flashMessage('#login_edit_saved');
 						}).catch(function(err) {
