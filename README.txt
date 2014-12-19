@@ -1,11 +1,102 @@
 ! pouchUI
 Author: Steve Ryan <stever@syntithenai.com>
 
+pouchUI is a jquery plugin for generating dynamic HTML interfaces using localstorage or a couchDB database.
+pouchUI is relies on the pouchdb.js wrapper for local storage and couchDB.
+The plugin looks for $('.pouch-list') and populates records into these elements based on configuration.
+The plugin binds a number of events and provides a number of actions to support search and editing.
+The plugin binds to the changes feed of the data source so can be used to creative collaborative editing interfaces.
+Examples of live collaborative user interfaces include text editing, SVG image editing, contacts database and chess.
 
-pouchUI is a jquery plugin for generating dynamic HTML interfaces using a pouchDB database.
-The plugin looks for $('.pouch-list') and populates these lists based on meta data in data attributes.
 Usage $('.dom-selector').pouchUI();
 
+
+! BASIC EXAMPLE
+eg
+<!-- LIBS - SEE EXAMPLES FOR EXTRAS USED SOMETIMES -->
+<script src="../../lib/jquery/js/jquery.js"  ></script>
+<script src='../../lib/pouchdb.js' ></script>
+<script src='../../src/jquery.pouchUI.js' ></script>
+
+<div id='contactlist' class='pouch-list' data-pouch-db='contacts'  >
+	<div class='pouch-list-item' >
+		<label>Name <span class='data-pouch-value' data-pouch-field='name' ></span></label>
+	</div>
+</div>
+
+<script>
+$('#contactlist').pouchUI();
+</script>
+-------------------------------------------------
+If there are two contacts in the database the contactlist element HTML is used as a template and appended twice (once for each list item).
+ie
+<div id='contactlist' class='pouch-list' data-pouch-db='contacts'  >
+	<div class='pouch-list-item' >
+		<label>Name <span class='data-pouch-value' data-pouch-field='name' >Fred Spanner</span></label>
+	</div>
+	<div class='pouch-list-item' >
+		<label>Name <span class='data-pouch-value' data-pouch-field='name' >Joe Bloggs</span></label>
+	</div>
+</div>
+
+
+! VALIDATION
+- plugin config designDocs - validateFunction
+
+
+! BOUND EVENTS
+- CLICK
+	
+
+- KEYUP/CHANGE
+	- data-pouch-autosave
+
+- CHANGES
+	- PER DATABASE
+		- update or reload list or delete
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+! SUMMARY OF FEATURES
+- replace HTML list templates with multiple records from storage
+	- HTML templating using data attributes
+	- .pouch-list, .pouch-list-item, .pouch-list-value||.pouch-list-input
+	- .data-pouch-id, data-pouch-rev added to list items on rendering.
+	- set/get value of first input for all input types inside .pouch-list-input
+	- event binding to plugin with event routing based on
+		- click with .data-pouch-action attribute on links and buttons.
+		- keyup on search and form inputs
+		- change on form inputs
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+---------------------------------------
 The default usage will
 	- check all $('.pouch-list',DOMSELECTOR) for metadata, sync and load comment from pouch/couch databases for the list and load records from metadata selected index
 	- where an index has multiple dimension keys, manage view collation
@@ -114,6 +205,20 @@ authentication - restrict read/write access to master database
 pagination optimisation based on startkey endkey
 full text search https://github.com/nolanlawson/pouchdb-quick-search
 form submit event capture - search and save
+
+
+sample app suite
+- filemanager
+	- text edit
+	- rte edit
+	- trello/mindmap (rte)
+	- svg/presentation
+	- bitmap image
+	- sheet
+- calendar
+- email
+- contacts
+- web capture bookmarklet
 
 SAMPLE APP
 content editing timeline

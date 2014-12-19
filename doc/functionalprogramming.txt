@@ -1,0 +1,73 @@
+Ta for that food for thought,  my summary.....
+
+Functional programming describes an approach to software where
+- "computation is treated as the evaluation of mathematical functions and avoids changing-state and mutable data."
+- functions only rely on the parameters they are given.
+- functions do not change data outside their scope.
+- 'pure functions' 
+	- maintain 'referential integrity' by always returning the same value for a given set of parameters.
+	- maintain 'immutability' by always returning a new variable and never changing any parameter.
+	- prevent 'side effects'
+- requires pragmatism about purity - 'do your best to keep scope under control'
+- "functional in the small, OO in the large"  ??
+
+eg 
+PURE
+function addToSum(Integer sum,Integer number) {
+	sum=sum+number;
+	return sum;
+}
+
+NOT PURE
+var sum=2;
+function addToSum(number) {
+	sum=sum+number;
+}
+
+Functional programming is useful for
+- simplifying parallel processing
+- avoiding concurrency issues
+- clarity/testability/mathematical provability
+- code reusability that is not bound by context
+- pattern implementations like visitor through reduce and memoization.
+- application of maths to coding 
+	- implementing alternatives to recursion
+- maintaining indexes/querying data stored in object databases
+
+Functional programming is not for everything
+- we need state to solve most problems
+- imperative programming and object orientation are better fits for
+	- random number generator 
+	- database persistence
+	- event driven user interface
+- pragmatic impure implementations allow pass by reference for large data transfer
+
+Functional programming can be implemented in any language and is facilitated by language or library support for
+- immutability - const keyword
+- higher order functions
+- map/reduce/folding
+- syntax clarity in functional languages eg Haskell
+- eg Functional JS http://eliperelman.com/fn.js/ 
+
+Functional programming is not without any side effects - memory, cpu, ...
+
+What is useful to me from what I've read about functional programming
+- reminder to minimise scope
+- higher order functions pattern currying for aggregating parameters while maintaining function purity
+- reminder of the API resources for collection manipulation - map, reduce, 
+- resource of algorithms for manipulating data - especially recursion
+
+
+References
+wikipedia
+	http://en.wikipedia.org/wiki/Functional_programming
+	http://en.wikipedia.org/wiki/Imperative_programming
+	http://en.wikipedia.org/wiki/List_of_functional_programming_topics
+	http://en.wikipedia.org/wiki/Fold_(higher-order_function)
+basecamp
+	category theory http://bartoszmilewski.com/2014/10/28/category-theory-for-programmers-the-preface/
+	folds	http://fold.codemiller.com
+	functional programming pragmatism http://gamasutra.com/view/news/169296/Indepth_Functional_programming_in_C.php
+various blog articles http://www.johndcook.com/blog/tag/functional-programming/
+
+
