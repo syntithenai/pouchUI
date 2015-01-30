@@ -175,7 +175,8 @@ $.fn.pouchUI.api.view = {
 	},*/
 	updateListItemAll : function(resvalue,itemTmpl,list) {
 		var plugin=this;
-		console.log('UPDATELISTITEMALL');
+		var mdfr=$.Deferred();
+		//console.log('UPDATELISTITEMALL');
 		// SET ROW METADATA
 		$(itemTmpl).attr('data-pouch-id',resvalue.doc._id);
 		$(itemTmpl).attr('data-pouch-rev',resvalue.doc._rev);
@@ -188,6 +189,8 @@ $.fn.pouchUI.api.view = {
 		var disableInputGeneration=false;
 		//console.log('IT',$(itemTmpl)[0].classList,$(itemTmpl[0]),resvalue);
 		//console.log($.inArray('pouch-list-value',$(itemTmpl)[0].classList));
+		
+		// when list also has attributes data-pouch-list-value and data-pouch-field skip values iteration
 		if ($.inArray('pouch-list-value',$(itemTmpl)[0].classList)) {
 			if ($(itemTmpl).data('pouchField') && $(itemTmpl).data('pouchField').length>0) {
 				//console.log('also list value',$(itemTmpl).data('pouchField'),resvalue.doc[$(itemTmpl).data('pouchField')]);		
@@ -199,8 +202,6 @@ $.fn.pouchUI.api.view = {
 				});
 			}
 		}
-		//else 
-		//valueFields==
 		// REPLACE ITEM ATTRIBUTES
 		function replaceAttributes(itemTmpl,resvalue) {
 			$.each($(itemTmpl).data(),function(fk,fv) {
@@ -220,6 +221,9 @@ $.fn.pouchUI.api.view = {
 				}
 			});						
 		}
+		console.log('UPDATE ATTRIBUTES???',$(itemTmpl).find('.pouch-updateattributes').filter('.pouch-updateattributes')); //
+		//$(itemTmpl).add($(itemTmpl).children('.pouch-updateattributes'))); //);
+		// item and children where .pouch-updateattributes
 		$.each($(itemTmpl).add($(itemTmpl).find('.pouch-updateattributes')).filter('.pouch-updateattributes'),function() {
 			replaceAttributes(this,resvalue);
 			//console.log('UPDATETHIE',$(this).data(),resvalue.doc);
@@ -261,19 +265,23 @@ $.fn.pouchUI.api.view = {
 		//console.log('RENDERed set vals NOW LISTS',$(itemTmpl),$(itemTmpl).find('> *:not(.pouch-list) > .pouch-list').length);
 		
 		//> *:not(.pouch-list) > 
+		var promises=[];
 		$.each($(itemTmpl).children('.pouch-list').add($(itemTmpl).find('.pouch-list')),function(key,iList) {
-		// REPLACE LISTS
+			// REPLACE LISTS
 			var field=$(iList).data('pouchField');
+			console.log('REPLACE LISTS',field,resvalue.doc[field],iList);
 			if (field && field.length>0 && resvalue.doc[field]) {
 				if ($(iList).data('pouchMmseperator') && $(iList).data('pouchMmseperator').length && $(iList).data('pouchMmseperator').length>0) {
 					$(iList).attr('data-keys',resvalue.doc[field]);
 				} else {
-					console.log('??REPLACE LIST SET STARTENDKEY');
+					//console.log('??REPLACE LIST SET STARTENDKEY');
 					//$(iList).attr('data-key',resvalue.doc[field]);
 					$(iList).attr('data-startkey',$.trim(resvalue.doc[field]));
 					$(iList).attr('data-endkey',$.trim(resvalue.doc[field]+"\ufff0"));
 				}
 				//$(iList).attr('data-endkey',resvalue.doc[field]);
+				var dfr=$.Deferred();
+				promises.push(dfr);
 				plugin.api.model.loadList(iList).then(function(res2) {
 					if (res2 && res2.rows && res2.rows.length>0)  {
 						plugin.api.view.renderList(res2,iList).then(function (items) {
@@ -290,19 +298,23 @@ $.fn.pouchUI.api.view = {
 							if ($(iList).data('pouchWrapend')) firstItem.before($(iList).data('pouchWrapend'));
 							firstItem.remove();
 							$('.pouch-list-noresults',iList).remove();
+							dfr.resolve();
 						});
 					} else {
 						plugin.api.view.showNoResults(iList);
+						dfr.resolve();
 					}
 				});
 			}  else {
 				plugin.api.view.showNoResults(iList);
 			}
 		});
-		console.log('UPDATELISTITEMALL TRIGGER',itemTmpl);
-		$(itemTmpl).trigger('pouchui.updatelistitem');				
-		//console.log('UPDATELISTITEMALL TRIGGER DONE');
-
+		$.when.apply($,promises).then(function() {
+			//console.log('UPDATELISTITEMALL TRIGGER',itemTmpl);
+			$(itemTmpl).trigger('pouchui.updatelistitem',[itemTmpl]);				
+			mdfr.resolve();
+		});
+		return mdfr;
 	},
 	// SHOW THE NO RESULTS BLOCK 
 	// removes all pouch-list-items and inserts the pouch-list-noresults section of the template relevant to the current list
@@ -597,7 +609,10 @@ $.fn.pouchUI.api.view = {
 				plugin.api.view.replaceFileInput(formInput,value,resvalue);
 			// HAVE VALUE FOR FIELD	
 			} else if (resvalue.doc[$(value).data('pouchField')]) {
-				if (formInput.type=='textarea') {
+				if (formInput.type=='rte') {
+					//console.log('textarea',resvalue.doc,$(value).data('pouchField'));
+					$(formInput).html(plugin.api.view.valueFromObjectPath(resvalue.doc,$(value).data('pouchField')))
+				} else if (formInput.type=='textarea') {
 					//console.log('textarea',resvalue.doc,$(value).data('pouchField'));
 					$(formInput).text(plugin.api.view.valueFromObjectPath(resvalue.doc,$(value).data('pouchField')))
 				} else {
@@ -605,7 +620,7 @@ $.fn.pouchUI.api.view = {
 					//$(formInput).attr('value',plugin.api.view.valueFromObjectPath(resvalue.doc,$(value).data('pouchField')));
 					$(formInput).val(plugin.api.view.valueFromObjectPath(resvalue.doc,$(value).data('pouchField')));
 					//console.log('done set value',$(formInput).attr('value'));
-					console.log('done set value',$(formInput).val());
+					//console.log('done set value',$(formInput).val());
 					//$(formInput).toggle();
 				}
 			// NO VALUE FOR FIELD
@@ -623,6 +638,7 @@ $.fn.pouchUI.api.view = {
 	renderList : function (res,list) {
 		var plugin=this;
 		var dfr=$.Deferred();
+		var promises=[];
 		//return dfr.resolve([]);
 		//var result=$('<div/>');
 		//console.log(list);
@@ -636,16 +652,18 @@ $.fn.pouchUI.api.view = {
 				$.each(res.rows,function(reskey,resvalue) {
 					if (resvalue.doc) {
 						var itemTmpl=itemTmplBackup.clone(true);
-						plugin.api.view.updateListItemAll(resvalue,itemTmpl,list);
+						promises.push(plugin.api.view.updateListItemAll(resvalue,itemTmpl,list));
 						items.push(itemTmpl);
 					}
 				});
 			}
 		}
-
-		$(list).show();
-		//console.log('listed',$('.pouch-list-noresults',list));
-		return dfr.resolve(items);
+		$.when.apply($,promises).then(function() {
+			$(list).show();
+			//console.log('listed',$('.pouch-list-noresults',list));
+			dfr.resolve(items);
+		});
+		return dfr;
 	},
 	// render
 	renderSingle : function(id,targetLists) {
@@ -742,12 +760,13 @@ $.fn.pouchUI.api.view = {
 		//$(targetList).html(tmpl);
 		var resvalue={doc:{}};
 		var itemTemplate=$('.pouch-list-item',targetList).first();
-		plugin.api.view.updateListItemAll(resvalue,itemTemplate,targetList);
-		//console.log('ASNew injected');
-		$(targetList).show();
-		//console.log('show');
-		$('input,textarea,select',targetList).first().focus();
-		//console.log('focus');
+		plugin.api.view.updateListItemAll(resvalue,itemTemplate,targetList).then(function() {
+			//console.log('ASNew injected');
+			$(targetList).show();
+			//console.log('show');
+			$('input,textarea,select',targetList).first().focus();
+			//console.log('focus');
+		});
 	},
 	// LOAD AN IMAGE FROM DB AND INJECT INTO IMAGE TAG
 	asyncLoadImage : function (image) {

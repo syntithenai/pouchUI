@@ -53,7 +53,7 @@ $.fn.pouchUI.api.model = {
 	loadList : function(list,recurse) {
 		var plugin=this;
 		var buttonDOM=plugin.api.view.findSearchDOM(list);
-		console.log('LOAD LIST',$(list).data()); //,buttonDOM.html()
+		//console.log('LOAD LIST',$(list).data()); //,buttonDOM.html()
 		//$(list).html('<b>eek</b>')
 		var dfr=$.Deferred();
 		//return dfr.resolve([]);

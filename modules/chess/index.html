@@ -15,8 +15,8 @@
 <script type="text/javascript" src="jquery.garbochess/chess.js/chess.js"></script>
 <script type="text/javascript" src="jquery.garbochess/garbochess.js"></script>
 <script type="text/javascript" src="jquery.garbochess/jquery.garbochess.js"></script>
-<script type="text/javascript" src="../../lib/ztree/jquery.ztree.core-3.5.min.js"></script>		
-<link rel="stylesheet" href="../../lib/ztree/css/zTreeStyle/zTreeStyle.css" type="text/css"  charset="utf-8">
+<script type="text/javascript" src="../../lib/fancytree/dist/jquery.fancytree-all.min.js"></script>		
+<link rel="stylesheet" href="../../lib/fancytree/dist/skin-themeroller/ui.fancytree.min.css" type="text/css"  charset="utf-8">
 
 </head>
 <body>
@@ -32,62 +32,76 @@
 		<script src='../../src/jquery.pouchUI.controller.js' ></script>
 		<script src='init.js' ></script>
 		<script>
-		var openings={};
-		/*	$('.openingslist .pouch-list-item [data-pouch-field="name"]').each(function() { 
-			var nameParts=$(this).text().trim().split(",");
-			if (nameParts.length>0) {
-				if (typeof openings[nameParts[0]]!="object") {
-					openings[nameParts[0]]={title:nameParts[0]};
+			function openingsToTree(scope) {
+				var openings={};
+				var items=$('.pouch-list-item',scope);
+				//console(items.length,' IN LIST' );
+				console.log('OTT',items);
+				items.each(function() {
+					//console.log(this);
+					var nameParts=$('[data-pouch-field="name"]',this).text().trim().split(",");
+					var pgn=$('[data-pouch-field="pgn"]',this).text().trim();
+					//console.log(nameParts);
+					for (var i=0; i< nameParts.length; i++) {
+						if (i==0) {
+							if (typeof openings[nameParts[0]]=='undefined')  openings[nameParts[0]]={pgn:pgn};
+						} else if (i==1) {
+							if (typeof openings[nameParts[0]][nameParts[1]]=='undefined')  openings[nameParts[0]][nameParts[1]]={pgn:pgn};
+						} else if (i==2) {
+							if (typeof openings[nameParts[0]][nameParts[1]][nameParts[2]]=='undefined')  openings[nameParts[0]][nameParts[1]][nameParts[2]]={pgn:pgn};
+						} else if (i==3) {
+							if (typeof openings[nameParts[0]][nameParts[1]][nameParts[2]][nameParts[3]]=='undefined')  openings[nameParts[0]][nameParts[1]]={pgn:pgn};
+						} else if (i==4) {
+							if (typeof openings[nameParts[0]][nameParts[1]][nameParts[2]][nameParts[3]][nameParts[4]]=='undefined')  openings[nameParts[0]][nameParts[1]][nameParts[2]][nameParts[3]][nameParts[4]]={pgn:pgn};
+						}
+					}
+				});
+				//console.log('openings',openings); //,tree);
+				//alert('LL');
+				
+				var tree=[];
+				function convertToTreeRecursive(key,children) {
+					//console.log('KV',key,children);
+					var ret={};
+					ret.title='<a class="LoadGame" >'+key+'</a>';
+					ret.children=[];
+					$.each(children,function(ik,iv) {
+						if (typeof iv==="object") ret.children.push(convertToTreeRecursive(ik,iv))
+						else if (ik==="pgn") ret.tooltip=iv;
+					});
+					return ret;
 				}
+				$.each(openings,function(key,value) {
+					//console.log('KV',key,value);
+					tree.push(convertToTreeRecursive(key,value));
+				});
+				$(scope).hide();
+				
+				$('.tree',scope).remove();
+				var newTree=$('<div class="tree"></div>');
+				newTree.insertAfter(scope);
+				newTree.fancytree({source: tree});
+				$(newTree).on('click',function(e) {
+					//console.log('LICKED ON ',$(e.target));
+					var pgn='';
+					if ($(e.target).hasClass('LoadGame')) {
+						pgn=$(e.target).parent().attr('title');
+						if (pgn && pgn.length>0) $('.PgnTextBox',$(e.target).parents('.garbochess')).val(pgn);
+						if (pgn && pgn.length>0) $('.PgnTextBox',$(e.target).parents('.garbochess')).trigger('keyup');
+					}
+				});
+				 //items.length);
 			}
-			if (nameParts.length>1) {
-				if (typeof openings[nameParts[0]][nameParts[1]]!="object") {
-					openings[nameParts[0]][nameParts[1]]={title:nameParts[1]};
-				}
-			}
-			if (nameParts.length>2) {
-				if (typeof openings[nameParts[0]][nameParts[1]][nameParts[2]]!="object") {
-					openings[nameParts[0]][nameParts[1][nameParts[2]]={title:nameParts[2]};
-				}
-			}
-			if (nameParts.length>3) {
-				if (typeof openings[nameParts[0]][nameParts[1]][nameParts[2]][nameParts[3]]!="object") {
-					openings[nameParts[0]][nameParts[1]][nameParts[2]][nameParts[3]]={title:nameParts[3]};
-				}
-			}
-			if (nameParts.length>4) {
-				if (typeof openings[nameParts[0]][nameParts[1]][nameParts[2]][nameParts[3]][nameParts[4]]!="object") {
-					openings[nameParts[0]][nameParts[1]][nameParts[2]][nameParts[3]][nameParts[4]]={title:nameParts[4]};
-				}
-			}
-		});*/
-		console.log('openings',openings);
 		//$.mobile.ignoreContentEnabled=true;
 		$(document).ready(function() {
 			$.fn.garboChess.defaultOptions.showUI='.GameTitle,.output,.board,.PgnTextBox,.FenTextBox,.ui-btn.NewGame,.TimePerMoveLabel,.UndoMove,.ChangeBoardOrientation,.AnalysisToggle,.Suggest,.AutoMovesLabel';
 			$.fn.garboChess.defaultOptions.workerPath='jquery.garbochess/';
 			$.fn.garboChess.defaultOptions.imagePath='jquery.garbochess/img/';
 			PouchDB.plugin(Validation);
-			console.log('BIND RENDERED OPENINGS LIST',$('.openingslist'));	
-			/*$('.openingslist').on('pouchui.reloadlist',function() {
-				console.log('RENDERED OPENINGS LIST');	
-			})*/
-			//
-			/**/
-			$('#chesstemplate').on("pouchui.updatelistitem",function(e) {
-						console.log('ON UPDATELISTITEM');
-						//console.log('OPENLIST',$('.openingslist .pouch-list-item [data-pouch-field="name"]'))
-						//var aa=$(e.target).garboChess();
-						//console.log(aa);
-						//aa[0].api.UIChangePGN();
-						//$("#chesstemplate .pouch-list .pouch-list .pouch-list-item .LoadButton").on('click',function() {
-						//	console.log('click',$(this).data());
-						//});
-						
-			});
-				
-			$('#chesstemplate').on("pouchui.reloadlist",function() {
-				console.log('ON POUCHUI.RELOADLIST');	
+			
+			$('#chesstemplate').on("pouchui.reloadlist",function(e) {
+				console.log('RELOAD LIST');
+				console.log(e.target,$('.openingslist .pouch-list-item').length);
 				var gc=$('.garbochess',this);
 				//.not("#chesstemplate .pouch-list .pouch-list .pouch-list-item")
 				
@@ -101,62 +115,51 @@
 					console.log('gc moved',e.target);
 					$('.PgnTextBox',e.target).trigger('keyup');
 				});
-				$()
+				
 				//$('.garbochess',this).each(function() {$(this).garboChess({showUI:'.board'});});
 				//$('.garbochess').garboChess();
-				
+				// apply tree here
+				$('.openingslist',e.target).each(function() {
+					//console.log('OLP',this);
+					openingsToTree(this);
+				});
 			});
+			
+			$('#chesstemplate').on("pouchui.updatelistitem",function(e,d) {
+				console.log('ON UPDATELISTITEM',d,e.target,e);
+				$('.openingslist',e.target).each(function() {
+					//console.log('OLP',this);
+					openingsToTree(this);
+				});
+				//openingsToTree(e.target);
+				//$('.PgnTextBox',e.target).trigger('keyup');
+				//console.log('OPENLIST',$('.openingslist .pouch-list-item [data-pouch-field="name"]'))
+				var aa=$(e.target).garboChess();
+				console.log('CHANGEPGN',aa);
+				aa[0].api.UIChangePGN();
+				//$("#chesstemplate .pouch-list .pouch-list .pouch-list-item .LoadButton").on('click',function() {
+				//	console.log('click',$(this).data());
+				//});
+			});
+			//
+			/*
+			console.log('ON POUCHUI.RELOADLIST');	
+				$('body').on("pouchui.updatelistitem",'*',function(e,d) {
+							console.log('ON UPDATELISTITEM',d,e.target,e);
+							//console.log('OPENLIST',$('.openingslist .pouch-list-item [data-pouch-field="name"]'))
+							//var aa=$(e.target).garboChess();
+							//console.log(aa);
+							//aa[0].api.UIChangePGN();
+							//$("#chesstemplate .pouch-list .pouch-list .pouch-list-item .LoadButton").on('click',function() {
+							//	console.log('click',$(this).data());
+							//});
+							
+				});
+				
+			*/
+				
 			$('#chesstemplate').pouchUI({design:designDoc,init: {drefreshDesignDocs:true}}); 
-			console.log('GC');
-		/*var setting = {	};
-
-		var zNodes =[
-			{ name:"pNode 01", open:true,
-				children: [
-					{ name:"pNode 11",
-						children: [
-							{ name:"leaf node 111"},
-							{ name:"leaf node 112"},
-							{ name:"leaf node 113"},
-							{ name:"leaf node 114"}
-						]},
-					{ name:"pNode 12",
-						children: [
-							{ name:"leaf node 121"},
-							{ name:"leaf node 122"},
-							{ name:"leaf node 123"},
-							{ name:"leaf node 124"}
-						]},
-					{ name:"pNode 13 - no child", isParent:true}
-				]},
-			{ name:"pNode 02",
-				children: [
-					{ name:"pNode 21", open:true,
-						children: [
-							{ name:"leaf node 211"},
-							{ name:"leaf node 212"},
-							{ name:"leaf node 213"},
-							{ name:"leaf node 214"}
-						]},
-					{ name:"pNode 22",
-						children: [
-							{ name:"leaf node 221"},
-							{ name:"leaf node 222"},
-							{ name:"leaf node 223"},
-							{ name:"leaf node 224"}
-						]},
-					{ name:"pNode 23",
-						children: [
-							{ name:"leaf node 231"},
-							{ name:"leaf node 232"},
-							{ name:"leaf node 233"},
-							{ name:"leaf node 234"}
-						]}
-				]},
-			{ name:"pNode 3 - no child", isParent:true}
-
-		];
-
+		/*
 		$(document).ready(function(){
 			$.fn.zTree.init($("#treeDemo"), setting, zNodes);
 		});
@@ -228,7 +231,7 @@
 						$('.PgnTextBox').trigger('keyup');
 					}
 					</script>
-					<div style='ddisplay:none;' class='pouch-list ui-content openingslist'  data-pouch-index='openings/bypgn'  data-pouch-db='http://stever:wtfaid72@localhost:5984/chess' data-pouch-field='pgn'  data-limit="20" >
+					<!--div style='ddisplay:none;' class='pouch-list ui-content openingslist'  data-pouch-index='openings/bypgn'  data-pouch-db='http://stever:wtfaid72@localhost:5984/chess' data-pouch-field='pgn'  data-limit="200" >
 						<h3 class="ui-title" role="heading" aria-level="1">Games</h3>
 						<div>
 							<div class='pouch-list-item'  data-myname='name' >
@@ -241,7 +244,7 @@
 							</div>
 							<div class='pouch-list-noresults' >No matching Results</div>
 						</div>
-					</div>
+					</div-->
 				</td>
 				</tr> 
 			</table>

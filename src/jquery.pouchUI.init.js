@@ -101,7 +101,7 @@ $.fn.pouchUI.api = {
 		},
 		// CREATE/UPDATE NECESSARY DESIGN DOCSS
 		initialiseDesignDocuments : function (settings) {
-			console.log('init design');
+			//console.log('init design');
 			var designDocs=settings.design;
 			//var plugin=this;	
 			var dfr=$.Deferred();
@@ -116,7 +116,7 @@ $.fn.pouchUI.api = {
 					//console.log('now create designs ',designDoc);
 					$.each(designDocs,function(ddkey,designDoc) {
 						$.each(designDoc,function(dkey,dval) {
-							console.log('now create designs ',dkey,dval);
+						//	console.log('now create designs ',dkey,dval);
 							var pouch=$.fn.pouchUI.api.model.getDB(dkey);
 							
 							pouch.get(dval._id).then(function(current) {

@@ -75,9 +75,10 @@ $.fn.pouchUI = function(method) {
 						//$(tv).attr('data-root-pouch','true')
 						pluginTemplate=pluginTemplate+tv.outerHTML;
 						//console.log($(tv).data());
-						var pouchLists=$('.pouch-list',tv);
+						var pouchLists=$('.pouch-list:not(.pouch-list .pouch-list)',tv);
 						if ($(tv).hasClass('pouch-list')) pouchLists.add(tv);
 						pouchLists.each(function(ik,iv) {
+							//console.log('DBLA',iv);
 							if ($(iv).data('pouchDb')) {
 								// COLLATE LISTS BY DB FOR LISTENING
 								//console.log('collate',tv);
@@ -93,7 +94,7 @@ $.fn.pouchUI = function(method) {
 					// LISTEN TO CHANGES ON LOCAL DB AND UPDATE CONTENT
 					//setTimeout(function() {
 					
-					
+					//console.log('DBL',databasesToListen);
 					//console.log("PTEMP",masterPlugin);
 					// EXTRACT SETTINGS PER ITEM PASSED IN SO SEARCHFORM AND LIST CAN HAVE DIFFERENT SETTINGS
 					// BIND METHODS INSIDE PLUGIN AND CALL CONTROLLER INIT
