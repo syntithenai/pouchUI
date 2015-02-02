@@ -271,6 +271,13 @@ auth
 global - apply to all lists
 
 
+pagination
+- header row of buttons with attribute data-pouch-action=paginate-[first|next|previous|last]
+- list reload triggers assignment of attribute data-pouch-skip-to  (function updatePagination)
+- model draws from select.pouch-limit value 
+
+
+
 
 HAZARDS
 pouchdb uses different promises implementation so .then,.catch as compared to jq with .then,.fail

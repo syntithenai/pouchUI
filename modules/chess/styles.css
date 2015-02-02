@@ -101,6 +101,10 @@ button.ui-btn {
  clear:both;
  
 }
+
+.info {
+ display: none;	
+}
 div.ui-input-search { 
 	width: 20em !important ;
 	float: left !important ;
@@ -164,4 +168,15 @@ div.ui-input-search {
 }
 .ui-btn.disabled {
 	background-color:darkgrey !important;
+}
+.GameTitle .ui-input-text {
+ width: 80%;
+ float: left;
+}
+.headrow .AutoMovesLabel, .footrow .AutoMovesLabel {
+  padding-left: 3em ! important;
+}
+.headrow .AutoMoves, .footrow .AutoMoves {
+  margin-top: -0.2em ! important;
+  margin-left: -2.7em ! important;
 }

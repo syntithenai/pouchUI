@@ -4,12 +4,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="../../lib/jquery/js/jquery.js"  ></script>
 <script src="../../lib/jquery/js/jquery-ui.js"  ></script>
-<!--script src="../../lib/jquery/jq-mobile/jquery.mobile.js"  ></script-->
+<script src="../../lib/jquery/jq-mobile/jquery.mobile.js"  ></script>
+<link rel="stylesheet" href="../../lib/jquery/jq-mobile/jquery.mobile.css" type="text/css"  charset="utf-8">
 <script src='../../lib/pouchdb.js' ></script>
 <script src="../../lib/pouchdb.authentication.min.js" type="text/javascript" ></script>
 <script src='../../lib/pouchdb-validation.min.js' ></script>
 <script src="../../res/pageinit.js" type="text/javascript" ></script>
-<!--link rel="stylesheet" href="../../lib/jquery/jq-mobile/jquery.mobile.css" type="text/css"  charset="utf-8"-->
 <link rel="stylesheet" href="../../lib/jquery/css/smoothness/jquery-ui.css" type="text/css"  charset="utf-8">
 <link rel="stylesheet" href="../../res/styles.css" type="text/css"  charset="utf-8">
 <script type="text/javascript" src="jquery.garbochess/chess.js/chess.js"></script>
@@ -33,6 +33,7 @@
 		<script src='init.js' ></script>
 		<script>
 			function openingsToTree(scope) {
+				return;
 				var openings={};
 				var items=$('.pouch-list-item',scope);
 				//console(items.length,' IN LIST' );
@@ -77,9 +78,10 @@
 				});
 				$(scope).hide();
 				
-				$('.tree',scope).remove();
+				$('.openingslist',scope).remove();
 				var newTree=$('<div class="tree"></div>');
 				newTree.insertAfter(scope);
+				$(scope).remove();
 				newTree.fancytree({source: tree});
 				$(newTree).on('click',function(e) {
 					//console.log('LICKED ON ',$(e.target));
@@ -94,7 +96,7 @@
 			}
 		//$.mobile.ignoreContentEnabled=true;
 		$(document).ready(function() {
-			$.fn.garboChess.defaultOptions.showUI='.GameTitle,.output,.board,.PgnTextBox,.FenTextBox,.ui-btn.NewGame,.TimePerMoveLabel,.UndoMove,.ChangeBoardOrientation,.AnalysisToggle,.Suggest,.AutoMovesLabel';
+			$.fn.garboChess.defaultOptions.showUI='.GameTitle,.board,.PgnTextBox,.FenTextBox,.ui-btn.NewGame,.TimePerMoveLabel,.UndoMove,.ChangeBoardOrientation,.AnalysisToggle,.Suggest,.AutoMovesLabel';
 			$.fn.garboChess.defaultOptions.workerPath='jquery.garbochess/';
 			$.fn.garboChess.defaultOptions.imagePath='jquery.garbochess/img/';
 			PouchDB.plugin(Validation);
@@ -127,16 +129,17 @@
 			
 			$('#chesstemplate').on("pouchui.updatelistitem",function(e,d) {
 				console.log('ON UPDATELISTITEM',d,e.target,e);
+				var aa=$(e.target).garboChess();
+				console.log('CHANGEPGN',aa);
+				aa[0].api.UIChangePGN();
+				
 				$('.openingslist',e.target).each(function() {
 					//console.log('OLP',this);
-					openingsToTree(this);
+				//	openingsToTree(this);
 				});
 				//openingsToTree(e.target);
 				//$('.PgnTextBox',e.target).trigger('keyup');
 				//console.log('OPENLIST',$('.openingslist .pouch-list-item [data-pouch-field="name"]'))
-				var aa=$(e.target).garboChess();
-				console.log('CHANGEPGN',aa);
-				aa[0].api.UIChangePGN();
 				//$("#chesstemplate .pouch-list .pouch-list .pouch-list-item .LoadButton").on('click',function() {
 				//	console.log('click',$(this).data());
 				//});
@@ -202,13 +205,15 @@
 				<div data-role="controlgroup" data-type="horizontal" class='buttonsleft'>
 					<a href='#'  class='ui-btn NewGame ui-btn-a ui-corner-all ui-mini' >Reset</a>
 				</div>
+					
 				<div data-role="controlgroup" data-type="horizontal" class='buttonsright'>
 					<a href='#'  class='ui-btn ui-btn-a ui-corner-all ui-mini Suggest' >Suggest</a>
 					<a href='#'  class='ui-btn ui-btn-a ui-corner-all ui-mini UndoMove' >Undo</a>
-					<label class='AutoMovesLabel'>Auto
-						<input data-theme='a' data-mini="true" type='checkbox' class='AutoMoves' data-color='top'  />
-					</label>
+					<span class='ui-btn ui-btn-a ui-corner-all ui-mini AutoMovesLabel' >
+					<input  type='checkbox' class='AutoMoves'  data-color='top'  > Auto
+					</span>
 				</div>
+				
 			</div>
 			<br>
 				
@@ -217,9 +222,9 @@
 				<td>
 				<span class='board'  >This is the board</span>
 				</td>
-				<td class='info' style='vertical-align: top; width: 600px;' ><h3>Analysis</h3>
+				<td class='info' style='vertical-align: top; width: 600px;' ><h3>PGN</h3>
 					<div class='output'></div>
-					<div  class='pouch-list-input' data-pouch-field='pgn'  ><input class='PgnTextBox' /></div>
+					<div  class='pouch-list-input' data-pouch-field='pgn'  ><textarea class='PgnTextBox' rows='15' cols='20' /></textarea></div>
 					<!--div><input  class='FenTextBox' /></div-->
 					<script>
 					function loadFromPGN(pgn) {
@@ -255,9 +260,10 @@
 				<div data-role="controlgroup" data-type="horizontal"  class='buttonsright' >
 					<a href='#' class='ui-btn ui-btn-a ui-corner-all ui-mini Suggest'  >Suggest</a>
 					<a href='#' class='ui-btn ui-btn-a ui-corner-all ui-mini UndoMove' >Undo</a>
-					<label   class='AutoMovesLabel' >Auto
-						<input data-theme='a' data-mini="true" type='checkbox' class='AutoMoves' data-color='bottom'  />
-					</label>
+						<span class='ui-btn ui-btn-a ui-corner-all ui-mini AutoMovesLabel' >
+					<input  type='checkbox' class='AutoMoves'  data-color='bottom'  > Auto
+					</span>
+				
 				</div>
 			</div>
 		</div>

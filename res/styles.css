@@ -1,1 +1,16 @@
 
+#loading {
+    dposition: fixed;
+    dtop: 50%;
+    dleft: 50%;
+    width: 100px;
+    height: 100px;
+    d-webkit-transform: translate(-50%, -50%);
+    dtransform: translate(-50%, -50%);
+    background-image:url('loading.gif'); 
+    background-color: red;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-position: center; 
+    z-index: 99;
+}

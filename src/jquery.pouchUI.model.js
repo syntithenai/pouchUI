@@ -53,7 +53,7 @@ $.fn.pouchUI.api.model = {
 	loadList : function(list,recurse) {
 		var plugin=this;
 		var buttonDOM=plugin.api.view.findSearchDOM(list);
-		//console.log('LOAD LIST',$(list).data()); //,buttonDOM.html()
+		console.log('LOAD LIST',$(list).data()); //,buttonDOM.html()
 		//$(list).html('<b>eek</b>')
 		var dfr=$.Deferred();
 		//return dfr.resolve([]);
@@ -102,10 +102,13 @@ $.fn.pouchUI.api.model = {
 				d.startkey=[d.key];
 				d.endkey=[d.key,{}];
 				delete d.key;
-				//console.log('complex key');
+				console.log('complex key');
 			}
 			console.log('now query local',d.pouchIndex,d);
+			plugin.api.view.startWaiting();
 			pouch.query(d.pouchIndex,d).then(function(res) {
+				console.log('RESULTS query',res,list);	
+				plugin.api.view.stopWaiting();
 				// reverse array again so keys count forward
 				if (d.descending && res.rows) {
 					//console.log('REVERSE');
@@ -113,7 +116,6 @@ $.fn.pouchUI.api.model = {
 					$(list).data('descending',false);
 				}
 				//if (d.pouchIndex=="people/persons") console.log('DBDBDB query res',d.pouchIndex,res)
-				console.log('RESULTS query',res,list);	
 				dfr.resolve(res);
 			}).catch(function(err) {
 				//console.log('Query index err',err);

@@ -1,0 +1,104 @@
+.dui-btn {
+	border: 1px solid black;
+	background-color:pink;
+	padding: 0.2em;
+	margin-right: 0.5em;
+	margin-top: 20px;
+	text-decoration:none;
+}
+.ui-content {
+	margin-top: 4em;
+}
+ddiv[data-role="page"] div[data-role="header"] {
+	margin-top:2.4em;
+}
+div[data-role="page"]  div.pouch-list  {
+		margin-top:em;
+		margin-left:2em;
+}
+.ui-btn.disabled {
+	background-color:darkgrey !important;
+}
+fieldset.ui-field-contain label,.pouch-list-input label,.pouch-list-value label {
+  font-weight: bold;
+}
+.validationerror {
+	color: red;
+}
+.attachments, .buttonset {
+	margin-top: 0.7em;
+}
+.pouch-list-value .attachments {
+	dmax-width: 500px;
+}
+.pouch-list-value .attachments .file.image{
+	display: inline;
+}
+/* ensure rows are clickable */
+.drootlist { height: 800px !important; background-color: pink !important; }
+
+
+fieldset > .pouch-list-input, fieldset > .pouch-list-input label{
+	display: inline;
+}
+label[for="search"] {
+	margin-left: 10em;
+	display: inline;
+}
+
+#loading {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+}
+/*form in toolbar*/
+.left {
+	float: left;
+	width: 88%;
+	margin-right: 2%;
+}
+.right {
+	float: right;
+	width: 10%;
+}
+div.ui-input-search { width: 20em !important }
+div.ui-input-search { float: left; !important }
+
+#editheadertemplate [data-role="controlgroup"]{
+	margin-top:2.8em !important;
+	ddisplay: none !important;
+}
+.ui-input-search {
+	margin-left: 1.5em;
+	dmargin-top: -0.1em;
+}
+button[data-pouch-action="search"] {
+	margin-left: 1.5em !important;
+}
+.ui-select {
+	margin-top:0em !important; 
+	padding-left:0.6em !important; 
+	dfloat:left !important; 
+	display: inline !important;
+}
+
+
+button.ui-btn {
+	margin: 0;
+}
+.pouch-list.rootlist > * > .pouch-list-item {
+	width : 25%;
+	float:left !important;
+	display :none;
+	display: inline  !important;
+	background : white;
+	border: 1px solid black;
+	padding : 0.3em;
+	margin: 1em;
+	border-radius: 5px;
+}
+.editdelete {
+	float: right;
+}

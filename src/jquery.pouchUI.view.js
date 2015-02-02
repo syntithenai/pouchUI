@@ -176,7 +176,7 @@ $.fn.pouchUI.api.view = {
 	updateListItemAll : function(resvalue,itemTmpl,list) {
 		var plugin=this;
 		var mdfr=$.Deferred();
-		//console.log('UPDATELISTITEMALL');
+		//	console.log('UPDATELISTITEMALL',resvalue,itemTmpl,list);
 		// SET ROW METADATA
 		$(itemTmpl).attr('data-pouch-id',resvalue.doc._id);
 		$(itemTmpl).attr('data-pouch-rev',resvalue.doc._rev);
@@ -230,7 +230,7 @@ $.fn.pouchUI.api.view = {
 		});
 		//console.log('ATTRIB')
 		// REPLACE INPUT VALUES
-		//console.log('REPALCE INPUTS ',itemTmpl);
+		//console.log('REPALCE INPUTS ',plugin.api.view.collectChildrenButNotLists($(itemTmpl)),itemTmpl);
 		var inputs={};
 		$.each(plugin.api.view.collectChildrenButNotLists($(itemTmpl),'.pouch-list-input'),function(key,value) {
 			//console.log('REPALCE INPUT ',key,value,resvalue);
@@ -239,7 +239,7 @@ $.fn.pouchUI.api.view = {
 				//console.log('DEFAULT',resvalue);
 				plugin.api.view.replaceInputs(value,resvalue);
 			} else { 
-				//console.log('SEt',resvalue);
+				//console.log('SEt',value,resvalue);
 				//HERE NO //
 				plugin.api.view.replaceInputs(value,resvalue);
 			}
@@ -254,8 +254,8 @@ $.fn.pouchUI.api.view = {
 		if (!disableInputGeneration && inputs['type']!=1) {
 			// if type is blank ensure that type is set, either from parent list or undefined
 			var typeValue;
-			if (list.data('index')) {
-				typeValue=list.data('index').split("/")[0];
+			if (list.data('pouchIndex')) {
+				typeValue=list.data('pouchIndex').split("/")[0];
 			}
 			if (!typeValue) typeValue='undefined'; 
 			//console.log('ADD TYPE FIELD');
@@ -274,7 +274,7 @@ $.fn.pouchUI.api.view = {
 				if ($(iList).data('pouchMmseperator') && $(iList).data('pouchMmseperator').length && $(iList).data('pouchMmseperator').length>0) {
 					$(iList).attr('data-keys',resvalue.doc[field]);
 				} else {
-					//console.log('??REPLACE LIST SET STARTENDKEY');
+					//console.log('REPLACE LIST SET STARTENDKEY',resvalue.doc[field]);
 					//$(iList).attr('data-key',resvalue.doc[field]);
 					$(iList).attr('data-startkey',$.trim(resvalue.doc[field]));
 					$(iList).attr('data-endkey',$.trim(resvalue.doc[field]+"\ufff0"));
@@ -372,25 +372,30 @@ $.fn.pouchUI.api.view = {
 		var plugin=this;
 		var buttonDOM=plugin.api.view.findSearchDOM(list);
 		var skip=$(list).attr('data-pouch-skip');
-		//console.log('startfromlist',skip,$(list).data('descending'));
-		if (skip===undefined || parseInt(skip)==='NaN') skip=0;
-		else skip=parseInt(skip);
+		console.log('startfromlist',skip);
+		if (parseInt(skip)>0) skip=parseInt(skip);
+		else skip=0; 
+		//if (skip===undefined || parseInt(skip)=='NaN') skip=0;
+		//	else skip=parseInt(skip);
 		var limit=$('select.pouch-limit',buttonDOM).val();  //$(list).data('pouchLimit'));
 		//console.log('LImITTI',limit)
-		if (limit===undefined || parseInt(limit)==='NaN') skip=10;
+		if (limit===undefined || parseInt(limit)==='NaN') limit=10;
 		else limit=parseInt(limit);
 		var maxRecords;
 		if (res.rows) maxRecords=parseInt(res.total_rows); //res.rows.length;
-		var next=skip+limit;
-		var previous=skip-limit;
+		var next=skip;
+		if (skip+limit < maxRecords) next=skip+limit;
+		var previous=0;
+		if (skip-limit>=0) previous=skip-limit;
 		if (previous<0) previous=0;
 		var last=maxRecords-limit;
-		if (limit>0) last=Math.floor(maxRecords/limit)*limit;
-		
+		if (last<0) last=0;
+		//if (limit>0) last=Math.floor(maxRecords/limit)*limit;
+		console.log('UPDATE PAGINATION',previous,next,maxRecords,limit,skip)
 		$('[data-pouch-action="paginate-first"]',buttonDOM).attr('data-pouch-skip-to',0);
 		$('[data-pouch-action="paginate-previous"]',buttonDOM).attr('data-pouch-skip-to',previous);
 		$('[data-pouch-action="paginate-next"]',buttonDOM).attr('data-pouch-skip-to',next);
-		//$('[data-pouch-action="paginate-last"]',buttonDOM).attr('data-pouch-skip-to',last);
+		$('[data-pouch-action="paginate-last"]',buttonDOM).attr('data-pouch-skip-to',last);
 		
 		//console.log('UPD PAG',res,buttonDOM,skip<limit,'SKIP',skip,'limit',limit,'max',maxRecords,'next',next,'prev',previous,'laset',last);
 		/*
@@ -523,7 +528,7 @@ $.fn.pouchUI.api.view = {
 				attList.append('<div class="'+classNames+'" data-attachment-id="'+rvk+'" >'+attTmplCopy.html()+'</div>');
 				//console.log('ATTMPL',attTmplCopy);
 			});
-			//console.log('RENATTC',attList)
+			console.log('RENATTC',attList)
 			plugin.api.view.rerenderValueWithLabel('',value)
 		} else {
 			plugin.api.view.rerenderValueWithLabel(attList[0].outerHTML,value)
@@ -556,17 +561,18 @@ $.fn.pouchUI.api.view = {
 	replaceFileInput : function(formInput,value,resvalue) {
 		var plugin=this;
 		var attachmentsAfter=$(formInput);
-		if ($(formInput).siblings('input[type="file"]').length>0) attachmentsAfter=$(formInput).siblings('input[type="file"]').last();
+		if ($(formInput).parents('.pouch-list-input').length>0) attachmentsAfter=$(formInput).parents('.pouch-list-input');
 		//console.log('filetypeinput');
 		var attachmentsDOM;
 		// ALLOW FOR VALUE UPDATE
-		if ($(formInput).siblings('.attachments').length>0) {
-			attachmentsDOM=$(formInput).siblings('.attachments').first();
+		if ($(formInput).parents('.pouch-list-input').find('.attachments').length>0) {
+			attachmentsDOM=$(formInput).parents('.pouch-list-input').find('.attachments').first();
 			$('.file:not(.file.pending)',attachmentsDOM).remove();
 		// OTHERWISE CREATE DOM FOR ATTACHMENT LIST
 		} else {
+			console.log('INS ATT AT',attachmentsAfter);
 			attachmentsDOM=$('<div class="attachments" data-role="listview" ></div>');
-			$(attachmentsAfter).after(attachmentsDOM);
+			$(attachmentsAfter).append(attachmentsDOM);
 		}
 		// FILTER BY FOLDER ?  using data-pouch-folder attr - from pouch-list-input tag override by input type=file tag
 		var folder='';
@@ -610,15 +616,16 @@ $.fn.pouchUI.api.view = {
 			// HAVE VALUE FOR FIELD	
 			} else if (resvalue.doc[$(value).data('pouchField')]) {
 				if (formInput.type=='rte') {
-					//console.log('textarea',resvalue.doc,$(value).data('pouchField'));
-					$(formInput).html(plugin.api.view.valueFromObjectPath(resvalue.doc,$(value).data('pouchField')))
+					//console.log('rte',resvalue.doc,$(value).data('pouchField'));
+					$(formInput).val(plugin.api.view.valueFromObjectPath(resvalue.doc,$(value).data('pouchField')))
 				} else if (formInput.type=='textarea') {
-					//console.log('textarea',resvalue.doc,$(value).data('pouchField'));
-					$(formInput).text(plugin.api.view.valueFromObjectPath(resvalue.doc,$(value).data('pouchField')))
+					//console.log('textarea',formInput); //plugin.api.view.valueFromObjectPath(resvalue.doc,$(value).data('pouchField')),resvalue.doc,$(value).data('pouchField'));
+					$(formInput).val(plugin.api.view.valueFromObjectPath(resvalue.doc,$(value).data('pouchField')));
+					//$(formInput).html('<b>eek</b>');
 				} else {
 					//console.log('NOT textarea',resvalue.doc,$(value).data('pouchField'));
-					//$(formInput).attr('value',plugin.api.view.valueFromObjectPath(resvalue.doc,$(value).data('pouchField')));
 					$(formInput).val(plugin.api.view.valueFromObjectPath(resvalue.doc,$(value).data('pouchField')));
+					//$(formInput).val(plugin.api.view.valueFromObjectPath(resvalue.doc,$(value).data('pouchField')));
 					//console.log('done set value',$(formInput).attr('value'));
 					//console.log('done set value',$(formInput).val());
 					//$(formInput).toggle();

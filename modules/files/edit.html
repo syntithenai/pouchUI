@@ -4,12 +4,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="../../lib/jquery/js/jquery.js"  ></script>
 <script src="../../lib/jquery/js/jquery-ui.js"  ></script>
-<!--script src="../../lib/jquery/jq-mobile/jquery.mobile.js"  ></script-->
+<script src="../../lib/jquery/jq-mobile/jquery.mobile.js"  ></script>
 <script src='../../lib/pouchdb.js' ></script>
 <script src="../../lib/pouchdb.authentication.min.js" type="text/javascript" ></script>
 <script src='../../lib/pouchdb-validation.min.js' ></script>
 <script src="../../res/pageinit.js" type="text/javascript" ></script>
-<!--link rel="stylesheet" href="../../lib/jquery/jq-mobile/jquery.mobile.css" type="text/css"  charset="utf-8"-->
+<link rel="stylesheet" href="../../lib/jquery/jq-mobile/jquery.mobile.css" type="text/css"  charset="utf-8">
 <link rel="stylesheet" href="../../lib/jquery/css/smoothness/jquery-ui.css" type="text/css"  charset="utf-8">
 <link rel="stylesheet" href="../../res/styles.css" type="text/css"  charset="utf-8">
  
@@ -29,8 +29,10 @@
 		<script>
 		$(document).ready(function() {
 			PouchDB.plugin(Validation);
-			$('#edittemplate').pouchUI({design:designDoc,init: {drefreshDesignDocs:true}}); 
-		});		console.log('MSGout:edit');
+			$('#edittemplate').pouchUI({design:designDoc,init: {drefreshDesignDocs:true}}); //dbOptions:{testdb2:{adapter:'idb'}} //  ,[data-role="header"],[data-role="footer"]
+			console.log('MSGONCE:edit');
+		});
+		console.log('MSGout:edit');
 		</script>
 		
 		<!-- HEADER -->
@@ -38,21 +40,36 @@
 			<a href="index.html" data-rel="back" class="ui-btn-left ui-alt-icon ui-nodisc-icon ui-btn ui-icon-carat-l ui-btn-icon-notext ui-corner-all" data-role="button" role="button">Back</a>			
 			<div data-role="controlgroup" data-type="horizontal" class="ui-mini ui-btn-left">
 				<a class='ui-btn ui-icon-back ui-btn-icon-left ui-btn-a ui-corner-all ui-mini'  href='index.html' data-rel="back"  >Close</a>
+				<!--a class='ui-btn ui-icon-delete  ui-btn-icon-left' href='#listtemplate' data-pouch-action='delete' >Delete</a-->
 			</div>
-			<h3>Edit Game Details</h3>
+			<h3>Collection Manager</h3>
 			<div data-role="controlgroup" data-type="horizontal" class="ui-mini ui-btn-right  pouch-triggers" >
 				<a class='ui-btn ui-icon-check ui-btn-icon-left ui-btn-a ui-corner-all ui-mini'  href='index.html#listtemplate'  data-pouch-action='saveandclose' >Save</a>
+				<!--a class='ui-btn ui-icon-check ui-btn-icon-left ui-btn-a ui-corner-all ui-mini'  href='index.html'  data-pouch-action='saveandclose' >Done</a>
+				<a class='ui-btn ui-icon-check  ui-btn-icon-left'   href='#listtemplate' data-pouch-action='saveandclose' >Done</a-->
 			</div>
 		</div>
 		<!-- EDIT FORM -->
-		<div  class='pouch-list ui-content .pouch-list-editor' data-pouch-db='http://stever:wtfaid72@localhost:5984/chess' >
-			<div class='pouch-list-item' >
-				<div class='pouch-list-input' style='display:none'  data-pouch-field='type' data-pouch-default='game'  ><input type='hidden' value='' /></div>	
-				
-				<fieldset class='ui-field-contain pouch-list-input' data-pouch-field='name'><label>Name:<input type='text'  /></label></fieldset>	
-				<fieldset class='ui-field-contain pouch-list-input' data-pouch-field='pgn' ><label>PGN: <textarea ></textarea></label>	</fieldset>	
+	<div  class='rootlist pouch-list ui-content'  ddata-pouch-autosave='true'  data-pouch-index='files/all'  data-pouch-db='http://stever:wtfaid72@localhost:5984/files'>
 
-			</div>
+	<h3 class="ui-title" role="heading" aria-level="1"></h3>
+	<div>
+		<div class='pouch-list-item'   >
+				
+			<div class='pouch-list-input' data-pouch-field='name' ><label>Name <input type='text' /></label></div>
+				<fieldset class='ui-field-contain' ><label></label>
+					<fieldset class='ui-field-contain'><b></b>
+						<div class='pouch-list-input' data-pouch-folder='' >
+							<table><tr><td>Select Files<input type='file' multiple="multiple"  /></span>
+							</td><td><b>OR  </b>Select folder<input type='file'  webkitdirectory='webkitdirectory' /></td></tr></table>
+						</div>
+					</fieldset>
+				</fieldset>	
+			
+		</div>
+		<div class='pouch-list-noresults' >No matching Results</div>
+	</div>
+	</div>
 		</div> 
 	</div> 
 
