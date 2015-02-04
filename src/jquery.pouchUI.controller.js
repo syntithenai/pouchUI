@@ -208,24 +208,24 @@ $.fn.pouchUI.api.controller = {
 		var finalDoc={};
 		
 		// RECURSIVE TO ALLOW ASYNC
-		function doSaveAttachments(finalDoc,attachments,currentListItem,closeAfter) {
-			console.log('do save attachments',attachments,finalDoc);
+		function doSaveAttachments(finalDoc,foundAttachments,updatedAttachments,currentListItem,closeAfter) {
+			console.log('do save attachments',typeof foundAttachments,foundAttachments.length,foundAttachments,updatedAttachments,finalDoc);
 			//  if sending no attachments, clear any existing in database
-			if (true || attachments && attachments.length>0) {
-				console.log('NOW remove attachments from DB',attachments);
-				$.each(attachments,function(ak,av) {
+			if (typeof foundAttachments==="object") {
+				console.log('NOW remove attachments from DB WHERE FALSE',foundAttachments);
+				$.each(foundAttachments,function(ak,av) {
 					if (av===false) {
 						pouch.removeAttachment(finalDoc._id,ak,finalDoc._rev).then(function(res) {
 							finalDoc._rev=res.rev;
 						}).catch(function(err) {
 							console.log('ERROR REMOVING ATTACHMENT',err);
 						})
-					s}
+					}
 				});
 			}
 			console.log('do save attachments DONE REMOVES');
 			
-			return doSaveAttachmentsRecursive(finalDoc,attachments,currentListItem,closeAfter);
+			return doSaveAttachmentsRecursive(finalDoc,updatedAttachments,currentListItem,closeAfter);
 		}
 		function doSaveAttachmentsRecursive(finalDoc,attachments,currentListItem,closeAfter) {
 			var adfr=$.Deferred();
@@ -340,7 +340,7 @@ $.fn.pouchUI.api.controller = {
 					finalDoc._id=rs.id;
 					finalDoc._rev=rs.rev;
 					if (attachmentsChanged) {
-						doSaveAttachments(finalDoc,collateAttachments(foundAttachments,updatedAttachments),currentListItem,closeAfter).then(function() {
+						doSaveAttachments(finalDoc,foundAttachments,updatedAttachments,currentListItem,closeAfter).then(function() {
 							plugin.api.view.stopWaiting();
 							dfr.resolve();
 						}).fail(function() {
@@ -367,7 +367,7 @@ $.fn.pouchUI.api.controller = {
 				if (attachmentsChanged) {
 					//console.log('att changed');
 					plugin.api.view.startWaiting();
-					doSaveAttachments(finalDoc,collateAttachments(foundAttachments,updatedAttachments),currentListItem,closeAfter).then(function() {
+					doSaveAttachments(finalDoc,foundAttachments,updatedAttachments,currentListItem,closeAfter).then(function() {
 						plugin.api.view.stopWaiting();
 						dfr.resolve();
 					}).fail(function() {
@@ -386,6 +386,10 @@ $.fn.pouchUI.api.controller = {
 			//console.log('have id',currentListItem.data('pouchId'));
 			pouch.get(currentListItem.data('pouchId')).then(function(res) {
 				//console.log('loaded to save',res);
+				// COLLATE ATTACHMENTS
+				// FOUNDATTACHMENTS IS A LIST OF ALL ATTACHMENTS CURRENTLY STORED IN DB
+					// WITH TRUE IF THEY ARE FOUND IN THE LIST OF FILES OR FALSE IF THEY ARE NOT FOUND (AND NEED TO BE DELETED)
+				// UPDATEDATTACHMENTS IS A LIST OF ATTACHMENTS THAT NEED TO BE UPLOADED
 				var foundAttachments={};
 				var updatedAttachments={};
 				if (res._attachments) {
@@ -395,27 +399,30 @@ $.fn.pouchUI.api.controller = {
 				}
 				finalDoc=res;
 				//console.log('setup found atts');
-				var validFolders={};
-				var allFoldersValid=false;
+				// BUILD A LIST OF VALID FOLDERS FROM THE data-pouch-folder attribute of .pouch-list-input or .file
+				// if attribute data-pouch-folder is set on .pouch-list-input or on ALL .file elements, only files matching
+				// the selected folders will be allowed to associated with the record
+				//var validFolders={};
+				//var allFoldersValid=false;
 				$.each($('.pouch-list-input',currentListItem),function(ivk,ivv) {
 					// FILE INPUT
 					if ($('input[type="file"]',ivv).length>0) {
 						//console.log('FILE FIELD')
-						// COLLATE ATTACHMENTS
+						// GO LOOKING FOR ATTACHMENTS COLLATE NEWLY UPLOADED (UPDATED) AND CROSS OFF FOUND ATTACHMENTS 
 						$.each($('.attachments .file',ivv),function(iv,ik) {
-							var folder='';
+							//var folder='';
 							// FOLDER FROM .pouch-list-input
-							if ($(ivv).data('pouchFolder') && $(ivv).data('pouchFolder').length>0) folder=$(ivv).data('pouchFolder');			
+							//if ($(ivv).data('pouchFolder') && $(ivv).data('pouchFolder').length>0) folder=$.trim($(ivv).data('pouchFolder'));
 							// FOLDER FROM .file
-							if ($(iv).data('pouchFolder') && $(iv).data('pouchFolder').length>0) folder=$(iv).data('pouchFolder');			
+							//if ($(iv).data('pouchFolder') && $(iv).data('pouchFolder').length>0) folder=$.trim($(iv).data('pouchFolder'));
 							// ensure single trailing slash
-							if (folder.substr(folder.length-1)=='/') folder=folder.substr(0,folder.length-1);
-							if (folder.length>0) folder=folder+"/"; 
-							if (folder.length==0) {
-								allFoldersValid=true;
-							} else {
-								validFolders[folder]=true;
-							}
+							//if (folder.substr(folder.length-1)=='/') folder=folder.substr(0,folder.length-1);
+							//if (folder.length>0) folder=folder+"/"; 
+							//if (folder.length==0) {
+							//	allFoldersValid=true;
+							//} else {
+							//	validFolders[folder]=true;
+							//}
 							//console.log(ik);
 							if ($(ik).data('docid')) foundAttachments[$(ik).data('docid')]=true;
 							if ($(ik).hasClass('pending')) updatedAttachments[$(ik).data('docid')]=true;
@@ -445,9 +452,9 @@ $.fn.pouchUI.api.controller = {
 					}
 				});
 				// collate found status and remove attachments not matching any of the validFolders
-				var finalFoundAttachments={};
+				var finalFoundAttachments=foundAttachments;
 				//console.log('now review for folders',validFolders,allFoldersValid);
-				$.each(foundAttachments,function(fk,fv) {
+				/*$.each(foundAttachments,function(fk,fv) {
 					//console.log('check att',fk);
 					if (allFoldersValid) {
 						//console.log('all folders valid');
@@ -466,7 +473,7 @@ $.fn.pouchUI.api.controller = {
 						//if (inValidFolder) 
 						finalFoundAttachments[fk]=fv;
 					}
-				});
+				});*/
 				var foundAllAttachments=true;
 				$.each(finalFoundAttachments,function(fk,fv) {
 					foundAllAttachments=foundAllAttachments && fv;
@@ -509,11 +516,6 @@ $.fn.pouchUI.api.controller = {
 					var fn=$(ivv).data('pouchField');
 					var getDataFrom=$('select,input,textarea',ivv).first();
 					$.each(getDataFrom,function (rik,riv) {
-						/*if ($(riv).is('textarea')) {
-							finalDoc[fn]=$(riv).text();
-						} else {
-							finalDoc[fn]=$(riv).val();
-						}*/
 						finalDoc[fn]=$(riv).val();
 					});
 				}
